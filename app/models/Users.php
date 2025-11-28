@@ -298,4 +298,88 @@ class Users
             ];
         }
     }
+
+    // Cập nhật role - chỉ admin mới được sử dụng
+    public function updateRole($adminId, $userId, $newRole)
+    {
+        try {
+            // Kiểm tra admin có quyền không
+            $adminQuery = "SELECT role FROM " . $this->table_name . " WHERE id = :admin_id AND status = 1 LIMIT 1";
+            $adminStmt = $this->conn->prepare($adminQuery);
+            $adminStmt->bindParam(':admin_id', $adminId);
+            $adminStmt->execute();
+
+            if ($adminStmt->rowCount() === 0) {
+                return [
+                    'success' => false,
+                    'message' => 'Admin không tồn tại hoặc đã bị khóa'
+                ];
+            }
+
+            $admin = $adminStmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Kiểm tra có phải admin không (role = 1)
+            if ($admin['role'] != 1) {
+                return [
+                    'success' => false,
+                    'message' => 'Bạn không có quyền thực hiện chức năng này'
+                ];
+            }
+
+            // Kiểm tra user cần update có tồn tại không
+            $userQuery = "SELECT id, role, fullname FROM " . $this->table_name . " WHERE id = :user_id LIMIT 1";
+            $userStmt = $this->conn->prepare($userQuery);
+            $userStmt->bindParam(':user_id', $userId);
+            $userStmt->execute();
+
+            if ($userStmt->rowCount() === 0) {
+                return [
+                    'success' => false,
+                    'message' => 'Người dùng không tồn tại'
+                ];
+            }
+
+            $user = $userStmt->fetch(PDO::FETCH_ASSOC);
+
+            // Validate role (0: user, 1: admin)
+            if (!in_array($newRole, [0, 1])) {
+                return [
+                    'success' => false,
+                    'message' => 'Role không hợp lệ. Chỉ chấp nhận 0 (User) hoặc 1 (Admin)'
+                ];
+            }
+
+            // Không cho phép admin tự thay đổi role của chính mình
+            if ($adminId == $userId) {
+                return [
+                    'success' => false,
+                    'message' => 'Không thể thay đổi role của chính mình'
+                ];
+            }
+
+            // Cập nhật role
+            $result = update($this->conn, $this->table_name, [
+                'role' => $newRole
+            ], $userId);
+
+            if ($result) {
+                $roleName = $newRole == 1 ? 'Admin' : 'User';
+                return [
+                    'success' => true,
+                    'message' => "Đã cập nhật role của {$user['fullname']} thành {$roleName}",
+                    'user' => $this->getById($userId)
+                ];
+            }
+
+            return [
+                'success' => false,
+                'message' => 'Cập nhật role thất bại'
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Lỗi: ' . $e->getMessage()
+            ];
+        }
+    }
 }

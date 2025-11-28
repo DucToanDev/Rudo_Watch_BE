@@ -141,4 +141,52 @@ class UserController
             ], 400);
         }
     }
+
+    // Cập nhật role - chỉ admin
+    public function updateRole($data)
+    {
+        // Xác thực admin
+        $admin = $this->auth->authenticate();
+        if (!$admin) {
+            return;
+        }
+
+        // Convert object to array if needed
+        if (is_object($data)) {
+            $data = json_decode(json_encode($data), true);
+        }
+
+        // Validate input
+        if (!isset($data['user_id']) || empty($data['user_id'])) {
+            $this->response->json([
+                'error' => 'Vui lòng cung cấp user_id'
+            ], 400);
+            return;
+        }
+
+        if (!isset($data['role']) && $data['role'] !== 0 && $data['role'] !== 1) {
+            $this->response->json([
+                'error' => 'Vui lòng cung cấp role (0: User, 1: Admin)'
+            ], 400);
+            return;
+        }
+
+        $result = $this->userModel->updateRole(
+            $admin['id'],
+            $data['user_id'],
+            $data['role']
+        );
+
+        if ($result['success']) {
+            $this->response->json([
+                'message' => $result['message'],
+                'user' => $result['user']
+            ], 200);
+        } else {
+            $statusCode = $result['message'] === 'Bạn không có quyền thực hiện chức năng này' ? 403 : 400;
+            $this->response->json([
+                'error' => $result['message']
+            ], $statusCode);
+        }
+    }
 }
