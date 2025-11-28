@@ -260,8 +260,8 @@ class Products
             } else {
                 // Giá trị mặc định cho thumbnail
                 $defaultThumbnails = [
-                    "default-product.jpg",
-                    "default-product-2.jpg"
+                    "uploads/products/place-holder-1.png",
+                    "uploads/products/place-holder-2.png"
                 ];
                 $thumbnail = json_encode($defaultThumbnails);
             }
@@ -329,13 +329,10 @@ class Products
             } else if (empty($existing['specifications']) || $existing['specifications'] === 'null') {
                 // Nếu không có specifications cũ, thêm mặc định
                 $defaultSpecs = [
-                    "brand" => "",
-                    "model" => "",
-                    "color" => "",
-                    "material" => "",
-                    "size" => "",
-                    "weight" => "",
-                    "warranty" => "12 tháng"
+                    "Kích thước: 45mm",
+                    "Chống nước: 100m",
+                    "Chất liệu: Thép không gỉ",
+                    "Máy: Quartz"
                 ];
                 $specifications = json_encode($defaultSpecs);
             }
@@ -353,8 +350,8 @@ class Products
             } else if (empty($existing['thumbnail']) || $existing['thumbnail'] === 'null') {
                 // Nếu không có thumbnail cũ, thêm mặc định
                 $defaultThumbnails = [
-                       "uploads/products/place-holder-1.png",
-                        "uploads/products/place-holder-2.png"
+                    "uploads/products/place-holder-1.png",
+                    "uploads/products/place-holder-2.png"
                 ];
                 $thumbnail = json_encode($defaultThumbnails);
             }
