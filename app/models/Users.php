@@ -357,10 +357,12 @@ class Users
                 ];
             }
 
-            // Cập nhật role
-            $result = update($this->conn, $this->table_name, [
-                'role' => $newRole
-            ], $userId);
+            // Cập nhật role - sử dụng query trực tiếp để tránh side effects
+            $updateQuery = "UPDATE " . $this->table_name . " SET role = :role WHERE id = :id";
+            $updateStmt = $this->conn->prepare($updateQuery);
+            $updateStmt->bindParam(':role', $newRole, PDO::PARAM_INT);
+            $updateStmt->bindParam(':id', $userId, PDO::PARAM_INT);
+            $result = $updateStmt->execute();
 
             if ($result) {
                 $roleName = $newRole == 1 ? 'Admin' : 'User';
