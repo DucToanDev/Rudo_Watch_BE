@@ -44,24 +44,38 @@ class UserController
 
         $updateData = [];
 
-        if (isset($data['fullname']) && !empty($data['fullname'])) {
-            $updateData['fullname'] = $data['fullname'];
+        // Cho phép update fullname (bắt buộc phải có giá trị)
+        if (isset($data['fullname'])) {
+            if (empty(trim($data['fullname']))) {
+                $this->response->json([
+                    'error' => 'Họ tên không được để trống'
+                ], 400);
+                return;
+            }
+            $updateData['fullname'] = trim($data['fullname']);
         }
 
-        if (isset($data['phone']) && !empty($data['phone'])) {
-            $updateData['phone'] = $data['phone'];
+        // Cho phép update phone (có thể để trống)
+        if (isset($data['phone'])) {
+            $updateData['phone'] = $data['phone'] ? trim($data['phone']) : null;
         }
 
-        if (isset($data['email']) && !empty($data['email'])) {
+        // Cho phép update email (bắt buộc phải hợp lệ)
+        if (isset($data['email'])) {
+            if (empty(trim($data['email']))) {
+                $this->response->json([
+                    'error' => 'Email không được để trống'
+                ], 400);
+                return;
+            }
             if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
                 $this->response->json([
                     'error' => 'Email không hợp lệ'
                 ], 400);
                 return;
             }
-            $updateData['email'] = $data['email'];
+            $updateData['email'] = trim($data['email']);
         }
-
 
         if (empty($updateData)) {
             $this->response->json([
