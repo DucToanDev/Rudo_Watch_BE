@@ -37,28 +37,13 @@ class UserController
             return;
         }
 
-        // DEBUG: Log raw data received
-        error_log("=== UPDATE USER DEBUG ===");
-        error_log("Raw data type: " . gettype($data));
-        error_log("Raw data: " . print_r($data, true));
-
         // Convert object to array if needed
         if (is_object($data)) {
             $data = json_decode(json_encode($data), true);
         }
 
-        // DEBUG: Log converted data
-        error_log("Converted data type: " . gettype($data));
-        error_log("Converted data: " . print_r($data, true));
-        if (is_array($data)) {
-            error_log("Data keys: " . print_r(array_keys($data), true));
-        } else {
-            error_log("WARNING: Data is not an array! Type: " . gettype($data));
-        }
-
         // Validate data is array
         if (!is_array($data)) {
-            error_log("ERROR: Invalid data format - expected array/object");
             $this->response->json([
                 'error' => 'Dữ liệu không hợp lệ'
             ], 400);
@@ -187,6 +172,7 @@ class UserController
         if (!$admin) {
             return;
         }
+        
 
         // Convert object to array if needed
         if (is_object($data)) {
