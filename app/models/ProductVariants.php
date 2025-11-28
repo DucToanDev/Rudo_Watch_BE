@@ -55,6 +55,25 @@ class ProductVariants
         }
     }
 
+    // Lấy tất cả variants cho nhiều product_id trong một query
+    public function getByProductIds($productIds)
+    {
+        try {
+            if (empty($productIds)) {
+                return [];
+            }
+
+            $placeholders = str_repeat('?,', count($productIds) - 1) . '?';
+            $query = "SELECT * FROM " . $this->table_name . " WHERE product_id IN ($placeholders) ORDER BY product_id, id ASC";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute($productIds);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
     // Kiểm tra SKU trùng lặp
     private function getBySku($sku)
     {

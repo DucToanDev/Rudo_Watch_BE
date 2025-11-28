@@ -97,9 +97,30 @@ class Products
             $stmt->execute();
             $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Decode specification từ JSON cho mỗi sản phẩm
-            foreach ($products as &$product) {
-                $product = $this->decodeSpecification($product);
+            // Decode specification và lấy variants cho mỗi sản phẩm
+            if (!empty($products)) {
+                require_once __DIR__ . '/ProductVariants.php';
+                $variantsModel = new ProductVariants();
+
+                // Lấy tất cả product IDs
+                $productIds = array_column($products, 'id');
+
+                // Lấy tất cả variants cho các products này trong 1 query
+                $allVariants = $variantsModel->getByProductIds($productIds);
+
+                // Group variants theo product_id
+                $variantsByProduct = [];
+                foreach ($allVariants as $variant) {
+                    $variantsByProduct[$variant['product_id']][] = $variant;
+                }
+
+                foreach ($products as &$product) {
+                    $product = $this->decodeSpecification($product);
+                    // Gán variants cho mỗi sản phẩm
+                    $product['variants'] = isset($variantsByProduct[$product['id']])
+                        ? $variantsByProduct[$product['id']]
+                        : [];
+                }
             }
 
             $countQuery = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE 1=1";
