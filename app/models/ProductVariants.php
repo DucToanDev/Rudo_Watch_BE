@@ -14,6 +14,8 @@ class ProductVariants
     public $id;
     public $product_id;
     public $price;
+    public $colors;
+    public $image;
     public $size;
     public $sku;
     public $quantity;
@@ -103,6 +105,8 @@ class ProductVariants
             $insertData = [
                 'product_id' => $data->product_id,
                 'price' => $data->price,
+                'colors' => $data->colors,
+                'image' => $data->image ?? null,
                 'size' => $data->size ?? null,
                 'sku' => $data->sku ?? null,
                 'quantity' => $data->quantity ?? 0
@@ -175,6 +179,12 @@ class ProductVariants
             }
             if (isset($data->size)) {
                 $updateData['size'] = $data->size;
+            }
+            if (isset($data->colors)) {
+                $updateData['colors'] = $data->colors;
+            }
+            if (isset($data->image)) {
+                $updateData['image'] = $data->image;
             }
             if (isset($data->sku)) {
                 $updateData['sku'] = $data->sku;
