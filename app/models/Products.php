@@ -74,7 +74,7 @@ class Products
 
             // Thêm điều kiện vào query
             if (!empty($conditions)) {
-                $query .= " AND " . implode(" AND ", $conditions);
+                $query .= " WHERE " . implode(" AND ", $conditions);
             }
 
             $query .= " " . $orderBy;
