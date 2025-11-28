@@ -172,11 +172,7 @@ class BrandsController
                     return;
                 }
 
-                $products = $this->productsModel->getAll(['brand_id' => $id]);
-                $productList = isset($products['data']) ? $products['data'] : $products;
-                $deletedCount = 0;
-
-                // Sử dụng deleteByBrand để xóa tất cả sản phẩm của brand
+                // Xóa tất cả sản phẩm của brand
                 $deleteResult = $this->productsModel->deleteByBrand($id);
 
                 if (!$deleteResult) {
