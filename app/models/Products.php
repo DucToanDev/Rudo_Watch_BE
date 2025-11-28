@@ -584,6 +584,20 @@ class Products
         }
     }
 
+    // Xóa tất cả sản phẩm theo brand_id
+    public function deleteByBrand($brandId)
+    {
+        try {
+            $query = "DELETE FROM " . $this->table_name . " WHERE brand_id = :brand_id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':brand_id', $brandId, PDO::PARAM_INT);
+
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            throw $e;
+        }
+    }
+
     public function getByCategorySlug($categorySlug, $limit = null)
     {
         try {
