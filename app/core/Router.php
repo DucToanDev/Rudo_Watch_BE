@@ -29,7 +29,8 @@ class Router
             'user' => [
                 'profile' => ['method' => 'GET', 'action' => 'profile'],
                 'update' => ['method' => 'PUT', 'action' => 'update'],
-                'change-password' => ['method' => 'PUT', 'action' => 'changePassword']
+                'change-password' => ['method' => 'PUT', 'action' => 'changePassword'],
+                'update-role' => ['method' => 'PUT', 'action' => 'updateRole']
             ]
         ];
     }
@@ -91,8 +92,8 @@ class Router
         require_once $controllerFile;
         $controller = new UserController();
 
-        // Pass data for actions that need it (update, change-password)
-        if (in_array($this->id, ['update', 'change-password'])) {
+        // Pass data for actions that need it (update, change-password, update-role)
+        if (in_array($this->id, ['update', 'change-password', 'update-role'])) {
             $data = json_decode(file_get_contents("php://input"));
             $controller->{$route['action']}($data);
         } else {
