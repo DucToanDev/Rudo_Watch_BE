@@ -37,10 +37,20 @@ class UserController
             return;
         }
 
+        // DEBUG: Log raw data received
+        error_log("=== UPDATE USER DEBUG ===");
+        error_log("Raw data type: " . gettype($data));
+        error_log("Raw data: " . print_r($data, true));
+
         // Convert object to array if needed
         if (is_object($data)) {
             $data = json_decode(json_encode($data), true);
         }
+
+        // DEBUG: Log converted data
+        error_log("Converted data type: " . gettype($data));
+        error_log("Converted data: " . print_r($data, true));
+        error_log("Data keys: " . print_r(array_keys($data), true));
 
         $updateData = [];
 
@@ -77,14 +87,22 @@ class UserController
             $updateData['email'] = trim($data['email']);
         }
 
+        // DEBUG: Log prepared update data
+        error_log("Update data prepared: " . print_r($updateData, true));
+        error_log("Update data empty? " . (empty($updateData) ? 'YES' : 'NO'));
+
         if (empty($updateData)) {
+            error_log("ERROR: No data to update!");
             $this->response->json([
                 'error' => 'Không có dữ liệu để cập nhật.'
             ], 400);
             return;
         }
 
+        error_log("Calling userModel->update with user_id: " . $user['id']);
         $result = $this->userModel->update($user['id'], $updateData);
+        error_log("Update result: " . print_r($result, true));
+        error_log("=== END UPDATE USER DEBUG ===");
 
         if ($result['success']) {
             $this->response->json([
