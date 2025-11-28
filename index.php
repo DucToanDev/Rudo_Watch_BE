@@ -17,7 +17,7 @@ require_once __DIR__ . '/config/cors.php';
 require_once __DIR__ . '/app/core/Response.php';
 require_once __DIR__ . '/app/core/Router.php';
 
-//hello war
+//hello war gbgfbfbfbg
 $response = new Response();
 
 $uri = isset($_GET['url']) ? trim($_GET['url'], '/') : '';
