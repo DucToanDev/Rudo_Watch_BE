@@ -224,6 +224,7 @@ class Products
                 });
             }
 
+            // Xử lý specifications với giá trị mặc định
             $specifications = null;
             if (isset($data->specifications)) {
                 if (is_string($data->specifications)) {
@@ -232,9 +233,21 @@ class Products
                 } else {
                     $specifications = json_encode($data->specifications);
                 }
+            } else {
+                // Giá trị mặc định cho specifications
+                $defaultSpecs = [
+                    "brand" => "",
+                    "model" => "",
+                    "color" => "",
+                    "material" => "",
+                    "size" => "",
+                    "weight" => "",
+                    "warranty" => "12 tháng"
+                ];
+                $specifications = json_encode($defaultSpecs);
             }
 
-            // Xử lý thumbnail - encode thành JSON nếu là array/object
+            // Xử lý thumbnail - encode thành JSON nếu là array/object với giá trị mặc định
             $thumbnail = null;
             if (isset($data->thumbnail)) {
                 if (is_string($data->thumbnail)) {
@@ -244,6 +257,13 @@ class Products
                     // Nếu là Array, encode thành JSON
                     $thumbnail = json_encode($data->thumbnail);
                 }
+            } else {
+                // Giá trị mặc định cho thumbnail
+                $defaultThumbnails = [
+                    "default-product.jpg",
+                    "default-product-2.jpg"
+                ];
+                $thumbnail = json_encode($defaultThumbnails);
             }
 
             $query = "INSERT INTO " . $this->table_name . " 
@@ -296,7 +316,7 @@ class Products
                 }, $id);
             }
 
-            // Encode thành JSON nếu là Array
+            // Xử lý specifications - encode thành JSON nếu là Array với fallback
             $specifications = $existing['specifications'];
             if (isset($data->specifications)) {
                 if (is_string($data->specifications)) {
@@ -306,9 +326,21 @@ class Products
                     // Nếu là Array, encode thành JSON
                     $specifications = json_encode($data->specifications);
                 }
+            } else if (empty($existing['specifications']) || $existing['specifications'] === 'null') {
+                // Nếu không có specifications cũ, thêm mặc định
+                $defaultSpecs = [
+                    "brand" => "",
+                    "model" => "",
+                    "color" => "",
+                    "material" => "",
+                    "size" => "",
+                    "weight" => "",
+                    "warranty" => "12 tháng"
+                ];
+                $specifications = json_encode($defaultSpecs);
             }
 
-            // Xử lý thumbnail - encode thành JSON nếu là array/object
+            // Xử lý thumbnail - encode thành JSON nếu là array/object với fallback
             $thumbnail = $existing['thumbnail']; // Giữ nguyên giá trị cũ nếu không có update
             if (isset($data->thumbnail)) {
                 if (is_string($data->thumbnail)) {
@@ -318,6 +350,13 @@ class Products
                     // Nếu là Array, encode thành JSON
                     $thumbnail = json_encode($data->thumbnail);
                 }
+            } else if (empty($existing['thumbnail']) || $existing['thumbnail'] === 'null') {
+                // Nếu không có thumbnail cũ, thêm mặc định
+                $defaultThumbnails = [
+                    "default-product.jpg",
+                    "default-product-2.jpg"
+                ];
+                $thumbnail = json_encode($defaultThumbnails);
             }
 
             $query = "UPDATE " . $this->table_name . " SET 
