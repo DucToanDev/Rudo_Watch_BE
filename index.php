@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 if (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) && !isset($_SERVER['HTTP_AUTHORIZATION'])) {
     $_SERVER['HTTP_AUTHORIZATION'] = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
@@ -14,7 +14,7 @@ if (!isset($_SERVER['HTTP_AUTHORIZATION']) && function_exists('getallheaders')) 
 }
 
 require_once __DIR__ . '/config/cors.php';
-require_once __DIR__ . '/app/core/response.php';
+require_once __DIR__ . '/app/core/Response.php';
 require_once __DIR__ . '/app/core/Router.php';
 
 $response = new Response();
@@ -23,15 +23,15 @@ $uri = isset($_GET['url']) ? trim($_GET['url'], '/') : '';
 
 if (empty($uri) && isset($_SERVER['REQUEST_URI'])) {
     $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-    
+
     $requestUri = strtok($requestUri, '?');
-    
+
     $requestUri = preg_replace('#^/backend/#', '/', $requestUri);
     $requestUri = preg_replace('#^/backend$#', '/', $requestUri);
-    
+
     $requestUri = preg_replace('#/index\.php$#', '', $requestUri);
     $requestUri = preg_replace('#^/index\.php#', '', $requestUri);
-    
+
     $uri = trim($requestUri, '/');
 }
 
@@ -81,4 +81,3 @@ if ($router->handleStandardRoute()) {
 // No route matched
 $response->json(['error' => 'Endpoint không tồn tại'], 404);
 exit();
-?>
