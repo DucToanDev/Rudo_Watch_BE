@@ -1,0 +1,144 @@
+<?php
+require_once __DIR__ . '/../../../models/Users.php';
+require_once __DIR__ . '/../../../core/Response.php';
+require_once __DIR__ . '/../../../middleware/AuthMiddleware.php';
+
+class UserController
+{
+    private $userModel;
+    private $response;
+    private $auth;
+
+    public function __construct()
+    {
+        $this->userModel = new Users();
+        $this->response = new Response();
+        $this->auth = new AuthMiddleware();
+    }
+
+    //Lấy thông tin user
+    public function profile()
+    {
+        $user = $this->auth->authenticate();
+        if (!$user) {
+            return;
+        }
+
+        $this->response->json([
+            'user' => $user
+        ], 200);
+    }
+
+    // Cập nhật user 
+    public function update($data)
+    {
+        $user = $this->auth->authenticate();
+        if (!$user) {
+            return;
+        }
+
+        // Convert object to array if needed
+        if (is_object($data)) {
+            $data = json_decode(json_encode($data), true);
+        }
+
+        $updateData = [];
+
+        if (isset($data['fullname']) && !empty($data['fullname'])) {
+            $updateData['fullname'] = $data['fullname'];
+        }
+
+        if (isset($data['phone']) && !empty($data['phone'])) {
+            $updateData['phone'] = $data['phone'];
+        }
+
+        if (isset($data['email']) && !empty($data['email'])) {
+            if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                $this->response->json([
+                    'error' => 'Email không hợp lệ'
+                ], 400);
+                return;
+            }
+            $updateData['email'] = $data['email'];
+        }
+
+
+        if (empty($updateData)) {
+            $this->response->json([
+                'error' => 'Không có dữ liệu để cập nhật.'
+            ], 400);
+            return;
+        }
+
+        $result = $this->userModel->update($user['id'], $updateData);
+
+        if ($result['success']) {
+            $this->response->json([
+                'message' => $result['message'],
+                'user' => $result['user']
+            ], 200);
+        } else {
+            $this->response->json([
+                'error' => $result['message']
+            ], 400);
+        }
+    }
+
+    // Đổi mật khẩu
+    public function changePassword($data)
+    {
+        $user = $this->auth->authenticate();
+        if (!$user) {
+            return;
+        }
+
+        // Convert object to array if needed
+        if (is_object($data)) {
+            $data = json_decode(json_encode($data), true);
+        }
+
+        if (!isset($data['old_password']) || empty($data['old_password'])) {
+            $this->response->json([
+                'error' => 'Vui lòng nhập mật khẩu cũ'
+            ], 400);
+            return;
+        }
+
+        if (!isset($data['new_password']) || empty($data['new_password'])) {
+            $this->response->json([
+                'error' => 'Vui lòng nhập mật khẩu mới'
+            ], 400);
+            return;
+        }
+
+        if (strlen($data['new_password']) < 6) {
+            $this->response->json([
+                'error' => 'Mật khẩu mới phải có ít nhất 6 ký tự'
+            ], 400);
+            return;
+        }
+
+        if (isset($data['confirm_password']) && $data['new_password'] !== $data['confirm_password']) {
+            $this->response->json([
+                'error' => 'Mật khẩu xác nhận không khớp'
+            ], 400);
+            return;
+        }
+
+        $result = $this->userModel->changePassword(
+            $user['id'],
+            $data['old_password'],
+            $data['new_password']
+        );
+
+        if ($result['success']) {
+            $this->response->json([
+                'message' => $result['message']
+            ], 200);
+        } else {
+            $this->response->json([
+                'error' => $result['message']
+            ], 400);
+        }
+    }
+}
