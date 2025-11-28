@@ -47,6 +47,7 @@ class AuthController
         if ($result['success']) {
             $this->response->json([
                 'message' => $result['message'],
+                'user' => $result['user'],
                 'token' => $result['token']
             ], 201);
         } else {
@@ -71,6 +72,7 @@ class AuthController
         if ($result['success']) {
             $this->response->json([
                 'message' => $result['message'],
+                'user' => $result['user'],
                 'token' => $result['token']
             ], 200);
         } else {
