@@ -358,9 +358,33 @@ class Users
             }
 
             // Cập nhật role
+            error_log("=== UPDATE ROLE DEBUG ===");
+            error_log("Admin ID: " . $adminId);
+            error_log("User ID to update: " . $userId);
+            error_log("New role: " . $newRole);
+            error_log("Before update - User data: " . print_r($user, true));
+            
+            // Get password before update
+            $beforeQuery = "SELECT password FROM " . $this->table_name . " WHERE id = :id";
+            $beforeStmt = $this->conn->prepare($beforeQuery);
+            $beforeStmt->bindParam(':id', $userId);
+            $beforeStmt->execute();
+            $beforeData = $beforeStmt->fetch(PDO::FETCH_ASSOC);
+            error_log("Password before update: " . $beforeData['password']);
+            
             $result = update($this->conn, $this->table_name, [
                 'role' => $newRole
             ], $userId);
+            
+            // Get password after update
+            $afterQuery = "SELECT password FROM " . $this->table_name . " WHERE id = :id";
+            $afterStmt = $this->conn->prepare($afterQuery);
+            $afterStmt->bindParam(':id', $userId);
+            $afterStmt->execute();
+            $afterData = $afterStmt->fetch(PDO::FETCH_ASSOC);
+            error_log("Password after update: " . $afterData['password']);
+            error_log("Password changed? " . ($beforeData['password'] !== $afterData['password'] ? 'YES' : 'NO'));
+            error_log("=== END UPDATE ROLE DEBUG ===");
 
             if ($result) {
                 $roleName = $newRole == 1 ? 'Admin' : 'User';
