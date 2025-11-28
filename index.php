@@ -1,4 +1,5 @@
 <?php
+// Force redeploy - ensure SQL WHERE fix is applied
 
 if (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) && !isset($_SERVER['HTTP_AUTHORIZATION'])) {
     $_SERVER['HTTP_AUTHORIZATION'] = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
