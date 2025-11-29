@@ -1,4 +1,7 @@
 <?php
+// CORS MUST BE FIRST - before any output
+require_once __DIR__ . '/config/cors.php';
+
 // Force redeploy - ensure SQL WHERE fix is applied
 
 if (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) && !isset($_SERVER['HTTP_AUTHORIZATION'])) {
@@ -13,8 +16,6 @@ if (!isset($_SERVER['HTTP_AUTHORIZATION']) && function_exists('getallheaders')) 
         $_SERVER['HTTP_AUTHORIZATION'] = $headers['authorization'];
     }
 }
-
-require_once __DIR__ . '/config/cors.php';
 require_once __DIR__ . '/app/core/Response.php';
 require_once __DIR__ . '/app/core/Router.php';
 
