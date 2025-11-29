@@ -2,6 +2,9 @@
 
 // MUST BE FIRST LINE OF FILE – no spaces above
 
+// Xóa CORS header cũ từ Apache để tránh duplicate
+header_remove('Access-Control-Allow-Origin');
+
 $allowedOrigins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
