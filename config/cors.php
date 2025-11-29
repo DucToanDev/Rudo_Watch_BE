@@ -2,9 +2,7 @@
 
 $allowAllOrigins = true;
 
-$allowedOrigins = [
-    ''
-];
+$allowedOrigins = [];
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
