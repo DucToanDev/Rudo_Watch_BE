@@ -99,7 +99,7 @@ class Products
 
             // Decode specification và lấy variants cho mỗi sản phẩm
             if (!empty($products)) {
-                require_once __DIR__ . '/ProductVariants.php';
+                require_once __DIR__ . '/ProductVariantModel.php';
                 $variantsModel = new ProductVariants();
 
                 // Lấy tất cả product IDs
@@ -164,7 +164,7 @@ class Products
             }
 
             // Lấy tất cả variants của sản phẩm này theo product_id
-            require_once __DIR__ . '/ProductVariants.php';
+            require_once __DIR__ . '/ProductVariantModel.php';
             $variantsModel = new ProductVariants();
             $product['variants'] = $variantsModel->getByProductId($id);
 
