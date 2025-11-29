@@ -21,9 +21,9 @@ if (in_array($origin, $allowedOrigins)) {
     // KHÔNG set Credentials khi dùng wildcard
 }
 
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept, Origin');
-header('Access-Control-Max-Age: 86400');
+// header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS');
+// header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept, Origin');
+// header('Access-Control-Max-Age: 86400');
 
 // BẮT BUỘC: xử lý Preflight OPTIONS
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
