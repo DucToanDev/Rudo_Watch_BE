@@ -37,29 +37,7 @@ if (empty($uri) && isset($_SERVER['REQUEST_URI'])) {
     $uri = trim($requestUri, '/');
 }
 
-// error_log("Parsed URI: " . $uri);
-// error_log("URI Segments: " . print_r(explode('/', $uri), true));
-
 $uriSegments = explode('/', $uri);
-
-// Handle Swagger UI
-if ($uriSegments[0] === 'swagger' || $uriSegments[0] === 'api-docs') {
-    $swaggerPath = __DIR__ . '/swagger/index.html';
-    if (file_exists($swaggerPath)) {
-        readfile($swaggerPath);
-        exit();
-    }
-}
-
-// Handle Swagger JSON
-if ($uriSegments[0] === 'swagger.json' || ($uriSegments[0] === 'swagger' && isset($uriSegments[1]) && $uriSegments[1] === 'swagger.json')) {
-    $swaggerJsonPath = __DIR__ . '/swagger/swagger.json';
-    if (file_exists($swaggerJsonPath)) {
-        header('Content-Type: application/json');
-        readfile($swaggerJsonPath);
-        exit();
-    }
-}
 
 // Validate API format
 if ($uriSegments[0] !== 'api' || !isset($uriSegments[1])) {

@@ -30,7 +30,7 @@ class Users
     public function create($data)
     {
         try {
-            // Kiểm tra email đã tồn tại chưa
+            // check email ton tai chua
             $checkQuery = "SELECT id FROM " . $this->table_name . " WHERE email = :email LIMIT 1";
             $checkStmt = $this->conn->prepare($checkQuery);
             $checkStmt->bindParam(':email', $data['email']);
@@ -299,7 +299,7 @@ class Users
         }
     }
 
-    // Cập nhật role - chỉ admin mới được sử dụng
+    // Cập nhật role 
     public function updateRole($adminId, $userId, $newRole)
     {
         try {
@@ -357,7 +357,7 @@ class Users
                 ];
             }
 
-            // Cập nhật role - sử dụng query trực tiếp để tránh side effects
+            // Cập nhật role 
             $updateQuery = "UPDATE " . $this->table_name . " SET role = :role WHERE id = :id";
             $updateStmt = $this->conn->prepare($updateQuery);
             $updateStmt->bindParam(':role', $newRole, PDO::PARAM_INT);
