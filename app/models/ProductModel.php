@@ -155,11 +155,7 @@ class Products
     public function getById($id)
     {
         try {
-            $query = "SELECT p.*, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug 
-                      FROM " . $this->table_name . " p
-                      LEFT JOIN brands b ON p.brand_id = b.id
-                      LEFT JOIN categories c ON p.category_id = c.id
-                      WHERE p.id = :id LIMIT 1";
+            $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
@@ -169,9 +165,6 @@ class Products
             if (!$product) {
                 return null;
             }
-
-            // Decode specifications
-            $product = $this->decodeSpecification($product);
 
             // Lấy tất cả variants của sản phẩm này theo product_id
             require_once __DIR__ . '/ProductVariantModel.php';
@@ -421,11 +414,7 @@ class Products
     public function getBySlug($slug)
     {
         try {
-            $query = "SELECT p.*, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug 
-                      FROM " . $this->table_name . " p
-                      LEFT JOIN brands b ON p.brand_id = b.id
-                      LEFT JOIN categories c ON p.category_id = c.id
-                      WHERE p.slug = :slug LIMIT 1";
+            $query = "SELECT * FROM " . $this->table_name . " WHERE slug = :slug LIMIT 1";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':slug', $slug);
             $stmt->execute();
@@ -444,12 +433,9 @@ class Products
     public function getFeatured($limit = 10)
     {
         try {
-            $query = "SELECT p.*, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug 
-                      FROM " . $this->table_name . " p
-                      LEFT JOIN brands b ON p.brand_id = b.id
-                      LEFT JOIN categories c ON p.category_id = c.id
-                      WHERE p.status = 1 
-                      ORDER BY p.created_at DESC 
+            $query = "SELECT * FROM " . $this->table_name . " 
+                      WHERE status = 1 
+                      ORDER BY created_at DESC 
                       LIMIT :limit";
 
             $stmt = $this->conn->prepare($query);
@@ -470,12 +456,9 @@ class Products
     public function getLatest($limit = 10)
     {
         try {
-            $query = "SELECT p.*, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug 
-                      FROM " . $this->table_name . " p
-                      LEFT JOIN brands b ON p.brand_id = b.id
-                      LEFT JOIN categories c ON p.category_id = c.id
-                      WHERE p.status = 1 
-                      ORDER BY p.created_at DESC 
+            $query = "SELECT * FROM " . $this->table_name . " 
+                      WHERE status = 1 
+                      ORDER BY created_at DESC 
                       LIMIT :limit";
 
             $stmt = $this->conn->prepare($query);
@@ -496,12 +479,9 @@ class Products
     public function getByCategory($categoryId, $limit = null)
     {
         try {
-            $query = "SELECT p.*, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug 
-                      FROM " . $this->table_name . " p
-                      LEFT JOIN brands b ON p.brand_id = b.id
-                      LEFT JOIN categories c ON p.category_id = c.id
-                      WHERE p.category_id = :category_id AND p.status = 1 
-                      ORDER BY p.created_at DESC";
+            $query = "SELECT * FROM " . $this->table_name . " 
+                      WHERE category_id = :category_id AND status = 1 
+                      ORDER BY created_at DESC";
 
             if ($limit) {
                 $query .= " LIMIT :limit";
@@ -528,12 +508,9 @@ class Products
     public function getByBrand($brandId, $limit = null)
     {
         try {
-            $query = "SELECT p.*, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug 
-                      FROM " . $this->table_name . " p
-                      LEFT JOIN brands b ON p.brand_id = b.id
-                      LEFT JOIN categories c ON p.category_id = c.id
-                      WHERE p.brand_id = :brand_id AND p.status = 1 
-                      ORDER BY p.created_at DESC";
+            $query = "SELECT * FROM " . $this->table_name . " 
+                      WHERE brand_id = :brand_id AND status = 1 
+                      ORDER BY created_at DESC";
 
             if ($limit) {
                 $query .= " LIMIT :limit";
@@ -560,13 +537,10 @@ class Products
     public function search($keyword)
     {
         try {
-            $query = "SELECT p.*, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug 
-                      FROM " . $this->table_name . " p
-                      LEFT JOIN brands b ON p.brand_id = b.id
-                      LEFT JOIN categories c ON p.category_id = c.id
-                      WHERE (p.name LIKE :keyword OR p.description LIKE :keyword) 
-                      AND p.status = 1
-                      ORDER BY p.name ASC";
+            $query = "SELECT * FROM " . $this->table_name . " 
+                      WHERE (name LIKE :keyword OR description LIKE :keyword) 
+                      AND status = 1
+                      ORDER BY name ASC";
 
             $stmt = $this->conn->prepare($query);
             $searchTerm = '%' . $keyword . '%';
@@ -630,9 +604,7 @@ class Products
     public function getByCategorySlug($categorySlug, $limit = null)
     {
         try {
-            $query = "SELECT p.*, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug 
-                      FROM " . $this->table_name . " p
-                      LEFT JOIN brands b ON p.brand_id = b.id
+            $query = "SELECT p.* FROM " . $this->table_name . " p
                       INNER JOIN categories c ON p.category_id = c.id
                       WHERE c.slug = :category_slug AND p.status = 1
                       ORDER BY p.created_at DESC";
