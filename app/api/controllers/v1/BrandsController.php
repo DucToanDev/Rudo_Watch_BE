@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../../../models/Brands.php';
-require_once __DIR__ . '/../../../models/Products.php';
+require_once __DIR__ . '/../../../models/BrandModel.php';
+require_once __DIR__ . '/../../../models/ProductModel.php';
 require_once __DIR__ . '/../../../core/Response.php';
 
 class BrandsController

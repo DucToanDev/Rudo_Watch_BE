@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../../models/Carts.php';
+require_once __DIR__ . '/../../../models/CartModel.php';
 require_once __DIR__ . '/../../../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../../../core/Response.php';
 
