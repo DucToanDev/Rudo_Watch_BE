@@ -19,7 +19,7 @@ RUN echo '<IfModule mod_headers.c>\n\
     Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, PATCH, OPTIONS"\n\
     Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin"\n\
     Header always set Access-Control-Max-Age "86400"\n\
-</IfModule>' >> /etc/apache2/conf-available/cors.conf && a2enconf cors
+    </IfModule>' >> /etc/apache2/conf-available/cors.conf && a2enconf cors
 
 # 6. Mở cổng 80 (Render sẽ tự động map cổng này ra ngoài)
 EXPOSE 80
