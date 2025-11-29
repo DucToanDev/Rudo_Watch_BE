@@ -1,39 +1,27 @@
 <?php
 
-$allowAllOrigins = false;
+// MUST BE FIRST LINE OF FILE – no spaces above
 
 $allowedOrigins = [
-    'http://localhost:3000'
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
 ];
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
-if ($allowAllOrigins) {
-    header('Access-Control-Allow-Origin: *');
+if (in_array($origin, $allowedOrigins)) {
+    header("Access-Control-Allow-Origin: $origin");
 } else {
-    if (in_array($origin, $allowedOrigins)) {
-        header("Access-Control-Allow-Origin: $origin");
-    } elseif (empty($origin)) {
-        header('Access-Control-Allow-Origin: *');
-    } else {
-        http_response_code(403);
-        header('Content-Type: application/json');
-        echo json_encode([
-            'status' => 'error',
-            'data' => [
-                'error' => 'Origin không được phép truy cập'
-            ]
-        ]);
-        exit();
-    }
+    // Cho phép tất cả nếu không có ORIGIN (Render đôi khi xoá ORIGIN)
+    header("Access-Control-Allow-Origin: *");
 }
 
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept, Origin');
-// Bỏ credentials để có thể dùng wildcard origin
-// header('Access-Control-Allow-Credentials: true');
+header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Max-Age: 86400');
 
+// BẮT BUỘC: xử lý Preflight OPTIONS
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
