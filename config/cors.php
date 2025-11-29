@@ -5,20 +5,24 @@
 $allowedOrigins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'http://localhost:5173',  // Vite dev server
+    'https://your-frontend-domain.com',  // Thêm domain production của bạn
 ];
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
+// Nếu origin trong whitelist, cho phép origin đó
 if (in_array($origin, $allowedOrigins)) {
     header("Access-Control-Allow-Origin: $origin");
+    header('Access-Control-Allow-Credentials: true');
 } else {
-    // Cho phép tất cả nếu không có ORIGIN (Render đôi khi xoá ORIGIN)
+    // Nếu không có origin hoặc không trong whitelist, cho phép tất cả NHƯNG không có credentials
     header("Access-Control-Allow-Origin: *");
+    // KHÔNG set Credentials khi dùng wildcard
 }
 
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept, Origin');
-header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Max-Age: 86400');
 
 // BẮT BUỘC: xử lý Preflight OPTIONS
