@@ -1,8 +1,10 @@
 <?php
 
-$allowAllOrigins = true;
+$allowAllOrigins = false;
 
-$allowedOrigins = [];
+$allowedOrigins = [
+    'http://localhost:3000'
+];
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
