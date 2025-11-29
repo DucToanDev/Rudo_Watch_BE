@@ -1,6 +1,14 @@
 # Bật công cụ Rewrite
 RewriteEngine On
 
+# XÓA CORS headers từ Apache config - để PHP xử lý hoàn toàn
+<IfModule mod_headers.c>
+    Header unset Access-Control-Allow-Origin
+    Header unset Access-Control-Allow-Methods
+    Header unset Access-Control-Allow-Headers
+    Header unset Access-Control-Max-Age
+</IfModule>
+
 # Base path - uncomment nếu cần
 # RewriteBase /backend/
 
