@@ -16,11 +16,16 @@ class LoginWithFacebook
 
     public function __construct()
     {
+        // Start session cho Facebook CSRF
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
         $this->conn = (new Database())->getConnection();
         $this->fb = new Facebook([
             'app_id' => $_ENV['FB_APP_ID'],
             'app_secret' => $_ENV['FB_APP_SECRET'],
-            'default_graph_version' => 'v24.0',
+            'default_graph_version' => 'v18.0',
         ]);
     }
 
@@ -35,15 +40,17 @@ class LoginWithFacebook
     // Lấy access token từ callback
     public function getAccessToken()
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-
         if (isset($_SESSION['facebook_access_token'])) {
             return $_SESSION['facebook_access_token'];
         }
 
         $helper = $this->fb->getRedirectLoginHelper();
+
+        // Fix CSRF cho redirect từ domain khác
+        if (isset($_GET['state'])) {
+            $helper->getPersistentDataHandler()->set('state', $_GET['state']);
+        }
+
         $token = $helper->getAccessToken();
 
         if ($token) {
