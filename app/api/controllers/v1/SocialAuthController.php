@@ -34,47 +34,39 @@ class SocialAuthController
     // Xử lý callback từ Facebook
     public function facebookCallback($data)
     {
+        // URL frontend
+        $frontendUrl = $_ENV['FRONTEND_URL'] ?? 'https://rudo-watch.vercel.app';
+
         try {
             // 1. Lấy token
             $token = $this->fbModel->getAccessToken();
             if (!$token) {
-                return $this->response->json([
-                    'success' => false,
-                    'login_url' => $this->fbModel->getLoginUrl(),
-                    'message' => 'Cần đăng nhập Facebook'
-                ]);
+                header("Location: {$frontendUrl}/login.html?error=no_token");
+                exit;
             }
 
             // 2. Lấy thông tin FB user
             $fbUser = $this->fbModel->getFacebookUser($token);
             if (empty($fbUser['email'])) {
-                return $this->response->json([
-                    'success' => false,
-                    'message' => 'Không có email từ Facebook'
-                ], 400);
+                header("Location: {$frontendUrl}/login.html?error=no_email");
+                exit;
             }
 
             // 3. Tìm hoặc tạo user
             $result = $this->fbModel->findOrCreateUser($fbUser);
             if (isset($result['error'])) {
-                return $this->response->json([
-                    'success' => false,
-                    'message' => $result['error']
-                ], 500);
+                header("Location: {$frontendUrl}/login.html?error=create_failed");
+                exit;
             }
 
-            // 4. Trả về user
-            return $this->response->json([
-                'success' => true,
-                'message' => $result['is_new'] ? 'Đăng ký thành công' : 'Đăng nhập thành công',
-                'user' => $result['user'],
-                'token' => $result['user']['api_token']
-            ], $result['is_new'] ? 201 : 200);
+            // 4. Redirect về frontend với token
+            $userToken = $result['user']['api_token'];
+            $userData = urlencode(json_encode($result['user']));
+            header("Location: {$frontendUrl}/login.html?token={$userToken}&user={$userData}");
+            exit;
         } catch (Exception $e) {
-            return $this->response->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            header("Location: {$frontendUrl}/login.html?error=" . urlencode($e->getMessage()));
+            exit;
         }
     }
 }
