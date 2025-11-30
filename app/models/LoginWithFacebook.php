@@ -20,7 +20,7 @@ class LoginWithFacebook
         $this->fb = new Facebook([
             'app_id' => $_ENV['FB_APP_ID'],
             'app_secret' => $_ENV['FB_APP_SECRET'],
-            'default_graph_version' => 'v18.0',
+            'default_graph_version' => 'v24.0',
         ]);
     }
 
