@@ -20,6 +20,7 @@ class SocialAuthController
             $loginUrl = $this->fbModel->getLoginUrl();
             return $this->response->json([
                 'success' => true,
+                'needsRedirect' => true,
                 'login_url' => $loginUrl
             ]);
         } catch (Exception $e) {
