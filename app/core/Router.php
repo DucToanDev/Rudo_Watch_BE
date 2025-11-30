@@ -15,9 +15,7 @@ class Router
         'auth' => [
             'register' => ['controller' => 'AuthController', 'method' => 'POST', 'action' => 'register'],
             'login' => ['controller' => 'AuthController', 'method' => 'POST', 'action' => 'login'],
-            // Facebook OAuth: start -> GET /api/v1/auth/facebook
             'facebook' => ['controller' => 'SocialAuthController', 'method' => 'GET', 'action' => 'facebookStart'],
-            // Callback endpoint that Facebook will redirect to -> GET /api/v1/auth/facebook-callback
             'facebook-callback' => ['controller' => 'SocialAuthController', 'method' => 'GET', 'action' => 'facebookCallback']
         ],
         // User routes
