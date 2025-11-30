@@ -16,7 +16,9 @@ class Router
             'register' => ['controller' => 'AuthController', 'method' => 'POST', 'action' => 'register'],
             'login' => ['controller' => 'AuthController', 'method' => 'POST', 'action' => 'login'],
             'facebook' => ['controller' => 'SocialAuthController', 'method' => 'GET', 'action' => 'facebookStart'],
-            'facebook-callback' => ['controller' => 'SocialAuthController', 'method' => 'GET', 'action' => 'facebookCallback']
+            'facebook-callback' => ['controller' => 'SocialAuthController', 'method' => 'GET', 'action' => 'facebookCallback'],
+            'google' => ['controller' => 'SocialAuthController', 'method' => 'GET', 'action' => 'googleStart'],
+            'google-callback' => ['controller' => 'SocialAuthController', 'method' => 'GET', 'action' => 'googleCallback']
         ],
         // User routes
         'user' => [
