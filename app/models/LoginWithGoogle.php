@@ -4,6 +4,9 @@ require_once __DIR__ . '/../../config/function.php';
 require_once __DIR__ . '/UserModel.php';
 require_once __DIR__ . '/../../vendor/autoload.php';
 
+use Google\Client;
+use Google\Service\Oauth2;
+
 class LoginWithGoogle
 {
     private $conn;
@@ -16,8 +19,8 @@ class LoginWithGoogle
         }
 
         $this->conn = (new Database())->getConnection();
-        
-        $this->client = new Google_Client();
+
+        $this->client = new Client();
         $this->client->setClientId($_ENV['GOOGLE_CLIENT_ID']);
         $this->client->setClientSecret($_ENV['GOOGLE_CLIENT_SECRET']);
         $this->client->setRedirectUri($_ENV['GOOGLE_REDIRECT_URI']);
@@ -35,7 +38,7 @@ class LoginWithGoogle
     public function getAccessToken($code)
     {
         $token = $this->client->fetchAccessTokenWithAuthCode($code);
-        
+
         if (isset($token['error'])) {
             return null;
         }
@@ -48,7 +51,7 @@ class LoginWithGoogle
     public function getGoogleUser($token)
     {
         $this->client->setAccessToken($token);
-        $oauth = new Google_Service_Oauth2($this->client);
+        $oauth = new Oauth2($this->client);
         $user = $oauth->userinfo->get();
 
         return [

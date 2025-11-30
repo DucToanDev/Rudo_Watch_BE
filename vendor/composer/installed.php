@@ -3,7 +3,7 @@
         'name' => 'rudo-watch/backend',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '153f1c2ab7c347c01cf7f18ef1e5bfd95c88ef63',
+        'reference' => '3a31c32cebff0cb2296bbd086afb3234b9a0c0bf',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -217,7 +217,7 @@
         'rudo-watch/backend' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '153f1c2ab7c347c01cf7f18ef1e5bfd95c88ef63',
+            'reference' => '3a31c32cebff0cb2296bbd086afb3234b9a0c0bf',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
