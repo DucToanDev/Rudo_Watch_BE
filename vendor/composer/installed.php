@@ -3,13 +3,22 @@
         'name' => 'rudo-watch/backend',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '32edb83ec70a2b687171d2ad5b75c41d1a4f584c',
+        'reference' => '0f726036d1a68bf9887aefc8847ca563615a4c12',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
+        'facebook/graph-sdk' => array(
+            'pretty_version' => '5.1.4',
+            'version' => '5.1.4.0',
+            'reference' => '38fd7187a6704d3ab14ded2f3a534ac4ee6f3481',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../facebook/graph-sdk',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'graham-campbell/result-type' => array(
             'pretty_version' => 'v1.1.3',
             'version' => '1.1.3.0',
@@ -31,7 +40,7 @@
         'rudo-watch/backend' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '32edb83ec70a2b687171d2ad5b75c41d1a4f584c',
+            'reference' => '0f726036d1a68bf9887aefc8847ca563615a4c12',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

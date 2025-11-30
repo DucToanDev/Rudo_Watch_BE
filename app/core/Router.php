@@ -14,7 +14,11 @@ class Router
         // Auth routes
         'auth' => [
             'register' => ['controller' => 'AuthController', 'method' => 'POST', 'action' => 'register'],
-            'login' => ['controller' => 'AuthController', 'method' => 'POST', 'action' => 'login']
+            'login' => ['controller' => 'AuthController', 'method' => 'POST', 'action' => 'login'],
+            // Facebook OAuth: start -> GET /api/v1/auth/facebook
+            'facebook' => ['controller' => 'SocialAuthController', 'method' => 'GET', 'action' => 'facebookStart'],
+            // Callback endpoint that Facebook will redirect to -> GET /api/v1/auth/facebook-callback
+            'facebook-callback' => ['controller' => 'SocialAuthController', 'method' => 'GET', 'action' => 'facebookCallback']
         ],
         // User routes
         'user' => [
@@ -82,11 +86,11 @@ class Router
         $controller = $this->loadController($route['controller']);
         if (!$controller) return false;
 
-        $needsData = in_array($actionType, ['update', 'change-password', 'update-role']) || 
-                     $this->method === 'POST';
-        
+        $needsData = in_array($actionType, ['update', 'change-password', 'update-role']) ||
+            $this->method === 'POST';
+
         $data = $needsData ? json_decode(file_get_contents("php://input")) : null;
-        
+
         $controller->{$route['action']}($data);
         return true;
     }
@@ -123,7 +127,7 @@ class Router
         // Cart sub-actions: /api/v1/cart/add
         if ($this->resource === 'cart' && in_array($this->id, ['add', 'update', 'remove'])) {
             $cartMethods = ['add' => 'POST', 'update' => 'PUT', 'remove' => 'DELETE'];
-            return $this->method === $cartMethods[$this->id] 
+            return $this->method === $cartMethods[$this->id]
                 ? ['action' => $this->id, 'param' => null]
                 : ['action' => null, 'param' => null];
         }
@@ -146,7 +150,7 @@ class Router
             'DELETE' => [$this->id ? 'destroy' : null, $this->id]
         ];
 
-        return isset($crudMap[$this->method]) 
+        return isset($crudMap[$this->method])
             ? ['action' => $crudMap[$this->method][0], 'param' => $crudMap[$this->method][1]]
             : ['action' => null, 'param' => null];
     }
