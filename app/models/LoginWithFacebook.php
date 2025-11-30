@@ -20,7 +20,7 @@ class LoginWithFacebook
         $this->fb = new Facebook([
             'app_id' => $_ENV['FB_APP_ID'],
             'app_secret' => $_ENV['FB_APP_SECRET'],
-            'default_graph_version' => 'v3.2',
+            'default_graph_version' => 'v18.0',
         ]);
     }
 
@@ -29,7 +29,7 @@ class LoginWithFacebook
     {
         $helper = $this->fb->getRedirectLoginHelper();
         $redirectUri = $_ENV['FB_REDIRECT_URI'] ?? $_ENV['FB_REDIRECT_URL'] ?? '';
-        return $helper->getLoginUrl($redirectUri, ['email']);
+        return $helper->getLoginUrl($redirectUri, ['public_profile', 'email']);
     }
 
     // Lấy access token từ callback
