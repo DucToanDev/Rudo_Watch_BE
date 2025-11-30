@@ -27,11 +27,17 @@ class Router
             'change-password' => ['controller' => 'UserController', 'method' => 'PUT', 'action' => 'changePassword'],
             'update-role' => ['controller' => 'UserController', 'method' => 'PUT', 'action' => 'updateRole']
         ],
+        // Address routes
+        'addresses' => [
+            'default' => ['controller' => 'AddressesController', 'method' => 'GET', 'action' => 'default'],
+            'set-default' => ['controller' => 'AddressesController', 'method' => 'PUT', 'action' => 'setDefault']
+        ],
         // Plural resources
         'plural' => [
             'cart' => 'Carts',
             'category' => 'Categories',
-            'brand' => 'Brands'
+            'brand' => 'Brands',
+            'address' => 'Addresses'
         ]
     ];
 
@@ -56,6 +62,18 @@ class Router
         // User: /api/v1/user/profile, /api/v1/user/update
         if ($this->resource === 'user' && isset(self::ROUTES['user'][$this->id])) {
             return $this->dispatch(self::ROUTES['user'][$this->id], $this->id);
+        }
+
+        // Addresses special routes: /api/v1/addresses/default, /api/v1/addresses/{id}/set-default
+        if ($this->resource === 'addresses') {
+            // GET /api/v1/addresses/default
+            if ($this->id === 'default' && isset(self::ROUTES['addresses']['default'])) {
+                return $this->dispatch(self::ROUTES['addresses']['default']);
+            }
+            // PUT /api/v1/addresses/{id}/set-default
+            if ($this->subAction === 'set-default' && isset(self::ROUTES['addresses']['set-default'])) {
+                return $this->dispatchWithParam(self::ROUTES['addresses']['set-default'], $this->id);
+            }
         }
 
         return false;
@@ -92,6 +110,18 @@ class Router
         $data = $needsData ? json_decode(file_get_contents("php://input")) : null;
 
         $controller->{$route['action']}($data);
+        return true;
+    }
+
+    // Dispatch route với param (ví dụ: /addresses/{id}/set-default)
+    private function dispatchWithParam($route, $param)
+    {
+        if ($this->method !== $route['method']) return false;
+
+        $controller = $this->loadController($route['controller']);
+        if (!$controller) return false;
+
+        $controller->{$route['action']}($param);
         return true;
     }
 

@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../../config/database.php';
-require_once __DIR__ . '/../models/Users.php';
+require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../core/Response.php';
 
 class AuthMiddleware
