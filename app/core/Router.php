@@ -154,10 +154,28 @@ class Router
     // Xác định action và param
     private function getAction()
     {
-        // Cart sub-actions: /api/v1/cart/add
-        if ($this->resource === 'cart' && in_array($this->id, ['add', 'update', 'remove'])) {
-            $cartMethods = ['add' => 'POST', 'update' => 'PUT', 'remove' => 'DELETE'];
+        // Cart sub-actions: /api/v1/cart/add, /api/v1/cart/sync, /api/v1/cart/clear, /api/v1/cart/count
+        if ($this->resource === 'cart' && in_array($this->id, ['add', 'update', 'remove', 'sync', 'clear', 'count'])) {
+            $cartMethods = [
+                'add' => 'POST',
+                'update' => 'PUT',
+                'remove' => 'DELETE',
+                'sync' => 'POST',
+                'clear' => 'DELETE',
+                'count' => 'GET'
+            ];
             return $this->method === $cartMethods[$this->id]
+                ? ['action' => $this->id, 'param' => null]
+                : ['action' => null, 'param' => null];
+        }
+
+        // Shipping methods sub-actions: /api/v1/shipping-methods/calculate, /api/v1/shipping-methods/admin
+        if ($this->resource === 'shipping-methods' && in_array($this->id, ['calculate', 'admin'])) {
+            $shippingMethods = [
+                'calculate' => 'POST',
+                'admin' => 'GET'
+            ];
+            return $this->method === $shippingMethods[$this->id]
                 ? ['action' => $this->id, 'param' => null]
                 : ['action' => null, 'param' => null];
         }
