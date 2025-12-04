@@ -395,106 +395,63 @@ class Users
     }
 
     /**
-     * Lấy tất cả users (Admin) - Tối ưu với CTDL hiệu quả
+     * Lấy tất cả users (Admin) - Tối ưu tốc độ cao
      */
     public function getAllUsers($params = [])
     {
         try {
-            // Dùng null coalescing + intval một lần - tránh isset() nhiều lần
             $page = max(1, (int)($params['page'] ?? 1));
-            $limit = min(100, max(1, (int)($params['limit'] ?? 10))); // Giới hạn 1-100
+            $limit = min(100, max(1, (int)($params['limit'] ?? 10)));
             $search = !empty($params['search']) ? trim($params['search']) : null;
             $role = $params['role'] ?? null;
             $status = $params['status'] ?? null;
-            $lastId = isset($params['last_id']) ? (int)$params['last_id'] : null;
-            $lastCreatedAt = $params['last_created_at'] ?? null;
-
-            // Tính offset một lần
             $offset = ($page - 1) * $limit;
 
-            // Dùng array để build conditions - O(1) push
-            $conditions = [];
+            $where = "1=1";
             $bindParams = [];
 
-            // Build conditions với array push - nhanh hơn string concatenation
             if ($search !== null) {
-                $conditions[] = "(fullname LIKE :search OR email LIKE :search OR phone LIKE :search)";
-                $bindParams[':search'] = "%$search%";
+                $where .= " AND (fullname LIKE ? OR email LIKE ? OR phone LIKE ?)";
+                $searchVal = "%$search%";
+                $bindParams[] = $searchVal;
+                $bindParams[] = $searchVal;
+                $bindParams[] = $searchVal;
             }
 
             if ($role !== null && $role !== '') {
-                $conditions[] = "role = :role";
-                $bindParams[':role'] = (int)$role;
+                $where .= " AND role = ?";
+                $bindParams[] = (int)$role;
             }
 
             if ($status !== null && $status !== '') {
-                $conditions[] = "status = :status";
-                $bindParams[':status'] = (int)$status;
+                $where .= " AND status = ?";
+                $bindParams[] = (int)$status;
             }
 
-            // Build WHERE clause một lần - dùng implode O(n)
-            $whereClause = !empty($conditions) ? ' AND ' . implode(' AND ', $conditions) : '';
-
-            // Chạy 2 query song song nếu có thể, hoặc dùng SQL_CALC_FOUND_ROWS
-            // Query đếm tổng
-            $countQuery = "SELECT COUNT(*) FROM " . $this->table_name . " WHERE 1=1" . $whereClause;
-
-            $countStmt = $this->conn->prepare($countQuery);
-            foreach ($bindParams as $key => $value) {
-                $countStmt->bindValue($key, $value);
-            }
-            $countStmt->execute();
+            // Count
+            $countSql = "SELECT COUNT(*) FROM {$this->table_name} WHERE {$where}";
+            $countStmt = $this->conn->prepare($countSql);
+            $countStmt->execute($bindParams);
             $total = (int)$countStmt->fetchColumn();
 
-            // Early return nếu không có data
-            if ($total === 0) {
-                return [
-                    'success' => true,
-                    'data' => [
-                        'users' => [],
-                        'pagination' => [
-                            'current_page' => $page,
-                            'per_page' => $limit,
-                            'total' => 0,
-                            'total_pages' => 0,
-                            'next_cursor' => null
-                        ]
-                    ]
-                ];
-            }
+            // Query lấy data
+            $sql = "SELECT id, fullname, email, phone, role, status, created_at 
+                    FROM {$this->table_name} 
+                    WHERE {$where} 
+                    ORDER BY id DESC 
+                    LIMIT {$offset}, {$limit}";
 
-            // Query lấy danh sách - dùng const cho columns
-            $query = "SELECT " . self::USER_COLUMNS_NO_TOKEN . " FROM " . $this->table_name . " WHERE 1=1" . $whereClause;
-
-            // Keyset pagination - hiệu quả O(1) thay vì O(n) với OFFSET
-            if ($lastId !== null && $lastCreatedAt !== null) {
-                $query .= " AND (created_at < :last_created_at OR (created_at = :last_created_at2 AND id < :last_id))";
-                $bindParams[':last_created_at'] = $lastCreatedAt;
-                $bindParams[':last_created_at2'] = $lastCreatedAt;
-                $bindParams[':last_id'] = $lastId;
-                $query .= " ORDER BY created_at DESC, id DESC LIMIT :limit";
-            } else {
-                $query .= " ORDER BY created_at DESC, id DESC LIMIT :limit OFFSET :offset";
-            }
-
-            $stmt = $this->conn->prepare($query);
-            foreach ($bindParams as $key => $value) {
-                $stmt->bindValue($key, $value);
-            }
-            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-            if ($lastId === null || $lastCreatedAt === null) {
-                $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-            }
-            $stmt->execute();
-
-            // Fetch all với FETCH_ASSOC - nhanh nhất
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute($bindParams);
             $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Format data dùng lookup table O(1) cho mỗi user
-            $this->formatUsers($users);
-
-            // Lấy last user cho cursor - dùng end() O(1)
-            $lastUser = !empty($users) ? end($users) : null;
+            // Format inline
+            foreach ($users as &$u) {
+                $u['role'] = (int)$u['role'];
+                $u['status'] = (int)$u['status'];
+                $u['role_name'] = $u['role'] === 1 ? 'Admin' : 'User';
+                $u['status_name'] = $u['status'] === 1 ? 'Hoạt động' : 'Bị khóa';
+            }
 
             return [
                 'success' => true,
@@ -504,18 +461,14 @@ class Users
                         'current_page' => $page,
                         'per_page' => $limit,
                         'total' => $total,
-                        'total_pages' => (int)ceil($total / $limit),
-                        'next_cursor' => $lastUser ? [
-                            'last_id' => (int)$lastUser['id'],
-                            'last_created_at' => $lastUser['created_at']
-                        ] : null
+                        'total_pages' => $total > 0 ? (int)ceil($total / $limit) : 0
                     ]
                 ]
             ];
         } catch (PDOException $e) {
             return [
                 'success' => false,
-                'message' => 'Lỗi khi lấy danh sách users: ' . $e->getMessage()
+                'message' => 'Lỗi: ' . $e->getMessage()
             ];
         }
     }
