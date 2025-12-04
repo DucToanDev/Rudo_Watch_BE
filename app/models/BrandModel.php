@@ -210,4 +210,19 @@ class Brands
             throw $e;
         }
     }
+
+    /**
+     * Lấy thương hiệu đang hoạt động (status = 1)
+     */
+    public function getActive()
+    {
+        try {
+            $query = "SELECT * FROM " . $this->table_name . " WHERE status = 1 ORDER BY name ASC";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw $e;
+        }
+    }
 }

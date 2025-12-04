@@ -29,7 +29,8 @@
     { "name": "Cart", "description": "Giỏ hàng" },
     { "name": "Orders", "description": "Đơn hàng" },
     { "name": "Addresses", "description": "Địa chỉ giao hàng" },
-    { "name": "Shipping", "description": "Phương thức vận chuyển" }
+    { "name": "Shipping", "description": "Phương thức vận chuyển" },
+    { "name": "Vouchers", "description": "Quản lý mã giảm giá" }
   ],
   "paths": {
     "/register": {
@@ -929,6 +930,247 @@
           }
         }
       }
+    },
+    "/vouchers": {
+      "get": {
+        "tags": ["Vouchers"],
+        "summary": "Lấy danh sách vouchers",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Danh sách vouchers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Voucher" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Vouchers"],
+        "summary": "Tạo voucher mới",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/VoucherRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tạo voucher thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "data": { "$ref": "#/components/schemas/Voucher" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Dữ liệu không hợp lệ" }
+        }
+      }
+    },
+    "/vouchers/{id}": {
+      "get": {
+        "tags": ["Vouchers"],
+        "summary": "Lấy chi tiết voucher",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chi tiết voucher",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/Voucher" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Không tìm thấy voucher" }
+        }
+      },
+      "put": {
+        "tags": ["Vouchers"],
+        "summary": "Cập nhật voucher",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/VoucherRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cập nhật thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "data": { "$ref": "#/components/schemas/Voucher" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Không tìm thấy voucher" }
+        }
+      },
+      "delete": {
+        "tags": ["Vouchers"],
+        "summary": "Xóa voucher",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Xóa thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Không tìm thấy voucher" }
+        }
+      }
+    },
+    "/vouchers/validate": {
+      "post": {
+        "tags": ["Vouchers"],
+        "summary": "Kiểm tra mã voucher hợp lệ",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["code", "cart_total"],
+                "properties": {
+                  "code": { "type": "string", "example": "SUMMER2024" },
+                  "cart_total": { "type": "number", "example": 500000 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Voucher hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/Voucher" },
+                    "discount_amount": { "type": "number" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Voucher không hợp lệ" }
+        }
+      }
+    },
+    "/vouchers/apply": {
+      "post": {
+        "tags": ["Vouchers"],
+        "summary": "Áp dụng voucher vào đơn hàng",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["code", "cart_total"],
+                "properties": {
+                  "code": { "type": "string", "example": "SUMMER2024" },
+                  "cart_total": { "type": "number", "example": 500000 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Áp dụng voucher thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "voucher": { "$ref": "#/components/schemas/Voucher" },
+                        "discount_amount": { "type": "number" },
+                        "original_total": { "type": "number" },
+                        "final_total": { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Voucher không hợp lệ" }
+        }
+      }
     }
   },
   "components": {
@@ -1223,6 +1465,43 @@
           "description": { "type": "string" },
           "base_fee": { "type": "number" },
           "estimated_days": { "type": "string" }
+        }
+      },
+      "Voucher": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "code": { "type": "string", "example": "SUMMER2024" },
+          "name": { "type": "string", "example": "Giảm giá mùa hè" },
+          "description": { "type": "string" },
+          "discount_type": { "type": "string", "enum": ["percentage", "fixed"], "description": "percentage: Giảm %, fixed: Giảm số tiền cố định" },
+          "discount_value": { "type": "number", "example": 10 },
+          "min_order_value": { "type": "number", "example": 500000, "description": "Giá trị đơn hàng tối thiểu" },
+          "max_discount": { "type": "number", "example": 100000, "description": "Số tiền giảm tối đa (cho loại percentage)" },
+          "usage_limit": { "type": "integer", "example": 100, "description": "Số lần sử dụng tối đa" },
+          "used_count": { "type": "integer", "example": 10, "description": "Số lần đã sử dụng" },
+          "start_date": { "type": "string", "format": "date-time", "example": "2024-06-01T00:00:00" },
+          "end_date": { "type": "string", "format": "date-time", "example": "2024-08-31T23:59:59" },
+          "status": { "type": "integer", "enum": [0, 1], "description": "0: Inactive, 1: Active" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "VoucherRequest": {
+        "type": "object",
+        "required": ["code", "name", "discount_type", "discount_value", "start_date", "end_date"],
+        "properties": {
+          "code": { "type": "string", "example": "SUMMER2024", "description": "Mã voucher (unique)" },
+          "name": { "type": "string", "example": "Giảm giá mùa hè" },
+          "description": { "type": "string" },
+          "discount_type": { "type": "string", "enum": ["percentage", "fixed"], "description": "percentage: Giảm %, fixed: Giảm số tiền cố định" },
+          "discount_value": { "type": "number", "example": 10, "description": "Giá trị giảm (% hoặc số tiền)" },
+          "min_order_value": { "type": "number", "example": 500000, "description": "Giá trị đơn hàng tối thiểu để áp dụng" },
+          "max_discount": { "type": "number", "example": 100000, "description": "Số tiền giảm tối đa (chỉ dùng cho percentage)" },
+          "usage_limit": { "type": "integer", "example": 100, "description": "Số lần sử dụng tối đa (null = không giới hạn)" },
+          "start_date": { "type": "string", "format": "date-time", "example": "2024-06-01T00:00:00" },
+          "end_date": { "type": "string", "format": "date-time", "example": "2024-08-31T23:59:59" },
+          "status": { "type": "integer", "enum": [0, 1], "default": 1, "description": "0: Inactive, 1: Active" }
         }
       }
     }

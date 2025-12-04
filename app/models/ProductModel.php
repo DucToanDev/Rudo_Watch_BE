@@ -221,7 +221,7 @@ class Products
     }
 
     // Tạo sản phẩm mới
-    public function create($data)
+    public function create($data, $imagePath = null, $thumbnailPath = null)
     {
         try {
             if (empty($data->slug)) {
@@ -257,9 +257,15 @@ class Products
                 $specifications = json_encode($defaultSpecs);
             }
 
+            // Xử lý image - ưu tiên từ upload, sau đó từ data
+            $image = $imagePath ?? ($data->image ?? null);
+
             // Xử lý thumbnail - encode thành JSON nếu là array/object với giá trị mặc định
             $thumbnail = null;
-            if (isset($data->thumbnail)) {
+            if ($thumbnailPath) {
+                // Nếu có upload thumbnail
+                $thumbnail = json_encode([$thumbnailPath]);
+            } elseif (isset($data->thumbnail)) {
                 if (is_string($data->thumbnail)) {
                     $decoded = json_decode($data->thumbnail);
                     $thumbnail = (json_last_error() === JSON_ERROR_NONE) ? $data->thumbnail : json_encode($data->thumbnail);
@@ -290,7 +296,7 @@ class Products
             $stmt->bindParam(':slug', $slug);
             $stmt->bindParam(':specifications', $specifications);
             $stmt->bindParam(':description', $data->description);
-            $stmt->bindParam(':image', $data->image);
+            $stmt->bindParam(':image', $image);
             $stmt->bindParam(':thumbnail', $thumbnail);
             $status = isset($data->status) ? $data->status : 1;
             $stmt->bindParam(':status', $status, PDO::PARAM_INT);
@@ -307,7 +313,7 @@ class Products
     }
 
     // Cập nhật sản phẩm
-    public function update($id, $data)
+    public function update($id, $data, $imagePath = null, $thumbnailPath = null)
     {
         try {
             $existing = $this->getById($id);
@@ -315,19 +321,22 @@ class Products
                 return null;
             }
 
-            $slug = $existing['slug'];
-            if (isset($data->slug) && !empty($data->slug) && $data->slug !== $existing['slug']) {
+            // Lấy dữ liệu từ data key nếu có
+            $existingData = isset($existing['data']) ? $existing['data'] : $existing;
+
+            $slug = $existingData['slug'] ?? '';
+            if (isset($data->slug) && !empty($data->slug) && $data->slug !== $existingData['slug']) {
                 $slug = create_slug($data->slug, function ($slug) use ($id) {
                     return slug_exists($this->conn, $this->table_name, $slug, $id);
                 }, $id);
-            } elseif (isset($data->name) && $data->name !== $existing['name']) {
+            } elseif (isset($data->name) && $data->name !== $existingData['name']) {
                 $slug = create_slug($data->name, function ($slug) use ($id) {
                     return slug_exists($this->conn, $this->table_name, $slug, $id);
                 }, $id);
             }
 
             // Xử lý specifications - encode thành JSON nếu là Array với fallback
-            $specifications = $existing['specifications'];
+            $specifications = $existingData['specifications'] ?? null;
             if (isset($data->specifications)) {
                 if (is_string($data->specifications)) {
                     $decoded = json_decode($data->specifications);
@@ -336,7 +345,7 @@ class Products
                     // Nếu là Array, encode thành JSON
                     $specifications = json_encode($data->specifications);
                 }
-            } else if (empty($existing['specifications']) || $existing['specifications'] === 'null') {
+            } else if (empty($existingData['specifications']) || $existingData['specifications'] === 'null') {
                 // Nếu không có specifications cũ, thêm mặc định
                 $defaultSpecs = [
                     "Kích thước: 45mm",
@@ -347,9 +356,15 @@ class Products
                 $specifications = json_encode($defaultSpecs);
             }
 
+            // Xử lý image - ưu tiên từ upload, sau đó từ data, cuối cùng giữ nguyên cũ
+            $image = $imagePath ?? ($data->image ?? $existingData['image'] ?? null);
+
             // Xử lý thumbnail - encode thành JSON nếu là array/object với fallback
-            $thumbnail = $existing['thumbnail']; // Giữ nguyên giá trị cũ nếu không có update
-            if (isset($data->thumbnail)) {
+            $thumbnail = $existingData['thumbnail'] ?? null; // Giữ nguyên giá trị cũ nếu không có update
+            if ($thumbnailPath) {
+                // Nếu có upload thumbnail mới
+                $thumbnail = json_encode([$thumbnailPath]);
+            } elseif (isset($data->thumbnail)) {
                 if (is_string($data->thumbnail)) {
                     $decoded = json_decode($data->thumbnail);
                     $thumbnail = (json_last_error() === JSON_ERROR_NONE) ? $data->thumbnail : json_encode($data->thumbnail);
@@ -357,13 +372,16 @@ class Products
                     // Nếu là Array, encode thành JSON
                     $thumbnail = json_encode($data->thumbnail);
                 }
-            } else if (empty($existing['thumbnail']) || $existing['thumbnail'] === 'null') {
+            } else if (empty($existingData['thumbnail']) || $existingData['thumbnail'] === 'null') {
                 // Nếu không có thumbnail cũ, thêm mặc định
                 $defaultThumbnails = [
                     "uploads/products/place-holder-1.png",
                     "uploads/products/place-holder-2.png"
                 ];
                 $thumbnail = json_encode($defaultThumbnails);
+            } else if (is_array($existingData['thumbnail'])) {
+                // Nếu thumbnail cũ là array, encode lại thành JSON
+                $thumbnail = json_encode($existingData['thumbnail']);
             }
 
             $query = "UPDATE " . $this->table_name . " SET 
@@ -382,16 +400,23 @@ class Products
             $stmt = $this->conn->prepare($query);
 
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-            $stmt->bindParam(':model_code', $data->model_code);
-            $stmt->bindParam(':category_id', $data->category_id, PDO::PARAM_INT);
-            $stmt->bindParam(':brand_id', $data->brand_id, PDO::PARAM_INT);
-            $stmt->bindParam(':name', $data->name);
+            $modelCode = $data->model_code ?? $existingData['model_code'] ?? null;
+            $categoryId = $data->category_id ?? $existingData['category_id'];
+            $brandId = $data->brand_id ?? $existingData['brand_id'];
+            $name = $data->name ?? $existingData['name'];
+            $description = $data->description ?? $existingData['description'] ?? null;
+            $status = $data->status ?? $existingData['status'] ?? 1;
+
+            $stmt->bindParam(':model_code', $modelCode);
+            $stmt->bindParam(':category_id', $categoryId, PDO::PARAM_INT);
+            $stmt->bindParam(':brand_id', $brandId, PDO::PARAM_INT);
+            $stmt->bindParam(':name', $name);
             $stmt->bindParam(':slug', $slug);
             $stmt->bindParam(':specifications', $specifications);
-            $stmt->bindParam(':description', $data->description);
-            $stmt->bindParam(':image', $data->image);
+            $stmt->bindParam(':description', $description);
+            $stmt->bindParam(':image', $image);
             $stmt->bindParam(':thumbnail', $thumbnail);
-            $stmt->bindParam(':status', $data->status, PDO::PARAM_INT);
+            $stmt->bindParam(':status', $status, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
                 return $this->getById($id);

@@ -89,7 +89,7 @@ class ProductVariants
     }
 
     // Tạo variant mới
-    public function create($data)
+    public function create($data, $imagePath = null)
     {
         try {
             if (empty($data->product_id) || empty($data->price)) {
@@ -121,11 +121,14 @@ class ProductVariants
                 }
             }
 
+            // Ưu tiên imagePath từ upload, sau đó từ data
+            $image = $imagePath ?? ($data->image ?? null);
+
             $insertData = [
                 'product_id' => $data->product_id,
                 'price' => $data->price,
-                'colors' => $data->colors,
-                'image' => $data->image ?? null,
+                'colors' => $data->colors ?? null,
+                'image' => $image,
                 'size' => $data->size ?? null,
                 'sku' => $data->sku ?? null,
                 'quantity' => $data->quantity ?? 0
@@ -153,7 +156,7 @@ class ProductVariants
         }
     }
 
-    public function update($id, $data)
+    public function update($id, $data, $imagePath = null)
     {
         try {
             $existing = $this->getById($id);
@@ -202,7 +205,10 @@ class ProductVariants
             if (isset($data->colors)) {
                 $updateData['colors'] = $data->colors;
             }
-            if (isset($data->image)) {
+            // Ưu tiên imagePath từ upload
+            if ($imagePath) {
+                $updateData['image'] = $imagePath;
+            } elseif (isset($data->image)) {
                 $updateData['image'] = $data->image;
             }
             if (isset($data->sku)) {

@@ -6,11 +6,43 @@ class ProductVariantsController
 {
     private $variantModel;
     private $response;
+    private $uploadDir = __DIR__ . '/../../../../uploads/products/';
 
     public function __construct()
     {
         $this->variantModel = new ProductVariants();
         $this->response = new Response();
+
+        // Tạo thư mục uploads nếu chưa có
+        if (!is_dir($this->uploadDir)) {
+            mkdir($this->uploadDir, 0755, true);
+        }
+    }
+
+    // GET /api/v1/product-variants/product/:id - Lấy variants theo product_id
+    public function byProduct($productId)
+    {
+        try {
+            if (!is_numeric($productId)) {
+                $this->response->json([
+                    'success' => false,
+                    'error' => 'Product ID không hợp lệ'
+                ], 400);
+                return;
+            }
+
+            $variants = $this->variantModel->getByProductId($productId);
+
+            $this->response->json([
+                'success' => true,
+                'data' => $variants
+            ], 200);
+        } catch (Exception $e) {
+            $this->response->json([
+                'success' => false,
+                'error' => 'Lỗi: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     // GET /api/v1/product-variants/:id - Lấy variant theo ID
@@ -51,6 +83,11 @@ class ProductVariantsController
     public function store($data)
     {
         try {
+            // Kiểm tra nếu có file upload (multipart/form-data)
+            if (!empty($_FILES['image']) || !empty($_POST)) {
+                $data = (object) $_POST;
+            }
+
             // Validate input
             if (empty($data->product_id) || empty($data->price)) {
                 $this->response->json([
@@ -84,7 +121,20 @@ class ProductVariantsController
                 return;
             }
 
-            $result = $this->variantModel->create($data);
+            // Upload ảnh nếu có
+            $imagePath = null;
+            if (!empty($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $imagePath = $this->uploadImage($_FILES['image']);
+                if (!$imagePath) {
+                    $this->response->json([
+                        'success' => false,
+                        'error' => 'Không thể upload ảnh. Chỉ chấp nhận jpeg, png, gif, webp và tối đa 5MB'
+                    ], 400);
+                    return;
+                }
+            }
+
+            $result = $this->variantModel->create($data, $imagePath);
 
             if ($result['success']) {
                 $this->response->json([
@@ -118,7 +168,22 @@ class ProductVariantsController
                 return;
             }
 
-            $data = json_decode(file_get_contents("php://input"));
+            // Lấy variant hiện tại để xóa ảnh cũ nếu cần
+            $existingVariant = $this->variantModel->getById($id);
+            if (!$existingVariant) {
+                $this->response->json([
+                    'success' => false,
+                    'error' => 'Variant không tồn tại'
+                ], 404);
+                return;
+            }
+
+            // Kiểm tra nếu có file upload (multipart/form-data)
+            if (!empty($_FILES['image']) || !empty($_POST)) {
+                $data = (object) $_POST;
+            } else {
+                $data = json_decode(file_get_contents("php://input"));
+            }
 
             if (isset($data->price) && !is_numeric($data->price)) {
                 $this->response->json([
@@ -160,7 +225,24 @@ class ProductVariantsController
                 return;
             }
 
-            $result = $this->variantModel->update($id, $data);
+            // Upload ảnh mới nếu có
+            $imagePath = null;
+            if (!empty($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $imagePath = $this->uploadImage($_FILES['image']);
+                if (!$imagePath) {
+                    $this->response->json([
+                        'success' => false,
+                        'error' => 'Không thể upload ảnh. Chỉ chấp nhận jpeg, png, gif, webp và tối đa 5MB'
+                    ], 400);
+                    return;
+                }
+                // Xóa ảnh cũ nếu có
+                if (!empty($existingVariant['image'])) {
+                    $this->deleteImage($existingVariant['image']);
+                }
+            }
+
+            $result = $this->variantModel->update($id, $data, $imagePath);
 
             if ($result['success']) {
                 $this->response->json([
@@ -214,5 +296,48 @@ class ProductVariantsController
             ], 500);
         }
     }
+
+    /**
+     * Upload ảnh variant
+     */
+    private function uploadImage($file, $prefix = 'variant_')
+    {
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $maxSize = 5 * 1024 * 1024; // 5MB
+
+        // Kiểm tra loại file
+        if (!in_array($file['type'], $allowedTypes)) {
+            return null;
+        }
+
+        // Kiểm tra kích thước
+        if ($file['size'] > $maxSize) {
+            return null;
+        }
+
+        // Tạo tên file unique
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = $prefix . time() . '_' . uniqid() . '.' . $extension;
+        $targetPath = $this->uploadDir . $filename;
+
+        // Upload file
+        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+            return 'uploads/products/' . $filename;
+        }
+
+        return null;
+    }
+
+    /**
+     * Xóa ảnh cũ
+     */
+    private function deleteImage($imagePath)
+    {
+        if (empty($imagePath)) return;
+
+        $fullPath = __DIR__ . '/../../../../' . $imagePath;
+        if (file_exists($fullPath)) {
+            unlink($fullPath);
+        }
+    }
 }
-?>

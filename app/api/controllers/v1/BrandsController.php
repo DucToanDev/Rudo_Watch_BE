@@ -283,4 +283,21 @@ class BrandsController
 
         return false;
     }
+
+    /**
+     * Lấy danh sách thương hiệu đang hoạt động
+     * GET /api/v1/brands/active
+     */
+    public function active()
+    {
+        try {
+            $brands = $this->brandsModel->getActive();
+            $this->response->json([
+                'success' => true,
+                'data' => $brands
+            ], 200);
+        } catch (Exception $e) {
+            $this->response->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

@@ -31,6 +31,9 @@ class Router
 
     // Routes đặc biệt có pattern riêng
     private const SPECIAL_ROUTES = [
+        // Home
+        'GET home'                      => ['HomeController', 'index'],
+
         // Addresses
         'GET addresses/default'         => ['AddressesController', 'default'],
         'PUT addresses/{id}/set-default' => ['AddressesController', 'setDefault'],
@@ -48,6 +51,7 @@ class Router
         'PUT users/{id}/status'         => ['UserController', 'updateUserStatus'],
 
         // Cart
+        'GET cart'          => ['CartsController', 'index'],
         'POST cart/add'     => ['CartsController', 'add'],
         'PUT cart/update'   => ['CartsController', 'update'],
         'DELETE cart/remove' => ['CartsController', 'remove'],
@@ -56,23 +60,54 @@ class Router
         'GET cart/count'    => ['CartsController', 'count'],
 
         // Shipping
+        'GET shipping-methods'            => ['ShippingMethodsController', 'index'],
+        'GET shipping-methods/{id}'       => ['ShippingMethodsController', 'show'],
+        'POST shipping-methods'           => ['ShippingMethodsController', 'store'],
+        'PUT shipping-methods/{id}'       => ['ShippingMethodsController', 'update'],
+        'DELETE shipping-methods/{id}'    => ['ShippingMethodsController', 'destroy'],
         'POST shipping-methods/calculate' => ['ShippingMethodsController', 'calculate'],
         'GET shipping-methods/admin'      => ['ShippingMethodsController', 'admin'],
 
         // Products
-        'GET products/featured' => ['ProductsController', 'featured'],
-        'GET products/latest'   => ['ProductsController', 'latest'],
+        'GET products/featured'           => ['ProductsController', 'featured'],
+        'GET products/latest'             => ['ProductsController', 'latest'],
+        'GET products/category/{id}'      => ['ProductsController', 'category'],
+        'GET products/brand/{id}'         => ['ProductsController', 'brand'],
+
+        // Product Variants
+        'GET product-variants/product/{id}' => ['ProductVariantsController', 'byProduct'],
+
+        // Vouchers
+        'POST vouchers/validate' => ['VouchersController', 'validate'],
+        'POST vouchers/apply'    => ['VouchersController', 'apply'],
+        'GET vouchers/check/{id}' => ['VouchersController', 'check'],
+
+        // Categories
+        'GET categories/active'  => ['CategoriesController', 'active'],
+
+        // Brands
+        'GET brands/active'      => ['BrandsController', 'active'],
     ];
 
     // Chuyển đổi resource số ít -> số nhiều
     private const PLURAL_MAP = [
         'cart' => 'Carts',
         'category' => 'Categories',
+        'categories' => 'Categories',
         'brand' => 'Brands',
+        'brands' => 'Brands',
         'address' => 'Addresses',
+        'addresses' => 'Addresses',
         'order' => 'Orders',
         'orders' => 'Orders',
         'users' => 'User',
+        'user' => 'User',
+        'product' => 'Products',
+        'products' => 'Products',
+        'product-variants' => 'ProductVariants',
+        'voucher' => 'Vouchers',
+        'vouchers' => 'Vouchers',
+        'shipping-methods' => 'ShippingMethods',
     ];
 
     // ===== CONSTRUCTOR =====

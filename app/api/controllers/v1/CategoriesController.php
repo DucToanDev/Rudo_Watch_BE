@@ -215,4 +215,21 @@ class CategoriesController
 
         return $errors;
     }
+
+    /**
+     * Lấy danh sách danh mục đang hoạt động
+     * GET /api/v1/categories/active
+     */
+    public function active()
+    {
+        try {
+            $categories = $this->categoriesModel->getActive();
+            $this->response->json([
+                'success' => true,
+                'data' => $categories
+            ], 200);
+        } catch (Exception $e) {
+            $this->response->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }
