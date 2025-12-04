@@ -31,7 +31,7 @@ class Users
     {
         try {
             // check email ton tai chua
-            $checkQuery = "SELECT id FROM " . $this->table_name . " WHERE email = :email LIMIT 1";
+            $checkQuery = "SELECT id FROM " . $this->table_name . " USE INDEX (idx_email) WHERE email = :email LIMIT 1";
             $checkStmt = $this->conn->prepare($checkQuery);
             $checkStmt->bindParam(':email', $data['email']);
             $checkStmt->execute();
@@ -81,7 +81,7 @@ class Users
     {
         try {
             $query = "SELECT id, fullname, email, password, phone, role, status, api_token 
-                     FROM " . $this->table_name . " 
+                     FROM " . $this->table_name . " USE INDEX (idx_email_status) 
                      WHERE email = :email AND status = 1 LIMIT 1";
 
             $stmt = $this->conn->prepare($query);
@@ -137,7 +137,7 @@ class Users
     {
         try {
             $query = "SELECT id, fullname, email, phone, role, status, api_token, created_at 
-                     FROM " . $this->table_name . " 
+                     FROM " . $this->table_name . " USE INDEX (PRIMARY) 
                      WHERE id = :id LIMIT 1";
 
             $stmt = $this->conn->prepare($query);
@@ -158,7 +158,7 @@ class Users
     {
         try {
             $query = "SELECT id, fullname, email, phone, role, status, created_at 
-                     FROM " . $this->table_name . " 
+                     FROM " . $this->table_name . " USE INDEX (idx_api_token_status) 
                      WHERE api_token = :token AND status = 1 LIMIT 1";
 
             $stmt = $this->conn->prepare($query);
@@ -189,7 +189,7 @@ class Users
             }
 
             if (isset($data['email'])) {
-                $checkQuery = "SELECT id FROM " . $this->table_name . " WHERE email = :email AND id != :id LIMIT 1";
+                $checkQuery = "SELECT id FROM " . $this->table_name . " USE INDEX (idx_email) WHERE email = :email AND id != :id LIMIT 1";
                 $checkStmt = $this->conn->prepare($checkQuery);
                 $checkStmt->bindParam(':email', $data['email']);
                 $checkStmt->bindParam(':id', $userId);
@@ -242,7 +242,7 @@ class Users
     public function changePassword($userId, $oldPassword, $newPassword)
     {
         try {
-            $query = "SELECT password FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
+            $query = "SELECT password FROM " . $this->table_name . " USE INDEX (PRIMARY) WHERE id = :id LIMIT 1";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':id', $userId);
             $stmt->execute();
@@ -313,7 +313,7 @@ class Users
             $offset = ($page - 1) * $limit;
 
             // Query đếm tổng
-            $countQuery = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE 1=1";
+            $countQuery = "SELECT COUNT(*) as total FROM " . $this->table_name . " USE INDEX (idx_role_status_created) WHERE 1=1";
             $conditions = [];
             $bindParams = [];
 
@@ -345,7 +345,7 @@ class Users
 
             // Query lấy danh sách
             $query = "SELECT id, fullname, email, phone, role, status, created_at 
-                      FROM " . $this->table_name . " WHERE 1=1";
+                      FROM " . $this->table_name . " USE INDEX (idx_role_status_created) WHERE 1=1";
 
             if (!empty($conditions)) {
                 $query .= " AND " . implode(" AND ", $conditions);
@@ -450,7 +450,7 @@ class Users
     {
         try {
             // Kiểm tra admin có quyền không
-            $adminQuery = "SELECT role FROM " . $this->table_name . " WHERE id = :admin_id AND status = 1 LIMIT 1";
+            $adminQuery = "SELECT role FROM " . $this->table_name . " USE INDEX (PRIMARY) WHERE id = :admin_id AND status = 1 LIMIT 1";
             $adminStmt = $this->conn->prepare($adminQuery);
             $adminStmt->bindParam(':admin_id', $adminId);
             $adminStmt->execute();
@@ -473,7 +473,7 @@ class Users
             }
 
             // Kiểm tra user cần update có tồn tại không
-            $userQuery = "SELECT id, role, fullname FROM " . $this->table_name . " WHERE id = :user_id LIMIT 1";
+            $userQuery = "SELECT id, role, fullname FROM " . $this->table_name . " USE INDEX (PRIMARY) WHERE id = :user_id LIMIT 1";
             $userStmt = $this->conn->prepare($userQuery);
             $userStmt->bindParam(':user_id', $userId);
             $userStmt->execute();
