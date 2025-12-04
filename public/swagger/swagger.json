@@ -30,7 +30,9 @@
     { "name": "Orders", "description": "Đơn hàng" },
     { "name": "Addresses", "description": "Địa chỉ giao hàng" },
     { "name": "Shipping", "description": "Phương thức vận chuyển" },
-    { "name": "Vouchers", "description": "Quản lý mã giảm giá" }
+    { "name": "Vouchers", "description": "Quản lý mã giảm giá" },
+    { "name": "Product Variants", "description": "Quản lý biến thể sản phẩm" },
+    { "name": "Home", "description": "Trang chủ" }
   ],
   "paths": {
     "/register": {
@@ -1171,6 +1173,293 @@
           "400": { "description": "Voucher không hợp lệ" }
         }
       }
+    },
+    "/home": {
+      "get": {
+        "tags": ["Home"],
+        "summary": "Lấy dữ liệu trang chủ",
+        "parameters": [
+          { "name": "latest_limit", "in": "query", "schema": { "type": "integer", "default": 8 }, "description": "Số sản phẩm mới nhất" },
+          { "name": "male_limit", "in": "query", "schema": { "type": "integer", "default": 4 }, "description": "Số sản phẩm nam" },
+          { "name": "female_limit", "in": "query", "schema": { "type": "integer", "default": 4 }, "description": "Số sản phẩm nữ" },
+          { "name": "posts_limit", "in": "query", "schema": { "type": "integer", "default": 4 }, "description": "Số bài viết" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dữ liệu trang chủ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "latest_products": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } },
+                    "male_products": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } },
+                    "female_products": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } },
+                    "posts": { "type": "array", "items": { "type": "object" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/product-variants": {
+      "get": {
+        "tags": ["Product Variants"],
+        "summary": "Lấy danh sách tất cả biến thể",
+        "responses": {
+          "200": {
+            "description": "Danh sách biến thể",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/ProductVariant" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Product Variants"],
+        "summary": "Tạo biến thể mới",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": { "$ref": "#/components/schemas/ProductVariantRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tạo biến thể thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "data": { "$ref": "#/components/schemas/ProductVariant" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Dữ liệu không hợp lệ" }
+        }
+      }
+    },
+    "/product-variants/{id}": {
+      "get": {
+        "tags": ["Product Variants"],
+        "summary": "Lấy chi tiết biến thể",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chi tiết biến thể",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/ProductVariant" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Không tìm thấy biến thể" }
+        }
+      },
+      "put": {
+        "tags": ["Product Variants"],
+        "summary": "Cập nhật biến thể",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": { "$ref": "#/components/schemas/ProductVariantRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cập nhật thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "data": { "$ref": "#/components/schemas/ProductVariant" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Không tìm thấy biến thể" }
+        }
+      },
+      "delete": {
+        "tags": ["Product Variants"],
+        "summary": "Xóa biến thể",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Xóa thành công",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Không tìm thấy biến thể" }
+        }
+      }
+    },
+    "/product-variants/product/{id}": {
+      "get": {
+        "tags": ["Product Variants"],
+        "summary": "Lấy biến thể theo sản phẩm",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "Product ID" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Danh sách biến thể của sản phẩm",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/ProductVariant" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories/active": {
+      "get": {
+        "tags": ["Categories"],
+        "summary": "Lấy danh mục đang hoạt động",
+        "responses": {
+          "200": {
+            "description": "Danh sách danh mục active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Category" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/brands/active": {
+      "get": {
+        "tags": ["Brands"],
+        "summary": "Lấy thương hiệu đang hoạt động",
+        "responses": {
+          "200": {
+            "description": "Danh sách thương hiệu active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Brand" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products/category/{id}": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Lấy sản phẩm theo danh mục",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "Category ID" },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" }, "description": "Giới hạn số lượng" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Danh sách sản phẩm",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products/brand/{id}": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Lấy sản phẩm theo thương hiệu",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "Brand ID" },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" }, "description": "Giới hạn số lượng" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Danh sách sản phẩm",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1502,6 +1791,34 @@
           "start_date": { "type": "string", "format": "date-time", "example": "2024-06-01T00:00:00" },
           "end_date": { "type": "string", "format": "date-time", "example": "2024-08-31T23:59:59" },
           "status": { "type": "integer", "enum": [0, 1], "default": 1, "description": "0: Inactive, 1: Active" }
+        }
+      },
+      "ProductVariant": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "product_id": { "type": "integer" },
+          "product_name": { "type": "string" },
+          "price": { "type": "number", "example": 3500000 },
+          "size": { "type": "string", "example": "42mm" },
+          "sku": { "type": "string", "example": "CAS-EDF-001-42" },
+          "quantity": { "type": "integer", "example": 10 },
+          "image": { "type": "string", "example": "uploads/products/variant_123.png" },
+          "colors": { "type": "string", "description": "JSON string của màu sắc" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ProductVariantRequest": {
+        "type": "object",
+        "required": ["product_id", "price"],
+        "properties": {
+          "product_id": { "type": "integer", "description": "ID sản phẩm" },
+          "price": { "type": "number", "example": 3500000, "description": "Giá biến thể" },
+          "size": { "type": "string", "example": "42mm", "description": "Kích thước" },
+          "sku": { "type": "string", "example": "CAS-EDF-001-42", "description": "Mã SKU (unique)" },
+          "quantity": { "type": "integer", "example": 10, "description": "Số lượng tồn kho" },
+          "colors": { "type": "string", "description": "Màu sắc (JSON string)" },
+          "image": { "type": "string", "format": "binary", "description": "File ảnh biến thể" }
         }
       }
     }
