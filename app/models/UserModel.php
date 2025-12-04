@@ -310,10 +310,28 @@ class Users
             $search = $params['search'] ?? null;
             $role = isset($params['role']) ? $params['role'] : null;
             $status = isset($params['status']) ? $params['status'] : null;
+            $lastId = isset($params['last_id']) ? (int)$params['last_id'] : null;
+            $lastCreatedAt = $params['last_created_at'] ?? null;
             $offset = ($page - 1) * $limit;
 
+            // Xác định index phù hợp dựa trên điều kiện filter
+            // Ưu tiên bên trái: role -> status -> created_at
+            $indexHint = "USE INDEX (idx_created_at_desc)"; // Default: chỉ phân trang
+
+            if ($role !== null && $role !== '' && $status !== null && $status !== '') {
+                $indexHint = "USE INDEX (idx_role_status_created)"; // Filter cả role và status
+            } elseif ($role !== null && $role !== '') {
+                $indexHint = "USE INDEX (idx_role_created)"; // Chỉ filter role
+            } elseif ($status !== null && $status !== '') {
+                $indexHint = "USE INDEX (idx_status_created)"; // Chỉ filter status
+            }
+
+            if ($search) {
+                $indexHint = "USE INDEX (idx_fullname_email_phone)"; // Search cần index khác
+            }
+
             // Query đếm tổng
-            $countQuery = "SELECT COUNT(*) as total FROM " . $this->table_name . " USE INDEX (idx_role_status_created) WHERE 1=1";
+            $countQuery = "SELECT COUNT(*) as total FROM " . $this->table_name . " " . $indexHint . " WHERE 1=1";
             $conditions = [];
             $bindParams = [];
 
@@ -343,22 +361,34 @@ class Users
             $countStmt->execute();
             $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
 
-            // Query lấy danh sách
+            // Query lấy danh sách với keyset pagination (hiệu quả hơn offset khi page lớn)
             $query = "SELECT id, fullname, email, phone, role, status, created_at 
-                      FROM " . $this->table_name . " USE INDEX (idx_role_status_created) WHERE 1=1";
+                      FROM " . $this->table_name . " " . $indexHint . " WHERE 1=1";
 
             if (!empty($conditions)) {
                 $query .= " AND " . implode(" AND ", $conditions);
             }
 
-            $query .= " ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
+            // Keyset pagination: sử dụng khi có last_id và last_created_at
+            if ($lastId !== null && $lastCreatedAt !== null) {
+                $query .= " AND (created_at < :last_created_at OR (created_at = :last_created_at2 AND id < :last_id))";
+                $bindParams[':last_created_at'] = $lastCreatedAt;
+                $bindParams[':last_created_at2'] = $lastCreatedAt;
+                $bindParams[':last_id'] = $lastId;
+                $query .= " ORDER BY created_at DESC, id DESC LIMIT :limit";
+            } else {
+                // Fallback về offset pagination
+                $query .= " ORDER BY created_at DESC, id DESC LIMIT :limit OFFSET :offset";
+            }
 
             $stmt = $this->conn->prepare($query);
             foreach ($bindParams as $key => $value) {
                 $stmt->bindValue($key, $value);
             }
             $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+            if ($lastId === null || $lastCreatedAt === null) {
+                $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+            }
             $stmt->execute();
 
             $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -371,6 +401,9 @@ class Users
                 $user['status_name'] = $user['status'] == 1 ? 'Hoạt động' : 'Bị khóa';
             }
 
+            // Thêm thông tin cho keyset pagination
+            $lastUser = !empty($users) ? end($users) : null;
+
             return [
                 'success' => true,
                 'data' => [
@@ -379,7 +412,12 @@ class Users
                         'current_page' => $page,
                         'per_page' => $limit,
                         'total' => (int)$total,
-                        'total_pages' => ceil($total / $limit)
+                        'total_pages' => ceil($total / $limit),
+                        // Keyset pagination info
+                        'next_cursor' => $lastUser ? [
+                            'last_id' => (int)$lastUser['id'],
+                            'last_created_at' => $lastUser['created_at']
+                        ] : null
                     ]
                 ]
             ];
