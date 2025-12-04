@@ -27,6 +27,52 @@ class ProductVariants
         $this->response = new Response();
     }
 
+    /**
+     * Normalize colors input về JSON string cho MySQL JSON column
+     * Chấp nhận:
+     * - null/empty -> null
+     * - String "Đen, Trắng, Vàng" -> '["Đen", "Trắng", "Vàng"]'
+     * - Array ["Đen", "Trắng"] -> '["Đen", "Trắng"]'
+     * - JSON string '["Đen"]' -> '["Đen"]' (giữ nguyên)
+     */
+    private function normalizeColors($colors)
+    {
+        if (empty($colors)) {
+            return null;
+        }
+
+        // Nếu là string
+        if (is_string($colors)) {
+            $colors = trim($colors);
+            if (empty($colors)) {
+                return null;
+            }
+
+            // Thử parse JSON trước
+            $decoded = json_decode($colors, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                // Đã là JSON array hợp lệ, clean up và trả về
+                $cleaned = array_map('trim', $decoded);
+                $cleaned = array_filter($cleaned, fn($c) => !empty($c));
+                return empty($cleaned) ? null : json_encode(array_values($cleaned), JSON_UNESCAPED_UNICODE);
+            }
+
+            // Không phải JSON -> split by comma
+            $colorArray = array_map('trim', explode(',', $colors));
+            $colorArray = array_filter($colorArray, fn($c) => !empty($c));
+            return empty($colorArray) ? null : json_encode(array_values($colorArray), JSON_UNESCAPED_UNICODE);
+        }
+
+        // Nếu là array
+        if (is_array($colors)) {
+            $cleaned = array_map('trim', $colors);
+            $cleaned = array_filter($cleaned, fn($c) => !empty($c));
+            return empty($cleaned) ? null : json_encode(array_values($cleaned), JSON_UNESCAPED_UNICODE);
+        }
+
+        return null;
+    }
+
     // Lấy tất cả variants
     public function getAll()
     {
@@ -140,10 +186,13 @@ class ProductVariants
             // Ưu tiên imagePath từ upload, sau đó từ data
             $image = $imagePath ?? ($data->image ?? null);
 
+            // Xử lý colors - normalize về JSON array
+            $colors = $this->normalizeColors($data->colors ?? null);
+
             $insertData = [
                 'product_id' => $data->product_id,
                 'price' => $data->price,
-                'colors' => $data->colors ?? null,
+                'colors' => $colors,
                 'image' => $image,
                 'size' => $data->size ?? null,
                 'sku' => $data->sku ?? null,
@@ -219,7 +268,7 @@ class ProductVariants
                 $updateData['size'] = $data->size;
             }
             if (isset($data->colors)) {
-                $updateData['colors'] = $data->colors;
+                $updateData['colors'] = $this->normalizeColors($data->colors);
             }
             // Ưu tiên imagePath từ upload
             if ($imagePath) {
