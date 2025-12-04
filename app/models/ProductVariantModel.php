@@ -27,6 +27,22 @@ class ProductVariants
         $this->response = new Response();
     }
 
+    // Lấy tất cả variants
+    public function getAll()
+    {
+        try {
+            $query = "SELECT pv.*, p.name as product_name 
+                      FROM " . $this->table_name . " pv
+                      LEFT JOIN products p ON pv.product_id = p.id
+                      ORDER BY pv.id DESC";
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw $e;
+        }
+    }
+
     // Lấy variant theo ID
     public function getById($id)
     {

@@ -19,6 +19,23 @@ class ProductVariantsController
         }
     }
 
+    // GET /api/v1/product-variants - Lấy tất cả variants
+    public function index()
+    {
+        try {
+            $variants = $this->variantModel->getAll();
+            $this->response->json([
+                'success' => true,
+                'data' => $variants
+            ], 200);
+        } catch (Exception $e) {
+            $this->response->json([
+                'success' => false,
+                'error' => 'Lỗi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     // GET /api/v1/product-variants/product/:id - Lấy variants theo product_id
     public function byProduct($productId)
     {
