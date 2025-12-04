@@ -9,6 +9,26 @@ class Users
     private $table_name = 'users';
     public $response;
 
+    // Cache để tránh query lặp lại - dùng SplObjectStorage hoặc array
+    private static $userCache = [];
+    private static $cacheExpiry = [];
+    private const CACHE_TTL = 300; // 5 phút
+
+    // Lookup tables - O(1) access thay vì if-else
+    private static $roleLookup = [
+        0 => 'User',
+        1 => 'Admin'
+    ];
+
+    private static $statusLookup = [
+        0 => 'Bị khóa',
+        1 => 'Hoạt động'
+    ];
+
+    // Columns cần select - tránh lặp lại string
+    private const USER_COLUMNS = 'id, fullname, email, phone, role, status, api_token, created_at';
+    private const USER_COLUMNS_NO_TOKEN = 'id, fullname, email, phone, role, status, created_at';
+
     public $id;
     public $fullname;
     public $email;
@@ -24,6 +44,57 @@ class Users
         $database = new Database();
         $this->conn = $database->getConnection();
         $this->response = new Response();
+    }
+
+    /**
+     * Lấy từ cache hoặc null nếu hết hạn
+     */
+    private function getFromCache($key)
+    {
+        if (isset(self::$userCache[$key]) && isset(self::$cacheExpiry[$key])) {
+            if (time() < self::$cacheExpiry[$key]) {
+                return self::$userCache[$key];
+            }
+            // Hết hạn - xóa cache
+            unset(self::$userCache[$key], self::$cacheExpiry[$key]);
+        }
+        return null;
+    }
+
+    /**
+     * Lưu vào cache
+     */
+    private function setCache($key, $value)
+    {
+        self::$userCache[$key] = $value;
+        self::$cacheExpiry[$key] = time() + self::CACHE_TTL;
+    }
+
+    /**
+     * Xóa cache của user
+     */
+    private function clearCache($userId)
+    {
+        unset(self::$userCache["user_$userId"], self::$cacheExpiry["user_$userId"]);
+    }
+
+    /**
+     * Format user data - dùng lookup table O(1)
+     */
+    private function formatUser(array &$user): void
+    {
+        $user['role'] = (int)$user['role'];
+        $user['status'] = (int)$user['status'];
+        $user['role_name'] = self::$roleLookup[$user['role']] ?? 'Unknown';
+        $user['status_name'] = self::$statusLookup[$user['status']] ?? 'Unknown';
+    }
+
+    /**
+     * Format nhiều users - dùng array_walk nhanh hơn foreach
+     */
+    private function formatUsers(array &$users): void
+    {
+        array_walk($users, [$this, 'formatUser']);
     }
 
     // register
@@ -130,22 +201,34 @@ class Users
     private function updateToken($userId, $token)
     {
         update($this->conn, $this->table_name, ['api_token' => $token], $userId);
+        $this->clearCache($userId);
     }
 
-    // Lấy user theo ID
+    // Lấy user theo ID - có cache
     public function getById($id)
     {
         try {
-            $query = "SELECT id, fullname, email, phone, role, status, api_token, created_at 
-                     FROM " . $this->table_name . " USE INDEX (PRIMARY) 
+            $cacheKey = "user_$id";
+
+            // Kiểm tra cache trước
+            $cached = $this->getFromCache($cacheKey);
+            if ($cached !== null) {
+                return $cached;
+            }
+
+            $query = "SELECT " . self::USER_COLUMNS . " 
+                     FROM " . $this->table_name . " 
                      WHERE id = :id LIMIT 1";
 
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $id);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
 
-            if ($stmt->rowCount() > 0) {
-                return $stmt->fetch(PDO::FETCH_ASSOC);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user) {
+                $this->setCache($cacheKey, $user);
+                return $user;
             }
             return null;
         } catch (PDOException $e) {
@@ -153,20 +236,31 @@ class Users
         }
     }
 
-    // Lấy user theo token
+    // Lấy user theo token - có cache
     public function getByToken($token)
     {
         try {
-            $query = "SELECT id, fullname, email, phone, role, status, created_at 
-                     FROM " . $this->table_name . " USE INDEX (idx_api_token_status) 
+            $cacheKey = "token_$token";
+
+            // Kiểm tra cache trước
+            $cached = $this->getFromCache($cacheKey);
+            if ($cached !== null) {
+                return $cached;
+            }
+
+            $query = "SELECT " . self::USER_COLUMNS_NO_TOKEN . " 
+                     FROM " . $this->table_name . " 
                      WHERE api_token = :token AND status = 1 LIMIT 1";
 
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':token', $token);
             $stmt->execute();
 
-            if ($stmt->rowCount() > 0) {
-                return $stmt->fetch(PDO::FETCH_ASSOC);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user) {
+                $this->setCache($cacheKey, $user);
+                return $user;
             }
             return null;
         } catch (PDOException $e) {
@@ -219,6 +313,7 @@ class Users
             $result = update($this->conn, $this->table_name, $updateData, $userId);
 
             if ($result) {
+                $this->clearCache($userId); // Clear cache sau khi update
                 return [
                     'success' => true,
                     'message' => 'Cập nhật thành công',
@@ -300,42 +395,29 @@ class Users
     }
 
     /**
-     * Lấy tất cả users (Admin)
+     * Lấy tất cả users (Admin) - Tối ưu với CTDL hiệu quả
      */
     public function getAllUsers($params = [])
     {
         try {
-            $page = isset($params['page']) ? (int)$params['page'] : 1;
-            $limit = isset($params['limit']) ? (int)$params['limit'] : 10;
-            $search = $params['search'] ?? null;
-            $role = isset($params['role']) ? $params['role'] : null;
-            $status = isset($params['status']) ? $params['status'] : null;
+            // Dùng null coalescing + intval một lần - tránh isset() nhiều lần
+            $page = max(1, (int)($params['page'] ?? 1));
+            $limit = min(100, max(1, (int)($params['limit'] ?? 10))); // Giới hạn 1-100
+            $search = !empty($params['search']) ? trim($params['search']) : null;
+            $role = $params['role'] ?? null;
+            $status = $params['status'] ?? null;
             $lastId = isset($params['last_id']) ? (int)$params['last_id'] : null;
             $lastCreatedAt = $params['last_created_at'] ?? null;
+
+            // Tính offset một lần
             $offset = ($page - 1) * $limit;
 
-            // Xác định index phù hợp dựa trên điều kiện filter
-            // Ưu tiên bên trái: role -> status -> created_at
-            $indexHint = "USE INDEX (idx_created_at_desc)"; // Default: chỉ phân trang
-
-            if ($role !== null && $role !== '' && $status !== null && $status !== '') {
-                $indexHint = "USE INDEX (idx_role_status_created)"; // Filter cả role và status
-            } elseif ($role !== null && $role !== '') {
-                $indexHint = "USE INDEX (idx_role_created)"; // Chỉ filter role
-            } elseif ($status !== null && $status !== '') {
-                $indexHint = "USE INDEX (idx_status_created)"; // Chỉ filter status
-            }
-
-            if ($search) {
-                $indexHint = "USE INDEX (idx_fullname_email_phone)"; // Search cần index khác
-            }
-
-            // Query đếm tổng
-            $countQuery = "SELECT COUNT(*) as total FROM " . $this->table_name . " " . $indexHint . " WHERE 1=1";
+            // Dùng array để build conditions - O(1) push
             $conditions = [];
             $bindParams = [];
 
-            if ($search) {
+            // Build conditions với array push - nhanh hơn string concatenation
+            if ($search !== null) {
                 $conditions[] = "(fullname LIKE :search OR email LIKE :search OR phone LIKE :search)";
                 $bindParams[':search'] = "%$search%";
             }
@@ -350,26 +432,41 @@ class Users
                 $bindParams[':status'] = (int)$status;
             }
 
-            if (!empty($conditions)) {
-                $countQuery .= " AND " . implode(" AND ", $conditions);
-            }
+            // Build WHERE clause một lần - dùng implode O(n)
+            $whereClause = !empty($conditions) ? ' AND ' . implode(' AND ', $conditions) : '';
+
+            // Chạy 2 query song song nếu có thể, hoặc dùng SQL_CALC_FOUND_ROWS
+            // Query đếm tổng
+            $countQuery = "SELECT COUNT(*) FROM " . $this->table_name . " WHERE 1=1" . $whereClause;
 
             $countStmt = $this->conn->prepare($countQuery);
             foreach ($bindParams as $key => $value) {
                 $countStmt->bindValue($key, $value);
             }
             $countStmt->execute();
-            $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+            $total = (int)$countStmt->fetchColumn();
 
-            // Query lấy danh sách với keyset pagination (hiệu quả hơn offset khi page lớn)
-            $query = "SELECT id, fullname, email, phone, role, status, created_at 
-                      FROM " . $this->table_name . " " . $indexHint . " WHERE 1=1";
-
-            if (!empty($conditions)) {
-                $query .= " AND " . implode(" AND ", $conditions);
+            // Early return nếu không có data
+            if ($total === 0) {
+                return [
+                    'success' => true,
+                    'data' => [
+                        'users' => [],
+                        'pagination' => [
+                            'current_page' => $page,
+                            'per_page' => $limit,
+                            'total' => 0,
+                            'total_pages' => 0,
+                            'next_cursor' => null
+                        ]
+                    ]
+                ];
             }
 
-            // Keyset pagination: sử dụng khi có last_id và last_created_at
+            // Query lấy danh sách - dùng const cho columns
+            $query = "SELECT " . self::USER_COLUMNS_NO_TOKEN . " FROM " . $this->table_name . " WHERE 1=1" . $whereClause;
+
+            // Keyset pagination - hiệu quả O(1) thay vì O(n) với OFFSET
             if ($lastId !== null && $lastCreatedAt !== null) {
                 $query .= " AND (created_at < :last_created_at OR (created_at = :last_created_at2 AND id < :last_id))";
                 $bindParams[':last_created_at'] = $lastCreatedAt;
@@ -377,7 +474,6 @@ class Users
                 $bindParams[':last_id'] = $lastId;
                 $query .= " ORDER BY created_at DESC, id DESC LIMIT :limit";
             } else {
-                // Fallback về offset pagination
                 $query .= " ORDER BY created_at DESC, id DESC LIMIT :limit OFFSET :offset";
             }
 
@@ -385,23 +481,19 @@ class Users
             foreach ($bindParams as $key => $value) {
                 $stmt->bindValue($key, $value);
             }
-            $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
             if ($lastId === null || $lastCreatedAt === null) {
-                $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+                $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
             }
             $stmt->execute();
 
+            // Fetch all với FETCH_ASSOC - nhanh nhất
             $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Format data
-            foreach ($users as &$user) {
-                $user['role'] = (int)$user['role'];
-                $user['status'] = (int)$user['status'];
-                $user['role_name'] = $user['role'] == 1 ? 'Admin' : 'User';
-                $user['status_name'] = $user['status'] == 1 ? 'Hoạt động' : 'Bị khóa';
-            }
+            // Format data dùng lookup table O(1) cho mỗi user
+            $this->formatUsers($users);
 
-            // Thêm thông tin cho keyset pagination
+            // Lấy last user cho cursor - dùng end() O(1)
             $lastUser = !empty($users) ? end($users) : null;
 
             return [
@@ -411,9 +503,8 @@ class Users
                     'pagination' => [
                         'current_page' => $page,
                         'per_page' => $limit,
-                        'total' => (int)$total,
-                        'total_pages' => ceil($total / $limit),
-                        // Keyset pagination info
+                        'total' => $total,
+                        'total_pages' => (int)ceil($total / $limit),
                         'next_cursor' => $lastUser ? [
                             'last_id' => (int)$lastUser['id'],
                             'last_created_at' => $lastUser['created_at']
@@ -463,7 +554,8 @@ class Users
             $result = update($this->conn, $this->table_name, ['status' => $status], $userId);
 
             if ($result) {
-                $statusName = $status == 1 ? 'Hoạt động' : 'Bị khóa';
+                $this->clearCache($userId); // Clear cache
+                $statusName = self::$statusLookup[$status] ?? 'Unknown';
                 return [
                     'success' => true,
                     'message' => "Đã cập nhật trạng thái thành {$statusName}",
@@ -483,26 +575,20 @@ class Users
         }
     }
 
-    // Cập nhật role 
+    // Cập nhật role - tối ưu với cache
     public function updateRole($adminId, $userId, $newRole)
     {
         try {
-            // Kiểm tra admin có quyền không
-            $adminQuery = "SELECT role FROM " . $this->table_name . " USE INDEX (PRIMARY) WHERE id = :admin_id AND status = 1 LIMIT 1";
-            $adminStmt = $this->conn->prepare($adminQuery);
-            $adminStmt->bindParam(':admin_id', $adminId);
-            $adminStmt->execute();
+            // Dùng getById có cache thay vì query riêng
+            $admin = $this->getById($adminId);
 
-            if ($adminStmt->rowCount() === 0) {
+            if (!$admin || $admin['status'] != 1) {
                 return [
                     'success' => false,
                     'message' => 'Admin không tồn tại hoặc đã bị khóa'
                 ];
             }
 
-            $admin = $adminStmt->fetch(PDO::FETCH_ASSOC);
-
-            // Kiểm tra có phải admin không (role = 1)
             if ($admin['role'] != 1) {
                 return [
                     'success' => false,
@@ -510,23 +596,18 @@ class Users
                 ];
             }
 
-            // Kiểm tra user cần update có tồn tại không
-            $userQuery = "SELECT id, role, fullname FROM " . $this->table_name . " USE INDEX (PRIMARY) WHERE id = :user_id LIMIT 1";
-            $userStmt = $this->conn->prepare($userQuery);
-            $userStmt->bindParam(':user_id', $userId);
-            $userStmt->execute();
+            // Dùng getById có cache
+            $user = $this->getById($userId);
 
-            if ($userStmt->rowCount() === 0) {
+            if (!$user) {
                 return [
                     'success' => false,
                     'message' => 'Người dùng không tồn tại'
                 ];
             }
 
-            $user = $userStmt->fetch(PDO::FETCH_ASSOC);
-
-            // Validate role (0: user, 1: admin)
-            if (!in_array($newRole, [0, 1])) {
+            // Validate role dùng isset với lookup table - O(1)
+            if (!isset(self::$roleLookup[$newRole])) {
                 return [
                     'success' => false,
                     'message' => 'Role không hợp lệ. Chỉ chấp nhận 0 (User) hoặc 1 (Admin)'
@@ -544,12 +625,13 @@ class Users
             // Cập nhật role 
             $updateQuery = "UPDATE " . $this->table_name . " SET role = :role WHERE id = :id";
             $updateStmt = $this->conn->prepare($updateQuery);
-            $updateStmt->bindParam(':role', $newRole, PDO::PARAM_INT);
-            $updateStmt->bindParam(':id', $userId, PDO::PARAM_INT);
+            $updateStmt->bindValue(':role', $newRole, PDO::PARAM_INT);
+            $updateStmt->bindValue(':id', $userId, PDO::PARAM_INT);
             $result = $updateStmt->execute();
 
             if ($result) {
-                $roleName = $newRole == 1 ? 'Admin' : 'User';
+                $this->clearCache($userId); // Clear cache
+                $roleName = self::$roleLookup[$newRole];
                 return [
                     'success' => true,
                     'message' => "Đã cập nhật role của {$user['fullname']} thành {$roleName}",
