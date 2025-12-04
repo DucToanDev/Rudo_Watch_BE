@@ -37,7 +37,9 @@ class Router
             'cart' => 'Carts',
             'category' => 'Categories',
             'brand' => 'Brands',
-            'address' => 'Addresses'
+            'address' => 'Addresses',
+            'order' => 'Orders',
+            'orders' => 'Orders'
         ]
     ];
 
@@ -73,6 +75,78 @@ class Router
             // PUT /api/v1/addresses/{id}/set-default
             if ($this->subAction === 'set-default' && isset(self::ROUTES['addresses']['set-default'])) {
                 return $this->dispatchWithParam(self::ROUTES['addresses']['set-default'], $this->id);
+            }
+        }
+
+        // Orders special routes
+        if ($this->resource === 'orders') {
+            // GET /api/v1/orders/admin - Admin lấy tất cả đơn hàng
+            if ($this->id === 'admin' && $this->method === 'GET') {
+                $controller = $this->loadController('OrdersController');
+                if ($controller) {
+                    $controller->admin();
+                    return true;
+                }
+            }
+            // GET /api/v1/orders/statistics - Admin xem thống kê
+            if ($this->id === 'statistics' && $this->method === 'GET') {
+                $controller = $this->loadController('OrdersController');
+                if ($controller) {
+                    $controller->statistics();
+                    return true;
+                }
+            }
+            // PUT /api/v1/orders/{id}/cancel - User hủy đơn hàng
+            if ($this->subAction === 'cancel' && $this->method === 'PUT') {
+                $controller = $this->loadController('OrdersController');
+                if ($controller) {
+                    $controller->cancel($this->id);
+                    return true;
+                }
+            }
+            // PUT /api/v1/orders/{id}/status - Admin cập nhật trạng thái
+            if ($this->subAction === 'status' && $this->method === 'PUT') {
+                $controller = $this->loadController('OrdersController');
+                if ($controller) {
+                    $controller->updateStatus($this->id);
+                    return true;
+                }
+            }
+            // PUT /api/v1/orders/{id}/payment-status - Admin cập nhật trạng thái thanh toán
+            if ($this->subAction === 'payment-status' && $this->method === 'PUT') {
+                $controller = $this->loadController('OrdersController');
+                if ($controller) {
+                    $controller->updatePaymentStatus($this->id);
+                    return true;
+                }
+            }
+        }
+
+        // Users special routes (Admin)
+        if ($this->resource === 'users') {
+            // GET /api/v1/users - Admin lấy tất cả users
+            if (!$this->id && $this->method === 'GET') {
+                $controller = $this->loadController('UserController');
+                if ($controller) {
+                    $controller->index();
+                    return true;
+                }
+            }
+            // GET /api/v1/users/{id} - Admin lấy chi tiết user
+            if ($this->id && !$this->subAction && $this->method === 'GET') {
+                $controller = $this->loadController('UserController');
+                if ($controller) {
+                    $controller->show($this->id);
+                    return true;
+                }
+            }
+            // PUT /api/v1/users/{id}/status - Admin cập nhật trạng thái user
+            if ($this->subAction === 'status' && $this->method === 'PUT') {
+                $controller = $this->loadController('UserController');
+                if ($controller) {
+                    $controller->updateUserStatus($this->id);
+                    return true;
+                }
             }
         }
 

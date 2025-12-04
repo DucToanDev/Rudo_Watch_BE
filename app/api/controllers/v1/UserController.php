@@ -29,6 +29,115 @@ class UserController
         ], 200);
     }
 
+    /**
+     * GET /api/v1/users
+     * Admin lấy tất cả users
+     * Query params: page, limit, search, role, status
+     */
+    public function index()
+    {
+        $user = $this->auth->authenticate();
+        if (!$user) {
+            return;
+        }
+
+        // Kiểm tra quyền admin
+        if ($user['role'] != 1) {
+            $this->response->json([
+                'error' => 'Bạn không có quyền thực hiện chức năng này'
+            ], 403);
+            return;
+        }
+
+        $params = [
+            'page' => $_GET['page'] ?? 1,
+            'limit' => $_GET['limit'] ?? 10,
+            'search' => $_GET['search'] ?? null,
+            'role' => $_GET['role'] ?? null,
+            'status' => $_GET['status'] ?? null
+        ];
+
+        $result = $this->userModel->getAllUsers($params);
+
+        if ($result['success']) {
+            $this->response->json($result['data'], 200);
+        } else {
+            $this->response->json(['error' => $result['message']], 500);
+        }
+    }
+
+    /**
+     * GET /api/v1/users/{id}
+     * Admin lấy chi tiết user
+     */
+    public function show($id)
+    {
+        $user = $this->auth->authenticate();
+        if (!$user) {
+            return;
+        }
+
+        // Kiểm tra quyền admin
+        if ($user['role'] != 1) {
+            $this->response->json([
+                'error' => 'Bạn không có quyền thực hiện chức năng này'
+            ], 403);
+            return;
+        }
+
+        $userData = $this->userModel->getById($id);
+
+        if ($userData) {
+            $userData['role_name'] = $userData['role'] == 1 ? 'Admin' : 'User';
+            $userData['status_name'] = $userData['status'] == 1 ? 'Hoạt động' : 'Bị khóa';
+            unset($userData['api_token']);
+            $this->response->json($userData, 200);
+        } else {
+            $this->response->json(['error' => 'Không tìm thấy người dùng'], 404);
+        }
+    }
+
+    /**
+     * PUT /api/v1/users/{id}/status
+     * Admin cập nhật trạng thái user
+     * Body: { status: 0 | 1 }
+     */
+    public function updateUserStatus($id)
+    {
+        $user = $this->auth->authenticate();
+        if (!$user) {
+            return;
+        }
+
+        // Kiểm tra quyền admin
+        if ($user['role'] != 1) {
+            $this->response->json([
+                'error' => 'Bạn không có quyền thực hiện chức năng này'
+            ], 403);
+            return;
+        }
+
+        $data = json_decode(file_get_contents("php://input"));
+        $status = isset($data->status) ? (int)$data->status : null;
+
+        if ($status === null) {
+            $this->response->json(['error' => 'Vui lòng cung cấp trạng thái'], 400);
+            return;
+        }
+
+        $result = $this->userModel->updateStatus($user['id'], $id, $status);
+
+        if ($result['success']) {
+            $this->response->json([
+                'message' => $result['message'],
+                'user' => $result['user']
+            ], 200);
+        } else {
+            $statusCode = $result['message'] === 'Bạn không có quyền thực hiện chức năng này' ? 403 : 400;
+            $this->response->json(['error' => $result['message']], $statusCode);
+        }
+    }
+
     // Cập nhật user 
     public function update($data)
     {

@@ -299,6 +299,152 @@ class Users
         }
     }
 
+    /**
+     * Lấy tất cả users (Admin)
+     */
+    public function getAllUsers($params = [])
+    {
+        try {
+            $page = isset($params['page']) ? (int)$params['page'] : 1;
+            $limit = isset($params['limit']) ? (int)$params['limit'] : 10;
+            $search = $params['search'] ?? null;
+            $role = isset($params['role']) ? $params['role'] : null;
+            $status = isset($params['status']) ? $params['status'] : null;
+            $offset = ($page - 1) * $limit;
+
+            // Query đếm tổng
+            $countQuery = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE 1=1";
+            $conditions = [];
+            $bindParams = [];
+
+            if ($search) {
+                $conditions[] = "(fullname LIKE :search OR email LIKE :search OR phone LIKE :search)";
+                $bindParams[':search'] = "%$search%";
+            }
+
+            if ($role !== null && $role !== '') {
+                $conditions[] = "role = :role";
+                $bindParams[':role'] = (int)$role;
+            }
+
+            if ($status !== null && $status !== '') {
+                $conditions[] = "status = :status";
+                $bindParams[':status'] = (int)$status;
+            }
+
+            if (!empty($conditions)) {
+                $countQuery .= " AND " . implode(" AND ", $conditions);
+            }
+
+            $countStmt = $this->conn->prepare($countQuery);
+            foreach ($bindParams as $key => $value) {
+                $countStmt->bindValue($key, $value);
+            }
+            $countStmt->execute();
+            $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+            // Query lấy danh sách
+            $query = "SELECT id, fullname, email, phone, role, status, created_at 
+                      FROM " . $this->table_name . " WHERE 1=1";
+
+            if (!empty($conditions)) {
+                $query .= " AND " . implode(" AND ", $conditions);
+            }
+
+            $query .= " ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
+
+            $stmt = $this->conn->prepare($query);
+            foreach ($bindParams as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Format data
+            foreach ($users as &$user) {
+                $user['role'] = (int)$user['role'];
+                $user['status'] = (int)$user['status'];
+                $user['role_name'] = $user['role'] == 1 ? 'Admin' : 'User';
+                $user['status_name'] = $user['status'] == 1 ? 'Hoạt động' : 'Bị khóa';
+            }
+
+            return [
+                'success' => true,
+                'data' => [
+                    'users' => $users,
+                    'pagination' => [
+                        'current_page' => $page,
+                        'per_page' => $limit,
+                        'total' => (int)$total,
+                        'total_pages' => ceil($total / $limit)
+                    ]
+                ]
+            ];
+        } catch (PDOException $e) {
+            return [
+                'success' => false,
+                'message' => 'Lỗi khi lấy danh sách users: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái user (Admin)
+     */
+    public function updateStatus($adminId, $userId, $status)
+    {
+        try {
+            // Kiểm tra admin có quyền không
+            $admin = $this->getById($adminId);
+            if (!$admin || $admin['role'] != 1) {
+                return [
+                    'success' => false,
+                    'message' => 'Bạn không có quyền thực hiện chức năng này'
+                ];
+            }
+
+            // Không cho phép admin tự khóa chính mình
+            if ($adminId == $userId) {
+                return [
+                    'success' => false,
+                    'message' => 'Không thể thay đổi trạng thái của chính mình'
+                ];
+            }
+
+            // Validate status
+            if (!in_array($status, [0, 1])) {
+                return [
+                    'success' => false,
+                    'message' => 'Trạng thái không hợp lệ. Chỉ chấp nhận 0 (Khóa) hoặc 1 (Hoạt động)'
+                ];
+            }
+
+            $result = update($this->conn, $this->table_name, ['status' => $status], $userId);
+
+            if ($result) {
+                $statusName = $status == 1 ? 'Hoạt động' : 'Bị khóa';
+                return [
+                    'success' => true,
+                    'message' => "Đã cập nhật trạng thái thành {$statusName}",
+                    'user' => $this->getById($userId)
+                ];
+            }
+
+            return [
+                'success' => false,
+                'message' => 'Cập nhật trạng thái thất bại'
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Lỗi: ' . $e->getMessage()
+            ];
+        }
+    }
+
     // Cập nhật role 
     public function updateRole($adminId, $userId, $newRole)
     {
