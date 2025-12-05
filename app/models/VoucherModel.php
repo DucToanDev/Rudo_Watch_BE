@@ -181,8 +181,9 @@ class Vouchers
                 'code' => strtoupper($data->code),
                 'type' => $data->type,
                 'discount' => $data->type === 'percent' ? (int)$data->discount : null,
-                'amount' => $data->type === 'money' ? (float)$data->amount : null,
-                'expired_at' => $data->expired_at ?? null
+                'amount' => $data->type === 'money' ? (float)$data->discount : null,
+                'expired_at' => $data->expired_at ?? null,
+                'usage_limit' => isset($data->usage_limit) ? (int)$data->usage_limit : null
             ];
 
             $id = insert($this->conn, $this->table_name, $insertData);
@@ -215,11 +216,16 @@ class Vouchers
             if ($type === 'percent') {
                 $updateData['discount'] = isset($data->discount) ? (int)$data->discount : $existing['discount'];
             } else {
-                $updateData['amount'] = isset($data->amount) ? (float)$data->amount : $existing['amount'];
+                $updateData['amount'] = isset($data->discount) ? (float)$data->discount : $existing['amount'];
             }
 
             if (isset($data->expired_at)) {
                 $updateData['expired_at'] = $data->expired_at;
+            }
+
+            // Xử lý usage_limit
+            if (isset($data->usage_limit)) {
+                $updateData['usage_limit'] = (int)$data->usage_limit;
             }
 
             $result = update($this->conn, $this->table_name, $updateData, $id);
