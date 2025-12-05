@@ -87,6 +87,11 @@ class Router
 
         // Brands
         'GET brands/active'      => ['BrandsController', 'active'],
+
+        // Reviews
+        'GET reviews/product/{id}'    => ['ReviewsController', 'byProduct'],
+        'GET reviews/stats/{id}'      => ['ReviewsController', 'stats'],
+        'GET reviews/my-review/{id}'  => ['ReviewsController', 'myReview'],
     ];
 
     // Chuyển đổi resource số ít -> số nhiều
@@ -108,6 +113,8 @@ class Router
         'voucher' => 'Vouchers',
         'vouchers' => 'Vouchers',
         'shipping-methods' => 'ShippingMethods',
+        'review' => 'Reviews',
+        'reviews' => 'Reviews',
     ];
 
     // ===== CONSTRUCTOR =====
