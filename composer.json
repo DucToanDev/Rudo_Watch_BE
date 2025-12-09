@@ -8,7 +8,8 @@
         "facebook/graph-sdk": "^5.1",
         "google/apiclient": "*",
         "cloudinary/cloudinary_php": "*",
-        "phpmailer/phpmailer": "^7.0"
+        "phpmailer/phpmailer": "^7.0",
+        "aws/aws-sdk-php": "^3.366"
     },
     "autoload": {
         "psr-4": {

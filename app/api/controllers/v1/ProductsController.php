@@ -1,10 +1,12 @@
 <?php
 require_once __DIR__ . '/../../../models/ProductModel.php';
+require_once __DIR__ . '/../../../services/RailwayStorageService.php';
 require_once __DIR__ . '/../../../core/Response.php';
 
 class ProductsController
 {
     private $productModel;
+    private $storageService;
     private $response;
     private $uploadDir = __DIR__ . '/../../../../uploads/products/';
 
@@ -12,8 +14,16 @@ class ProductsController
     {
         $this->productModel = new Products();
         $this->response = new Response();
+        
+        // Khởi tạo Railway Storage Service
+        try {
+            $this->storageService = new RailwayStorageService();
+        } catch (Exception $e) {
+            // Nếu không cấu hình Railway S3, sẽ dùng local storage
+            $this->storageService = null;
+        }
 
-        // Tạo thư mục uploads nếu chưa có
+        // Tạo thư mục uploads nếu chưa có (fallback)
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0755, true);
         }
@@ -95,18 +105,42 @@ class ProductsController
             $thumbnailPath = null;
 
             if (!empty($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-                $imagePath = $this->uploadImage($_FILES['image']);
-                if (!$imagePath) {
-                    $this->response->json(['error' => 'Không thể upload ảnh'], 400);
-                    return;
+                // Sử dụng Railway S3 nếu có, nếu không dùng local
+                if ($this->storageService) {
+                    $uploadResult = $this->storageService->uploadFile($_FILES['image'], 'products');
+                    if ($uploadResult['success']) {
+                        $imagePath = $uploadResult['url']; // Lưu URL từ S3
+                    } else {
+                        $this->response->json(['error' => 'Không thể upload ảnh: ' . $uploadResult['message']], 400);
+                        return;
+                    }
+                } else {
+                    // Fallback: upload local
+                    $imagePath = $this->uploadImage($_FILES['image']);
+                    if (!$imagePath) {
+                        $this->response->json(['error' => 'Không thể upload ảnh'], 400);
+                        return;
+                    }
                 }
             }
 
             if (!empty($_FILES['thumbnail']) && $_FILES['thumbnail']['error'] === UPLOAD_ERR_OK) {
-                $thumbnailPath = $this->uploadImage($_FILES['thumbnail'], 'thumb_');
-                if (!$thumbnailPath) {
-                    $this->response->json(['error' => 'Không thể upload thumbnail'], 400);
-                    return;
+                // Sử dụng Railway S3 nếu có
+                if ($this->storageService) {
+                    $uploadResult = $this->storageService->uploadFile($_FILES['thumbnail'], 'products/thumbnails');
+                    if ($uploadResult['success']) {
+                        $thumbnailPath = $uploadResult['url'];
+                    } else {
+                        $this->response->json(['error' => 'Không thể upload thumbnail: ' . $uploadResult['message']], 400);
+                        return;
+                    }
+                } else {
+                    // Fallback: upload local
+                    $thumbnailPath = $this->uploadImage($_FILES['thumbnail'], 'thumb_');
+                    if (!$thumbnailPath) {
+                        $this->response->json(['error' => 'Không thể upload thumbnail'], 400);
+                        return;
+                    }
                 }
             }
 
@@ -168,22 +202,48 @@ class ProductsController
             $thumbnailPath = null;
 
             if (!empty($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-                $imagePath = $this->uploadImage($_FILES['image']);
-                if (!$imagePath) {
-                    $this->response->json(['error' => 'Không thể upload ảnh'], 400);
-                    return;
-                }
-                // Xóa ảnh cũ
-                if (!empty($existingProduct['data']['image'])) {
-                    $this->deleteImage($existingProduct['data']['image']);
+                // Sử dụng Railway S3 nếu có
+                if ($this->storageService) {
+                    $uploadResult = $this->storageService->uploadFile($_FILES['image'], 'products');
+                    if ($uploadResult['success']) {
+                        $imagePath = $uploadResult['url'];
+                        // Xóa ảnh cũ từ S3 nếu có
+                        if (!empty($existingProduct['data']['image'])) {
+                            $oldKey = $this->extractS3Key($existingProduct['data']['image']);
+                            if ($oldKey) {
+                                $this->storageService->deleteFile($oldKey);
+                            }
+                        }
+                    } else {
+                        $this->response->json(['error' => 'Không thể upload ảnh: ' . $uploadResult['message']], 400);
+                        return;
+                    }
+                } else {
+                    // Fallback: upload local
+                    $imagePath = $this->uploadImage($_FILES['image']);
+                    if (!$imagePath) {
+                        $this->response->json(['error' => 'Không thể upload ảnh'], 400);
+                        return;
+                    }
+                    // Xóa ảnh cũ
+                    if (!empty($existingProduct['data']['image'])) {
+                        $this->deleteImage($existingProduct['data']['image']);
+                    }
                 }
             }
 
             if (!empty($_FILES['thumbnail']) && $_FILES['thumbnail']['error'] === UPLOAD_ERR_OK) {
-                $thumbnailPath = $this->uploadImage($_FILES['thumbnail'], 'thumb_');
-                if (!$thumbnailPath) {
-                    $this->response->json(['error' => 'Không thể upload thumbnail'], 400);
-                    return;
+                if ($this->storageService) {
+                    $uploadResult = $this->storageService->uploadFile($_FILES['thumbnail'], 'products/thumbnails');
+                    if ($uploadResult['success']) {
+                        $thumbnailPath = $uploadResult['url'];
+                    }
+                } else {
+                    $thumbnailPath = $this->uploadImage($_FILES['thumbnail'], 'thumb_');
+                    if (!$thumbnailPath) {
+                        $this->response->json(['error' => 'Không thể upload thumbnail'], 400);
+                        return;
+                    }
                 }
                 // Xóa thumbnail cũ
                 if (!empty($existingProduct['data']['thumbnail'])) {
@@ -374,9 +434,30 @@ class ProductsController
     {
         if (empty($imagePath)) return;
 
-        $fullPath = __DIR__ . '/../../../../' . $imagePath;
-        if (file_exists($fullPath)) {
-            unlink($fullPath);
+        // Nếu là URL từ S3, xóa từ S3
+        if ($this->storageService && strpos($imagePath, 'http') === 0) {
+            $key = $this->extractS3Key($imagePath);
+            if ($key) {
+                $this->storageService->deleteFile($key);
+            }
+        } else {
+            // Xóa file local
+            $fullPath = __DIR__ . '/../../../../' . $imagePath;
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
         }
+    }
+
+    /**
+     * Extract S3 key từ URL
+     */
+    private function extractS3Key($url)
+    {
+        // URL format: https://storage.railway.app/{bucket}/{key}
+        if (preg_match('/\/' . preg_quote($_ENV['RAILWAY_S3_BUCKET'] ?? '', '/') . '\/(.+)$/', $url, $matches)) {
+            return $matches[1];
+        }
+        return null;
     }
 }

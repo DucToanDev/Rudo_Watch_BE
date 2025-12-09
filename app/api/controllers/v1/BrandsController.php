@@ -1,12 +1,14 @@
 <?php
 require_once __DIR__ . '/../../../models/BrandModel.php';
 require_once __DIR__ . '/../../../models/ProductModel.php';
+require_once __DIR__ . '/../../../services/RailwayStorageService.php';
 require_once __DIR__ . '/../../../core/Response.php';
 
 class BrandsController
 {
     private $brandsModel;
     private $productsModel;
+    private $storageService;
     private $response;
 
     public function __construct()
@@ -14,6 +16,14 @@ class BrandsController
         $this->brandsModel = new Brands();
         $this->productsModel = new Products();
         $this->response = new Response();
+        
+        // Khởi tạo Railway Storage Service
+        try {
+            $this->storageService = new RailwayStorageService();
+        } catch (Exception $e) {
+            // Nếu không cấu hình Railway S3, sẽ dùng local storage
+            $this->storageService = null;
+        }
     }
 
     public function index()
@@ -87,10 +97,22 @@ class BrandsController
             // Xử lý upload logo
             $logoPath = null;
             if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
-                $logoPath = $this->uploadLogo($_FILES['logo']);
-                if ($logoPath === false) {
-                    $this->response->json(['error' => 'Không thể upload logo'], 400);
-                    return;
+                // Sử dụng Railway S3 nếu có
+                if ($this->storageService) {
+                    $uploadResult = $this->storageService->uploadFile($_FILES['logo'], 'brands');
+                    if ($uploadResult['success']) {
+                        $logoPath = $uploadResult['url'];
+                    } else {
+                        $this->response->json(['error' => 'Không thể upload logo: ' . $uploadResult['message']], 400);
+                        return;
+                    }
+                } else {
+                    // Fallback: upload local
+                    $logoPath = $this->uploadLogo($_FILES['logo']);
+                    if ($logoPath === false) {
+                        $this->response->json(['error' => 'Không thể upload logo'], 400);
+                        return;
+                    }
                 }
             }
 
@@ -145,16 +167,35 @@ class BrandsController
             // Xử lý upload logo
             $logoPath = null;
             if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
-                $logoPath = $this->uploadLogo($_FILES['logo']);
-                if ($logoPath === false) {
-                    $this->response->json(['error' => 'Không thể upload logo'], 400);
-                    return;
-                }
-                // Xóa logo cũ nếu có
-                if (!empty($brand['logo'])) {
-                    $oldLogoPath = __DIR__ . '/../../../../' . $brand['logo'];
-                    if (file_exists($oldLogoPath)) {
-                        unlink($oldLogoPath);
+                // Sử dụng Railway S3 nếu có
+                if ($this->storageService) {
+                    $uploadResult = $this->storageService->uploadFile($_FILES['logo'], 'brands');
+                    if ($uploadResult['success']) {
+                        $logoPath = $uploadResult['url'];
+                        // Xóa logo cũ từ S3 nếu có
+                        if (!empty($brand['logo'])) {
+                            $oldKey = $this->extractS3Key($brand['logo']);
+                            if ($oldKey) {
+                                $this->storageService->deleteFile($oldKey);
+                            }
+                        }
+                    } else {
+                        $this->response->json(['error' => 'Không thể upload logo: ' . $uploadResult['message']], 400);
+                        return;
+                    }
+                } else {
+                    // Fallback: upload local
+                    $logoPath = $this->uploadLogo($_FILES['logo']);
+                    if ($logoPath === false) {
+                        $this->response->json(['error' => 'Không thể upload logo'], 400);
+                        return;
+                    }
+                    // Xóa logo cũ nếu có
+                    if (!empty($brand['logo'])) {
+                        $oldLogoPath = __DIR__ . '/../../../../' . $brand['logo'];
+                        if (file_exists($oldLogoPath)) {
+                            unlink($oldLogoPath);
+                        }
                     }
                 }
             }
@@ -282,6 +323,18 @@ class BrandsController
         }
 
         return false;
+    }
+
+    /**
+     * Extract S3 key từ URL
+     */
+    private function extractS3Key($url)
+    {
+        // URL format: https://storage.railway.app/{bucket}/{key}
+        if (preg_match('/\/' . preg_quote($_ENV['RAILWAY_S3_BUCKET'] ?? $_ENV['AWS_S3_BUCKET_NAME'] ?? '', '/') . '\/(.+)$/', $url, $matches)) {
+            return $matches[1];
+        }
+        return null;
     }
 
     /**

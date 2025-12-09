@@ -95,6 +95,24 @@ class Router
         'GET reviews/product/{id}'    => ['ReviewsController', 'byProduct'],
         'GET reviews/stats/{id}'      => ['ReviewsController', 'stats'],
         'GET reviews/my-review/{id}'  => ['ReviewsController', 'myReview'],
+
+        // Post Categories
+        'GET post-categories/active'  => ['PostCategoriesController', 'active'],
+
+        // Posts
+        'GET posts/published'         => ['PostsController', 'published'],
+        'GET posts/category/{id}'     => ['PostsController', 'byCategory'],
+        'GET posts/slug/{slug}'       => ['PostsController', 'bySlug'],
+
+        // Payments
+        'POST payments/create'        => ['PaymentController', 'create'],
+        'POST payments/webhook'        => ['PaymentController', 'webhook'],
+        'GET payments/status/{id}'    => ['PaymentController', 'status'],
+
+        // Upload
+        'POST upload/image'            => ['UploadController', 'image'],
+        'POST upload/images'           => ['UploadController', 'images'],
+        'DELETE upload/{key}'          => ['UploadController', 'delete'],
     ];
 
     // Chuyển đổi resource số ít -> số nhiều
@@ -118,6 +136,12 @@ class Router
         'shipping-methods' => 'ShippingMethods',
         'review' => 'Reviews',
         'reviews' => 'Reviews',
+        'payment' => 'Payment',
+        'payments' => 'Payment',
+        'post-category' => 'PostCategories',
+        'post-categories' => 'PostCategories',
+        'post' => 'Posts',
+        'posts' => 'Posts',
     ];
 
     // ===== CONSTRUCTOR =====

@@ -72,7 +72,7 @@ class OrdersController
      * Body: { 
      *   items: [{ variant_id: int, quantity: int }], 
      *   address: { name, phone, province, district, ward, detail },
-     *   payment_method: 'cod' | 'banking' | 'momo',
+     *   payment_method: 'cod' | 'sepay' | 'banking' | 'momo',
      *   note: string,
      *   voucher_id: int,
      *   shipping_method_id: int
