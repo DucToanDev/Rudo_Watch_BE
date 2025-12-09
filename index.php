@@ -53,26 +53,44 @@ require_once __DIR__ . '/app/core/Router.php';
 
 $response = new Response();
 
+// Log request để debug
+error_log('=== REQUEST DEBUG ===');
+error_log('REQUEST_URI: ' . ($_SERVER['REQUEST_URI'] ?? 'N/A'));
+error_log('REQUEST_METHOD: ' . ($_SERVER['REQUEST_METHOD'] ?? 'N/A'));
+error_log('QUERY_STRING: ' . ($_SERVER['QUERY_STRING'] ?? 'N/A'));
+error_log('GET url param: ' . (isset($_GET['url']) ? $_GET['url'] : 'N/A'));
+
 $uri = isset($_GET['url']) ? trim($_GET['url'], '/') : '';
 
 if (empty($uri) && isset($_SERVER['REQUEST_URI'])) {
     $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    error_log('Parsed REQUEST_URI: ' . $requestUri);
 
     $requestUri = strtok($requestUri, '?');
 
+    // Remove common prefixes
     $requestUri = preg_replace('#^/backend/#', '/', $requestUri);
     $requestUri = preg_replace('#^/backend$#', '/', $requestUri);
-
     $requestUri = preg_replace('#/index\.php$#', '', $requestUri);
     $requestUri = preg_replace('#^/index\.php#', '', $requestUri);
 
     $uri = trim($requestUri, '/');
+    error_log('Final URI: ' . $uri);
 }
 
 $uriSegments = explode('/', $uri);
+error_log('URI Segments: ' . json_encode($uriSegments));
 
-if ($uriSegments[0] !== 'api' || !isset($uriSegments[1])) {
-    $response->json(['error' => 'Yêu cầu không hợp lệ'], 400);
+if (empty($uri) || $uriSegments[0] !== 'api' || !isset($uriSegments[1])) {
+    error_log('Invalid URI structure - returning 400');
+    $response->json([
+        'error' => 'Yêu cầu không hợp lệ',
+        'debug' => [
+            'uri' => $uri,
+            'segments' => $uriSegments,
+            'request_uri' => $_SERVER['REQUEST_URI'] ?? 'N/A'
+        ]
+    ], 400);
     exit();
 }
 

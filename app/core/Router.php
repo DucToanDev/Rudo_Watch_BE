@@ -13,6 +13,7 @@ class Router
 
     // Routes không cần ID (public)
     private const AUTH_ROUTES = [
+        'GET health'        => ['HomeController', 'health'], // Test endpoint
         'POST register'     => ['AuthController', 'register'],
         'POST login'        => ['AuthController', 'login'],
         'POST auth/reset-password' => ['AuthController', 'resetPassword'],
@@ -144,12 +145,16 @@ class Router
 
     public function __construct($uriSegments, $response)
     {
+        error_log('Router constructor - URI segments: ' . json_encode($uriSegments));
+        
         $this->response = $response;
         $this->version = $uriSegments[1] ?? null;     // v1
         $this->resource = $uriSegments[2] ?? null;    // products, users, etc
         $this->id = $uriSegments[3] ?? null;          // ID hoặc sub-action
         $this->subAction = $uriSegments[4] ?? null;   // action phụ
         $this->method = $_SERVER['REQUEST_METHOD'];
+
+        error_log("Router parsed - version: {$this->version}, resource: {$this->resource}, id: {$this->id}, method: {$this->method}");
 
         // Hỗ trợ method override cho form-data (POST với _method=PUT/DELETE)
         if ($this->method === 'POST' && isset($_POST['_method'])) {
@@ -161,17 +166,25 @@ class Router
 
     public function handleSpecialRoute()
     {
+        // Log để debug
+        error_log("Router::handleSpecialRoute - method: {$this->method}, resource: {$this->resource}, id: {$this->id}");
+        
         // 1. Auth routes: POST /register, POST /login, GET /facebook...
         // Kiểm tra route đơn giản trước (không có sub-action)
         $authKey = "{$this->method} {$this->resource}";
+        error_log("Checking auth route: $authKey");
         if (isset(self::AUTH_ROUTES[$authKey])) {
+            error_log("Found route: $authKey");
             return $this->call(self::AUTH_ROUTES[$authKey]);
         }
 
         // 1b. Auth routes với sub-action: POST /forgot-password/send-code, POST /forgot-password/reset
+        // HOẶC POST /auth/reset-password
         if ($this->resource && $this->id) {
             $authKeyWithAction = "{$this->method} {$this->resource}/{$this->id}";
+            error_log("Checking auth route with action: $authKeyWithAction");
             if (isset(self::AUTH_ROUTES[$authKeyWithAction])) {
+                error_log("Found route: $authKeyWithAction");
                 return $this->call(self::AUTH_ROUTES[$authKeyWithAction]);
             }
         }
@@ -276,10 +289,20 @@ class Router
     private function execute($controller, $action, $param = null)
     {
         try {
+            error_log("Router::execute - controller: " . get_class($controller) . ", action: $action");
+            
             if ($param !== null) {
                 $controller->$action($param);
             } else {
-                $data = json_decode(file_get_contents("php://input"));
+                $rawInput = file_get_contents("php://input");
+                error_log("Router::execute - raw input: " . substr($rawInput, 0, 200));
+                $data = json_decode($rawInput);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    error_log("JSON decode error: " . json_last_error_msg());
+                    $this->response->json(['error' => 'Invalid JSON: ' . json_last_error_msg()], 400);
+                    return true;
+                }
+                error_log("Router::execute - decoded data: " . json_encode($data));
                 $controller->$action($data);
             }
             return true;

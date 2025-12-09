@@ -16,6 +16,16 @@ class HomeController
         $this->response = new Response();
     }
 
+    public function health()
+    {
+        $this->response->json([
+            'status' => 'ok',
+            'message' => 'Server is running',
+            'timestamp' => date('Y-m-d H:i:s'),
+            'php_version' => PHP_VERSION
+        ], 200);
+    }
+
     public function index()
     {
         try {

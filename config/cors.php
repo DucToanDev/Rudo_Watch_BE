@@ -9,7 +9,9 @@ $allowedOrigins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://localhost:5173',  // Vite dev server
-    'http://127.0.0.1:5500',  // Thêm domain production của bạn
+    'http://127.0.0.1:5500',
+    'https://rudowatchbe-production.up.railway.app',  // Railway backend
+    'https://*.railway.app',  // All Railway subdomains
 ];
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
