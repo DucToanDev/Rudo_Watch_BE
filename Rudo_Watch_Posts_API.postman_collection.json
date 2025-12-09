@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "rudo-watch-posts-api",
 		"name": "Rudo Watch - Posts API",
-		"description": "API collection cho quản lý bài viết và danh mục bài viết",
+		"description": "API collection đơn giản cho quản lý bài viết và danh mục bài viết",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -54,27 +54,6 @@
 							]
 						},
 						"description": "Lấy chi tiết danh mục bài viết theo ID"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Active Categories",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/v1/post-categories/active",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"post-categories",
-								"active"
-							]
-						},
-						"description": "Lấy danh sách danh mục đang active"
 					},
 					"response": []
 				},
@@ -212,7 +191,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/v1/posts?page=1&limit=10",
+							"raw": "{{base_url}}/api/v1/posts?category_id=",
 							"host": [
 								"{{base_url}}"
 							],
@@ -223,48 +202,14 @@
 							],
 							"query": [
 								{
-									"key": "page",
-									"value": "1",
-									"description": "Trang số"
-								},
-								{
-									"key": "limit",
-									"value": "10",
-									"description": "Số lượng mỗi trang"
-								},
-								{
-									"key": "search",
-									"value": "",
-									"description": "Tìm kiếm theo tên",
-									"disabled": true
-								},
-								{
 									"key": "category_id",
 									"value": "",
-									"description": "Lọc theo danh mục",
-									"disabled": true
-								},
-								{
-									"key": "author_id",
-									"value": "",
-									"description": "Lọc theo tác giả",
-									"disabled": true
-								},
-								{
-									"key": "sort_by",
-									"value": "created_at",
-									"description": "Sắp xếp theo",
-									"disabled": true
-								},
-								{
-									"key": "sort_order",
-									"value": "DESC",
-									"description": "Thứ tự",
+									"description": "Lọc theo danh mục (optional)",
 									"disabled": true
 								}
 							]
 						},
-						"description": "Lấy danh sách bài viết với phân trang và lọc"
+						"description": "Lấy danh sách bài viết (có thể lọc theo category_id)"
 					},
 					"response": []
 				},
@@ -288,111 +233,16 @@
 								{
 									"key": "id",
 									"value": "1",
-									"description": "Post ID"
+									"description": "Post ID hoặc slug"
 								}
 							]
 						},
-						"description": "Lấy chi tiết bài viết theo ID (tự động tăng views)"
+						"description": "Lấy chi tiết bài viết theo ID hoặc slug"
 					},
 					"response": []
 				},
 				{
-					"name": "Get Post by Slug",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/v1/posts/slug/:slug",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"posts",
-								"slug",
-								":slug"
-							],
-							"variable": [
-								{
-									"key": "slug",
-									"value": "bai-viet-mau",
-									"description": "Post slug"
-								}
-							]
-						},
-						"description": "Lấy bài viết theo slug (tự động tăng views)"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Published Posts",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/v1/posts/published?limit=10",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"posts",
-								"published"
-							],
-							"query": [
-								{
-									"key": "limit",
-									"value": "10",
-									"description": "Giới hạn số lượng",
-									"disabled": true
-								}
-							]
-						},
-						"description": "Lấy danh sách bài viết đã published"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Posts by Category",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/v1/posts/category/:category_id?limit=10",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"posts",
-								"category",
-								":category_id"
-							],
-							"query": [
-								{
-									"key": "limit",
-									"value": "10",
-									"description": "Giới hạn số lượng",
-									"disabled": true
-								}
-							],
-							"variable": [
-								{
-									"key": "category_id",
-									"value": "1",
-									"description": "Category ID"
-								}
-							]
-						},
-						"description": "Lấy bài viết theo danh mục"
-					},
-					"response": []
-				},
-				{
-					"name": "Create Post (JSON)",
+					"name": "Create Post",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -490,7 +340,7 @@
 					"response": []
 				},
 				{
-					"name": "Update Post (JSON)",
+					"name": "Update Post",
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -533,7 +383,7 @@
 								}
 							]
 						},
-						"description": "Cập nhật bài viết (không có ảnh, chỉ author hoặc admin)"
+						"description": "Cập nhật bài viết (không có ảnh)"
 					},
 					"response": []
 				},
@@ -593,7 +443,7 @@
 								}
 							]
 						},
-						"description": "Cập nhật bài viết với ảnh mới (chỉ author hoặc admin)"
+						"description": "Cập nhật bài viết với ảnh mới"
 					},
 					"response": []
 				},
@@ -627,12 +477,12 @@
 								}
 							]
 						},
-						"description": "Xóa bài viết (chỉ author hoặc admin, tự động xóa ảnh từ S3)"
+						"description": "Xóa bài viết (tự động xóa ảnh từ S3)"
 					},
 					"response": []
 				}
 			],
-			"description": "API quản lý bài viết"
+			"description": "API quản lý bài viết - Đơn giản: Thêm, Sửa, Xóa, Lọc theo ID và danh mục"
 		}
 	],
 	"variable": [
@@ -648,4 +498,3 @@
 		}
 	]
 }
-

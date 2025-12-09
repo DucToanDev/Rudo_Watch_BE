@@ -99,11 +99,6 @@ class Router
         // Post Categories
         'GET post-categories/active'  => ['PostCategoriesController', 'active'],
 
-        // Posts
-        'GET posts/published'         => ['PostsController', 'published'],
-        'GET posts/category/{id}'     => ['PostsController', 'byCategory'],
-        'GET posts/slug/{slug}'       => ['PostsController', 'bySlug'],
-
         // Payments
         'POST payments/create'        => ['PaymentController', 'create'],
         'POST payments/webhook'        => ['PaymentController', 'webhook'],

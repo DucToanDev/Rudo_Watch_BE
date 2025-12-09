@@ -43,22 +43,10 @@ class Posts
             $conditions = [];
             $bindings = [];
 
-            // Tìm kiếm theo name
-            if (isset($params['search']) && !empty($params['search'])) {
-                $conditions[] = "p.name LIKE :search";
-                $bindings[':search'] = '%' . $params['search'] . '%';
-            }
-
             // Lọc theo category
             if (isset($params['category_id']) && !empty($params['category_id'])) {
                 $conditions[] = "p.post_category_id = :category_id";
                 $bindings[':category_id'] = $params['category_id'];
-            }
-
-            // Lọc theo author
-            if (isset($params['author_id']) && !empty($params['author_id'])) {
-                $conditions[] = "p.user_id = :author_id";
-                $bindings[':author_id'] = $params['author_id'];
             }
 
             if (!empty($conditions)) {
@@ -66,26 +54,11 @@ class Posts
             }
 
             // Sắp xếp
-            $sortBy = $params['sort_by'] ?? 'created_at';
-            $sortOrder = $params['sort_order'] ?? 'DESC';
-            $query .= " ORDER BY p." . $sortBy . " " . $sortOrder;
-
-            // Phân trang
-            if (isset($params['page']) && isset($params['limit'])) {
-                $page = (int)$params['page'];
-                $limit = (int)$params['limit'];
-                $offset = ($page - 1) * $limit;
-                $query .= " LIMIT :limit OFFSET :offset";
-            }
+            $query .= " ORDER BY p.created_at DESC";
 
             $stmt = $this->conn->prepare($query);
             foreach ($bindings as $key => $value) {
                 $stmt->bindValue($key, $value);
-            }
-            
-            if (isset($params['page']) && isset($params['limit'])) {
-                $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-                $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
             }
             
             $stmt->execute();
@@ -143,67 +116,6 @@ class Posts
         }
     }
 
-    /**
-     * Lấy bài viết đã published (tất cả vì không có status field)
-     */
-    public function getPublished($limit = null)
-    {
-        try {
-            $query = "SELECT p.*, 
-                        pc.name as category_name, 
-                        pc.slug as category_slug,
-                        u.fullname as author_name
-                      FROM " . $this->table_name . " p
-                      LEFT JOIN posts_categories pc ON p.post_category_id = pc.id
-                      LEFT JOIN users u ON p.user_id = u.id
-                      ORDER BY p.created_at DESC";
-            
-            if ($limit) {
-                $query .= " LIMIT :limit";
-            }
-            
-            $stmt = $this->conn->prepare($query);
-            if ($limit) {
-                $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
-            }
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            throw $e;
-        }
-    }
-
-    /**
-     * Lấy bài viết theo category
-     */
-    public function getByCategory($categoryId, $limit = null)
-    {
-        try {
-            $query = "SELECT p.*, 
-                        pc.name as category_name, 
-                        pc.slug as category_slug,
-                        u.fullname as author_name
-                      FROM " . $this->table_name . " p
-                      LEFT JOIN posts_categories pc ON p.post_category_id = pc.id
-                      LEFT JOIN users u ON p.user_id = u.id
-                      WHERE p.post_category_id = :category_id 
-                      ORDER BY p.created_at DESC";
-            
-            if ($limit) {
-                $query .= " LIMIT :limit";
-            }
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':category_id', $categoryId, PDO::PARAM_INT);
-            if ($limit) {
-                $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
-            }
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            throw $e;
-        }
-    }
 
     /**
      * Tạo bài viết mới
@@ -281,12 +193,4 @@ class Posts
         }
     }
 
-    /**
-     * Tăng số lượt xem (không có field views trong DB, giữ lại để tương thích)
-     */
-    public function incrementViews($id)
-    {
-        // Không có field views trong database, bỏ qua
-        return true;
-    }
 }

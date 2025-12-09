@@ -31,19 +31,13 @@ class PostsController
 
     /**
      * GET /api/v1/posts
-     * Lấy danh sách bài viết
+     * Lấy danh sách bài viết (có thể lọc theo category_id)
      */
     public function index()
     {
         try {
             $params = [
-                'search' => $_GET['search'] ?? '',
-                'category_id' => $_GET['category_id'] ?? '',
-                'author_id' => $_GET['author_id'] ?? '',
-                'sort_by' => $_GET['sort_by'] ?? 'created_at',
-                'sort_order' => $_GET['sort_order'] ?? 'DESC',
-                'page' => $_GET['page'] ?? 1,
-                'limit' => $_GET['limit'] ?? 10
+                'category_id' => $_GET['category_id'] ?? ''
             ];
 
             // Loại bỏ các tham số rỗng
@@ -60,48 +54,22 @@ class PostsController
 
     /**
      * GET /api/v1/posts/{id}
-     * Lấy chi tiết bài viết
+     * Lấy chi tiết bài viết theo ID hoặc slug
      */
     public function show($id)
     {
         try {
-            if (!is_numeric($id)) {
-                $this->response->json(['error' => 'ID không hợp lệ'], 400);
-                return;
+            // Kiểm tra nếu là số thì tìm theo ID, nếu không thì tìm theo slug
+            if (is_numeric($id)) {
+                $post = $this->postModel->getById($id);
+            } else {
+                $post = $this->postModel->getBySlug($id);
             }
-
-            $post = $this->postModel->getById($id);
 
             if (!$post) {
                 $this->response->json(['error' => 'Bài viết không tồn tại'], 404);
                 return;
             }
-
-            // Tăng số lượt xem (nếu có field views)
-            $this->postModel->incrementViews($id);
-
-            $this->response->json($post, 200);
-        } catch (Exception $e) {
-            $this->response->json(['error' => $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * GET /api/v1/posts/slug/{slug}
-     * Lấy bài viết theo slug
-     */
-    public function bySlug($slug)
-    {
-        try {
-            $post = $this->postModel->getBySlug($slug);
-
-            if (!$post) {
-                $this->response->json(['error' => 'Bài viết không tồn tại'], 404);
-                return;
-            }
-
-            // Tăng số lượt xem (nếu có field views)
-            $this->postModel->incrementViews($post['id']);
 
             $this->response->json($post, 200);
         } catch (Exception $e) {
@@ -213,11 +181,6 @@ class PostsController
                 return;
             }
 
-            // Kiểm tra quyền (chỉ author hoặc admin mới được sửa)
-            if ($existingPost['user_id'] != $user['id'] && $user['role'] !== 'admin') {
-                $this->response->json(['error' => 'Bạn không có quyền sửa bài viết này'], 403);
-                return;
-            }
 
             // Kiểm tra nếu có file upload (multipart/form-data)
             if (!empty($_FILES['featured_image']) || !empty($_POST)) {
@@ -323,11 +286,6 @@ class PostsController
                 return;
             }
 
-            // Kiểm tra quyền (chỉ author hoặc admin mới được xóa)
-            if ($post['user_id'] != $user['id'] && $user['role'] !== 'admin') {
-                $this->response->json(['error' => 'Bạn không có quyền xóa bài viết này'], 403);
-                return;
-            }
 
             // Xóa ảnh từ S3 nếu có
             if (!empty($post['image']) && $this->storageService) {
@@ -349,40 +307,6 @@ class PostsController
         }
     }
 
-    /**
-     * GET /api/v1/posts/published
-     * Lấy danh sách bài viết đã published
-     */
-    public function published()
-    {
-        try {
-            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : null;
-            $posts = $this->postModel->getPublished($limit);
-            $this->response->json($posts, 200);
-        } catch (Exception $e) {
-            $this->response->json(['error' => $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * GET /api/v1/posts/category/{category_id}
-     * Lấy bài viết theo danh mục
-     */
-    public function byCategory($categoryId)
-    {
-        try {
-            if (!is_numeric($categoryId)) {
-                $this->response->json(['error' => 'Category ID không hợp lệ'], 400);
-                return;
-            }
-
-            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : null;
-            $posts = $this->postModel->getByCategory($categoryId, $limit);
-            $this->response->json($posts, 200);
-        } catch (Exception $e) {
-            $this->response->json(['error' => $e->getMessage()], 500);
-        }
-    }
 
     /**
      * Validate dữ liệu bài viết
