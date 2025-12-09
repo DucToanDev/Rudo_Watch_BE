@@ -9,8 +9,16 @@ class PasswordResetModel
 
     public function __construct()
     {
-        $database = new Database();
-        $this->conn = $database->getConnection();
+        try {
+            $database = new Database();
+            $this->conn = $database->getConnection();
+            if (!$this->conn) {
+                throw new Exception('Database connection is null');
+            }
+        } catch (Exception $e) {
+            error_log('PasswordResetModel constructor error: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     /**

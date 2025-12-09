@@ -11,9 +11,15 @@ class AuthController
 
     public function __construct()
     {
-        $this->userModel = new Users();
-        $this->passwordResetModel = new PasswordResetModel();
-        $this->response = new Response();
+        try {
+            $this->userModel = new Users();
+            $this->passwordResetModel = new PasswordResetModel();
+            $this->response = new Response();
+        } catch (\Exception $e) {
+            error_log('AuthController constructor error: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            throw $e;
+        }
     }
 
     //register
@@ -91,7 +97,17 @@ class AuthController
     public function resetPassword($data)
     {
         try {
-            if (!$data || (empty($data->token) || empty($data->password))) {
+            // Log để debug
+            error_log('AuthController::resetPassword called with data: ' . json_encode($data));
+            
+            if (!$data) {
+                error_log('AuthController::resetPassword - data is null or empty');
+                $this->response->json(['error' => 'Vui lòng điền đầy đủ thông tin'], 400);
+                return;
+            }
+
+            if (empty($data->token) || empty($data->password)) {
+                error_log('AuthController::resetPassword - missing token or password');
                 $this->response->json(['error' => 'Vui lòng điền đầy đủ thông tin'], 400);
                 return;
             }
@@ -107,19 +123,25 @@ class AuthController
             }
 
             // Find reset record by token
+            error_log('AuthController::resetPassword - looking for token: ' . $data->token);
             $resetRecord = $this->passwordResetModel->findByToken($data->token);
             
             if (!$resetRecord) {
+                error_log('AuthController::resetPassword - token not found or expired');
                 $this->response->json([
                     'error' => 'Token không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu link mới.'
                 ], 400);
                 return;
             }
 
+            error_log('AuthController::resetPassword - token found for email: ' . $resetRecord['email']);
+
             // Update password
             $result = $this->userModel->updatePasswordByEmail($resetRecord['email'], $data->password);
             
             if ($result === true) {
+                error_log('AuthController::resetPassword - password updated successfully');
+                
                 // Mark token as used
                 $this->passwordResetModel->markAsUsed($resetRecord['id']);
                 
@@ -130,11 +152,20 @@ class AuthController
                     'message' => 'Password reset successful'
                 ], 200);
             } else {
+                error_log('AuthController::resetPassword - failed to update password');
                 $this->response->json([
                     'error' => 'Đặt lại mật khẩu thất bại. Vui lòng thử lại.'
                 ], 500);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+            error_log('AuthController::resetPassword exception: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            $this->response->json([
+                'error' => 'Lỗi server: ' . $e->getMessage()
+            ], 500);
+        } catch (\Throwable $e) {
+            error_log('AuthController::resetPassword throwable: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
             $this->response->json([
                 'error' => 'Lỗi server: ' . $e->getMessage()
             ], 500);

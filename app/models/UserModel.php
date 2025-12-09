@@ -73,9 +73,17 @@ class Users
 
     public function __construct()
     {
-        $database = new Database();
-        $this->conn = $database->getConnection();
-        $this->response = new Response();
+        try {
+            $database = new Database();
+            $this->conn = $database->getConnection();
+            if (!$this->conn) {
+                throw new Exception('Database connection is null');
+            }
+            $this->response = new Response();
+        } catch (Exception $e) {
+            error_log('UserModel constructor error: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     /**

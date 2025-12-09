@@ -21,9 +21,14 @@ RUN echo '<IfModule mod_headers.c>\n\
     Header always set Access-Control-Max-Age "86400"\n\
 </IfModule>' >> /etc/apache2/conf-available/cors.conf && a2enconf cors
 
+# 5.2 Fix Apache ServerName warning
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
 # 6. Mở cổng 80 (Render sẽ tự động map cổng này ra ngoài)
 EXPOSE 80
 
-# 7. Cấp quyền để server có thể đọc/ghi file (tránh lỗi permission)
-RUN chown -R www-data:www-data /var/www/html && \
-    chmod -R 755 /var/www/html
+# 7. Tạo thư mục logs và cấp quyền
+RUN mkdir -p /var/www/html/storage/logs && \
+    chown -R www-data:www-data /var/www/html && \
+    chmod -R 755 /var/www/html && \
+    chmod -R 775 /var/www/html/storage

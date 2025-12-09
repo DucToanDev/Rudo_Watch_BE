@@ -283,7 +283,14 @@ class Router
                 $controller->$action($data);
             }
             return true;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+            error_log('Router execute exception: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            $this->response->json(['error' => 'Lỗi: ' . $e->getMessage()], 500);
+            return true;
+        } catch (\Throwable $e) {
+            error_log('Router execute throwable: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
             $this->response->json(['error' => 'Lỗi: ' . $e->getMessage()], 500);
             return true;
         }
@@ -294,11 +301,30 @@ class Router
      */
     private function loadController($name)
     {
-        $file = __DIR__ . "/../api/controllers/{$this->version}/{$name}.php";
-        if (!file_exists($file)) return null;
+        try {
+            $file = __DIR__ . "/../api/controllers/{$this->version}/{$name}.php";
+            if (!file_exists($file)) {
+                error_log("Controller file not found: $file");
+                return null;
+            }
 
-        require_once $file;
-        return new $name();
+            require_once $file;
+            
+            if (!class_exists($name)) {
+                error_log("Controller class not found: $name");
+                return null;
+            }
+            
+            return new $name();
+        } catch (\Exception $e) {
+            error_log("Error loading controller $name: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return null;
+        } catch (\Throwable $e) {
+            error_log("Error loading controller $name: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return null;
+        }
     }
 
     /**
