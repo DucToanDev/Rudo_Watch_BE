@@ -7,6 +7,17 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../vendor/phpmailer/phpmailer/src/PHPMailer.php';
 require_once __DIR__ . '/../../vendor/phpmailer/phpmailer/src/Exception.php';
 
+// Load environment variables nếu chưa được load
+if (!isset($_ENV['DB_HOST'])) {
+    try {
+        $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../..');
+        $dotenv->load();
+    } catch (Exception $e) {
+        // Nếu không có file .env, sử dụng getenv() từ system environment
+        error_log('Dotenv load failed, using getenv() instead: ' . $e->getMessage());
+    }
+}
+
 class MailService
 {
     private $mailer;
@@ -26,33 +37,45 @@ class MailService
             return;
         }
 
-        $smtpHost = $_ENV['SMTP_HOST'];
-        $smtpUser = $_ENV['SMTP_USER'];
-        $smtpPass = $_ENV['SMTP_PASS'];
-        $smtpPort = $_ENV['SMTP_PORT'] ?: 587;
-        $from = $_ENV['SMTP_FROM'];
-        $fromName = $_ENV['SMTP_FROM_NAME'];
+        try {
+            // Sử dụng getenv() hoặc $_ENV với fallback
+            $smtpHost = getenv('SMTP_HOST') ?: ($_ENV['SMTP_HOST'] ?? null);
+            $smtpUser = getenv('SMTP_USER') ?: ($_ENV['SMTP_USER'] ?? null);
+            $smtpPass = getenv('SMTP_PASS') ?: ($_ENV['SMTP_PASS'] ?? null);
+            $smtpPort = getenv('SMTP_PORT') ?: ($_ENV['SMTP_PORT'] ?? 587);
+            $from = getenv('SMTP_FROM') ?: ($_ENV['SMTP_FROM'] ?? null);
+            $fromName = getenv('SMTP_FROM_NAME') ?: ($_ENV['SMTP_FROM_NAME'] ?? null);
 
-        if (empty($smtpHost) || empty($smtpUser) || empty($smtpPass)) {
-            throw new Exception('Thiếu cấu hình SMTP!');
+            if (empty($smtpHost) || empty($smtpUser) || empty($smtpPass)) {
+                throw new Exception('Thiếu cấu hình SMTP! Vui lòng kiểm tra biến môi trường SMTP_HOST, SMTP_USER, SMTP_PASS');
+            }
+
+            if (empty($from) || empty($fromName)) {
+                $from = $from ?: $smtpUser;
+                $fromName = $fromName ?: 'Rudo Watch';
+            }
+
+            $this->mailer->isSMTP();
+            $this->mailer->Host = $smtpHost;
+            $this->mailer->SMTPAuth = true;
+            $this->mailer->Username = $smtpUser;
+            $this->mailer->Password = $smtpPass;
+            $this->mailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $this->mailer->Port = (int)$smtpPort;
+            $this->mailer->CharSet = 'UTF-8';
+            $this->mailer->setFrom($from, $fromName);
+            
+            // Tắt debug output trong production
+            $this->mailer->SMTPDebug = 0;
+            $this->mailer->Debugoutput = function($str, $level) {
+                error_log("PHPMailer: $str");
+            };
+
+            $this->initialized = true;
+        } catch (Exception $e) {
+            error_log('MailService initialize error: ' . $e->getMessage());
+            throw $e;
         }
-
-        if (empty($from) || empty($fromName)) {
-            $from = $from ?: $smtpUser;
-            $fromName = $fromName ?: 'Rudo Watch';
-        }
-
-        $this->mailer->isSMTP();
-        $this->mailer->Host = $smtpHost;
-        $this->mailer->SMTPAuth = true;
-        $this->mailer->Username = $smtpUser;
-        $this->mailer->Password = $smtpPass;
-        $this->mailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $this->mailer->Port = $smtpPort;
-        $this->mailer->CharSet = 'UTF-8';
-        $this->mailer->setFrom($from, $fromName);
-
-        $this->initialized = true;
     }
 
     public function send($to, $subject, $body)
@@ -61,14 +84,23 @@ class MailService
             $this->initialize();
             
             $this->mailer->clearAddresses();
+            $this->mailer->clearAttachments();
             $this->mailer->addAddress($to);
             $this->mailer->Subject = $subject;
             $this->mailer->Body = $body;
             $this->mailer->isHTML(true);
+            $this->mailer->AltBody = strip_tags($body);
             
-            $this->mailer->send();
-            return true;
+            $result = $this->mailer->send();
+            if ($result) {
+                return true;
+            } else {
+                $error = $this->mailer->ErrorInfo;
+                error_log('PHPMailer send failed: ' . $error);
+                return $error;
+            }
         } catch (Exception $e) {
+            error_log('MailService send exception: ' . $e->getMessage());
             return $e->getMessage();
         }
     }
