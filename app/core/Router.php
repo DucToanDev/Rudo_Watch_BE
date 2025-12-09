@@ -19,6 +19,9 @@ class Router
         'GET facebook-callback' => ['SocialAuthController', 'facebookCallback'],
         'GET google'        => ['SocialAuthController', 'googleStart'],
         'GET google-callback' => ['SocialAuthController', 'googleCallback'],
+        // Forgot password
+        'POST forgot-password/send-code' => ['ForgotPasswordController', 'sendCode'],
+        'POST forgot-password/reset'     => ['ForgotPasswordController', 'resetPassword'],
     ];
 
     // Routes /user/{action}
@@ -139,9 +142,27 @@ class Router
     public function handleSpecialRoute()
     {
         // 1. Auth routes: POST /register, POST /login, GET /facebook...
+        // Kiểm tra route đơn giản trước (không có sub-action)
         $authKey = "{$this->method} {$this->resource}";
         if (isset(self::AUTH_ROUTES[$authKey])) {
             return $this->call(self::AUTH_ROUTES[$authKey]);
+        }
+
+        // 1b. Auth routes với sub-action: POST /forgot-password/send-code, POST /forgot-password/reset
+        if ($this->resource && $this->id) {
+            $authKeyWithAction = "{$this->method} {$this->resource}/{$this->id}";
+            if (isset(self::AUTH_ROUTES[$authKeyWithAction])) {
+                return $this->call(self::AUTH_ROUTES[$authKeyWithAction]);
+            }
+        }
+        
+        // 1c. Kiểm tra lại với resource có dấu gạch ngang (forgot-password)
+        // Đảm bảo route được match đúng
+        if ($this->resource === 'forgot-password' && $this->id) {
+            $authKeyWithAction = "{$this->method} {$this->resource}/{$this->id}";
+            if (isset(self::AUTH_ROUTES[$authKeyWithAction])) {
+                return $this->call(self::AUTH_ROUTES[$authKeyWithAction]);
+            }
         }
 
         // 2. User routes: GET /user/profile, PUT /user/update...
@@ -265,7 +286,6 @@ class Router
      */
     private function getControllerName()
     {
-        // Check plural map
         if (isset(self::PLURAL_MAP[$this->resource])) {
             return self::PLURAL_MAP[$this->resource] . 'Controller';
         }

@@ -1086,62 +1086,68 @@
         }
       }
     },
-    "/vouchers/validate": {
-      "post": {
+    "/vouchers/check/{code}": {
+      "get": {
         "tags": ["Vouchers"],
-        "summary": "Kiểm tra mã voucher hợp lệ",
-        "security": [{ "BearerAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["code", "cart_total"],
-                "properties": {
-                  "code": { "type": "string", "example": "SUMMER2024" },
-                  "cart_total": { "type": "number", "example": 500000 }
-                }
-              }
-            }
+        "summary": "Kiểm tra mã voucher có hợp lệ không",
+        "description": "Kiểm tra mã voucher có tồn tại và còn hạn sử dụng không",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "SALE10",
+            "description": "Mã voucher cần kiểm tra"
           }
-        },
+        ],
         "responses": {
           "200": {
-            "description": "Voucher hợp lệ",
+            "description": "Kết quả kiểm tra voucher",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "valid": { "type": "boolean" },
-                    "data": { "$ref": "#/components/schemas/Voucher" },
-                    "discount_amount": { "type": "number" },
-                    "message": { "type": "string" }
+                    "valid": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Mã giảm giá hợp lệ" },
+                    "voucher": { "$ref": "#/components/schemas/Voucher" }
                   }
                 }
               }
             }
           },
-          "400": { "description": "Voucher không hợp lệ" }
+          "404": { 
+            "description": "Mã giảm giá không tồn tại",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string", "example": "Mã giảm giá không tồn tại" }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
     "/vouchers/apply": {
       "post": {
         "tags": ["Vouchers"],
-        "summary": "Áp dụng voucher vào đơn hàng",
-        "security": [{ "BearerAuth": [] }],
+        "summary": "Áp dụng mã giảm giá và tính tiền",
+        "description": "Áp dụng voucher vào đơn hàng và tính số tiền được giảm",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["code", "cart_total"],
+                "required": ["code", "total"],
                 "properties": {
-                  "code": { "type": "string", "example": "SUMMER2024" },
-                  "cart_total": { "type": "number", "example": 500000 }
+                  "code": { "type": "string", "example": "SALE10", "description": "Mã voucher" },
+                  "total": { "type": "number", "example": 500000, "description": "Tổng tiền đơn hàng" }
                 }
               }
             }
@@ -1155,14 +1161,15 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string" },
+                    "message": { "type": "string", "example": "Áp dụng mã giảm giá thành công" },
                     "data": {
                       "type": "object",
                       "properties": {
+                        "success": { "type": "boolean", "example": true },
                         "voucher": { "$ref": "#/components/schemas/Voucher" },
-                        "discount_amount": { "type": "number" },
-                        "original_total": { "type": "number" },
-                        "final_total": { "type": "number" }
+                        "discount_amount": { "type": "number", "example": 50000, "description": "Số tiền được giảm" },
+                        "original_total": { "type": "number", "example": 500000, "description": "Tổng tiền ban đầu" },
+                        "final_total": { "type": "number", "example": 450000, "description": "Tổng tiền sau giảm" }
                       }
                     }
                   }
@@ -1170,7 +1177,19 @@
               }
             }
           },
-          "400": { "description": "Voucher không hợp lệ" }
+          "400": { 
+            "description": "Voucher không hợp lệ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": { "type": "string", "example": "Mã giảm giá đã hết hạn" }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -1760,37 +1779,26 @@
         "type": "object",
         "properties": {
           "id": { "type": "integer" },
-          "code": { "type": "string", "example": "SUMMER2024" },
-          "name": { "type": "string", "example": "Giảm giá mùa hè" },
-          "description": { "type": "string" },
-          "discount_type": { "type": "string", "enum": ["percentage", "fixed"], "description": "percentage: Giảm %, fixed: Giảm số tiền cố định" },
-          "discount_value": { "type": "number", "example": 10 },
-          "min_order_value": { "type": "number", "example": 500000, "description": "Giá trị đơn hàng tối thiểu" },
-          "max_discount": { "type": "number", "example": 100000, "description": "Số tiền giảm tối đa (cho loại percentage)" },
+          "code": { "type": "string", "example": "SALE10" },
+          "type": { "type": "string", "enum": ["percent", "money"], "description": "percent: Giảm %, money: Giảm số tiền cố định" },
+          "discount": { "type": "integer", "example": 10, "description": "Phần trăm giảm giá (khi type=percent, từ 1-100)" },
+          "amount": { "type": "number", "example": 50000, "description": "Số tiền giảm (khi type=money)" },
           "usage_limit": { "type": "integer", "example": 100, "description": "Số lần sử dụng tối đa" },
-          "used_count": { "type": "integer", "example": 10, "description": "Số lần đã sử dụng" },
-          "start_date": { "type": "string", "format": "date-time", "example": "2024-06-01T00:00:00" },
-          "end_date": { "type": "string", "format": "date-time", "example": "2024-08-31T23:59:59" },
-          "status": { "type": "integer", "enum": [0, 1], "description": "0: Inactive, 1: Active" },
-          "created_at": { "type": "string", "format": "date-time" },
-          "updated_at": { "type": "string", "format": "date-time" }
+          "expired_at": { "type": "string", "format": "date-time", "example": "2025-12-31T23:59:59" },
+          "is_expired": { "type": "boolean", "description": "Voucher đã hết hạn chưa" },
+          "created_at": { "type": "string", "format": "date-time" }
         }
       },
       "VoucherRequest": {
         "type": "object",
-        "required": ["code", "name", "discount_type", "discount_value", "start_date", "end_date"],
+        "required": ["code", "type"],
         "properties": {
-          "code": { "type": "string", "example": "SUMMER2024", "description": "Mã voucher (unique)" },
-          "name": { "type": "string", "example": "Giảm giá mùa hè" },
-          "description": { "type": "string" },
-          "discount_type": { "type": "string", "enum": ["percentage", "fixed"], "description": "percentage: Giảm %, fixed: Giảm số tiền cố định" },
-          "discount_value": { "type": "number", "example": 10, "description": "Giá trị giảm (% hoặc số tiền)" },
-          "min_order_value": { "type": "number", "example": 500000, "description": "Giá trị đơn hàng tối thiểu để áp dụng" },
-          "max_discount": { "type": "number", "example": 100000, "description": "Số tiền giảm tối đa (chỉ dùng cho percentage)" },
-          "usage_limit": { "type": "integer", "example": 100, "description": "Số lần sử dụng tối đa (null = không giới hạn)" },
-          "start_date": { "type": "string", "format": "date-time", "example": "2024-06-01T00:00:00" },
-          "end_date": { "type": "string", "format": "date-time", "example": "2024-08-31T23:59:59" },
-          "status": { "type": "integer", "enum": [0, 1], "default": 1, "description": "0: Inactive, 1: Active" }
+          "code": { "type": "string", "example": "SALE10", "description": "Mã voucher (chỉ chữ và số, tối đa 50 ký tự)" },
+          "type": { "type": "string", "enum": ["percent", "money"], "description": "percent: Giảm %, money: Giảm số tiền cố định" },
+          "discount": { "type": "integer", "example": 10, "description": "Phần trăm giảm giá (bắt buộc khi type=percent, từ 1-100)" },
+          "amount": { "type": "number", "example": 50000, "description": "Số tiền giảm (bắt buộc khi type=money, > 0)" },
+          "usage_limit": { "type": "integer", "example": 100, "description": "Số lần sử dụng tối đa" },
+          "expired_at": { "type": "string", "format": "date-time", "example": "2025-12-31T23:59:59", "description": "Ngày hết hạn" }
         }
       },
       "ProductVariant": {

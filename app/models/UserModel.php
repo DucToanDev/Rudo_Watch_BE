@@ -5,6 +5,38 @@ require_once __DIR__ . '/../../config/function.php';
 
 class Users
 {
+    // Tìm user theo email
+    public function findByEmail($email)
+    {
+        try {
+            $query = "SELECT * FROM {$this->table_name} WHERE email = :email LIMIT 1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':email', $email);
+            $stmt->execute();
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $user ?: null;
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    // Đổi mật khẩu theo email (không cần mật khẩu cũ)
+    public function updatePasswordByEmail($email, $newPassword)
+    {
+        try {
+            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+            $newToken = bin2hex(random_bytes(32));
+            $query = "UPDATE {$this->table_name} SET password = :password, api_token = :token WHERE email = :email";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':password', $hashedPassword);
+            $stmt->bindParam(':token', $newToken);
+            $stmt->bindParam(':email', $email);
+            $result = $stmt->execute();
+            return $result === true;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
     private $conn;
     private $table_name = 'users';
     public $response;
