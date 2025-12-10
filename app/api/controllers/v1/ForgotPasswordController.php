@@ -31,6 +31,11 @@ class ForgotPasswordController
     public function sendCode($data)
     {
         try {
+            // Chuyển đổi data thành object nếu là array
+            if (is_array($data)) {
+                $data = (object)$data;
+            }
+
             if (!$data || empty($data->email)) {
                 $this->response->json(['error' => 'Vui lòng nhập email'], 400);
                 return;
@@ -105,6 +110,11 @@ class ForgotPasswordController
     public function resetPassword($data)
     {
         try {
+            // Chuyển đổi data thành object nếu là array
+            if (is_array($data)) {
+                $data = (object)$data;
+            }
+
             if (!$data || empty($data->email) || empty($data->code) || empty($data->new_password)) {
                 $this->response->json(['error' => 'Vui lòng điền đầy đủ thông tin'], 400);
                 return;

@@ -1,17 +1,20 @@
 <?php
-require_once __DIR__ . '/../../../models/ReviewModel.php';
+require_once __DIR__ . '/../../../models/ReviewModel.php'; // File chứa class "Reviews"
+require_once __DIR__ . '/../../../models/ProductModel.php';
 require_once __DIR__ . '/../../../core/Response.php';
 require_once __DIR__ . '/../../../middleware/AuthMiddleware.php';
 
 class ReviewsController
 {
     private $reviewModel;
+    private $productModel;
     private $response;
     private $authMiddleware;
 
     public function __construct()
     {
-        $this->reviewModel = new Reviews();
+        $this->reviewModel = new Reviews(); // Class name trong ReviewModel.php là "Reviews"
+        $this->productModel = new Products(); // Class name trong ProductModel.php là "Products"
         $this->response = new Response();
         $this->authMiddleware = new AuthMiddleware();
     }
@@ -118,15 +121,46 @@ class ReviewsController
                 return;
             }
 
-            // Lấy dữ liệu từ request
-            if (!empty($_POST)) {
-                $data = (object) $_POST;
+            // Nếu data null hoặc không hợp lệ, thử parse lại từ raw input
+            if (empty($data) || (is_array($data) && !isset($data['product_id']) && !isset($data['content']))) {
+                $rawInput = file_get_contents("php://input");
+                if (!empty($rawInput)) {
+                    $decoded = json_decode($rawInput, true);
+                    if ($decoded && json_last_error() === JSON_ERROR_NONE) {
+                        $data = (object)$decoded;
+                    } elseif (!empty($_POST)) {
+                        $data = (object) $_POST;
+                    }
+                } elseif (!empty($_POST)) {
+                    $data = (object) $_POST;
+                }
+            }
+
+            // Chuyển đổi data thành object nếu là array
+            if (is_array($data)) {
+                $data = (object)$data;
+            }
+
+            // Nếu vẫn không có data, trả về lỗi
+            if (empty($data)) {
+                $this->response->json(['error' => 'Dữ liệu không hợp lệ'], 400);
+                return;
             }
 
             // Validate dữ liệu
             $errors = $this->validateReviewData($data);
             if (!empty($errors)) {
                 $this->response->json(['errors' => $errors], 400);
+                return;
+            }
+
+            // Kiểm tra product có tồn tại không
+            $product = $this->productModel->getById($data->product_id);
+            if (!$product) {
+                $this->response->json([
+                    'error' => 'Sản phẩm không tồn tại',
+                    'product_id' => $data->product_id
+                ], 404);
                 return;
             }
 
@@ -150,6 +184,29 @@ class ReviewsController
                 ], 201);
             } else {
                 $this->response->json(['error' => 'Không thể tạo đánh giá'], 500);
+            }
+        } catch (PDOException $e) {
+            // Xử lý lỗi database cụ thể
+            $errorCode = $e->getCode();
+            $errorMessage = $e->getMessage();
+            
+            // Lỗi foreign key constraint
+            if ($errorCode == 23000 || strpos($errorMessage, 'foreign key constraint') !== false) {
+                if (strpos($errorMessage, 'product_id') !== false) {
+                    $this->response->json([
+                        'error' => 'Sản phẩm không tồn tại',
+                        'product_id' => $data->product_id ?? null
+                    ], 404);
+                } else {
+                    $this->response->json([
+                        'error' => 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.',
+                        'details' => 'Foreign key constraint violation'
+                    ], 400);
+                }
+            } else {
+                $this->response->json([
+                    'error' => 'Lỗi database: ' . $errorMessage
+                ], 500);
             }
         } catch (Exception $e) {
             $this->response->json(['error' => $e->getMessage()], 500);
@@ -186,10 +243,24 @@ class ReviewsController
             }
 
             // Lấy dữ liệu từ request
-            if (!empty($_POST)) {
-                $data = (object) $_POST;
-            } else {
-                $data = json_decode(file_get_contents("php://input"));
+            // Chuyển đổi data thành object nếu là array
+            if (is_array($data)) {
+                $data = (object)$data;
+            }
+            
+            // Nếu data null hoặc rỗng, thử lấy từ $_POST hoặc php://input
+            if (empty($data)) {
+                if (!empty($_POST)) {
+                    $data = (object) $_POST;
+                } else {
+                    $rawInput = file_get_contents("php://input");
+                    if (!empty($rawInput)) {
+                        $data = json_decode($rawInput);
+                        if (is_array($data)) {
+                            $data = (object)$data;
+                        }
+                    }
+                }
             }
 
             // Validate rating nếu có

@@ -23,7 +23,12 @@ class AuthController
     //register
     public function register($data)
     {
-        if (empty($data->fullname) || empty($data->email) || empty($data->password)) {
+        // Chuyển đổi data thành object nếu là array
+        if (is_array($data)) {
+            $data = (object)$data;
+        }
+
+        if (empty($data) || empty($data->fullname) || empty($data->email) || empty($data->password)) {
             $this->response->json([
                 'error' => 'Vui lòng điền đầy đủ thông tin'
             ], 400);
@@ -67,7 +72,12 @@ class AuthController
     // login
     public function login($data)
     {
-        if (empty($data->email) || empty($data->password)) {
+        // Chuyển đổi data thành object nếu là array
+        if (is_array($data)) {
+            $data = (object)$data;
+        }
+
+        if (empty($data) || empty($data->email) || empty($data->password)) {
             $this->response->json([
                 'error' => 'Vui lòng điền đầy đủ thông tin'
             ], 400);

@@ -44,3 +44,487 @@
 [09-Dec-2025 19:41:08 UTC] MailService::initialize - starting
 [09-Dec-2025 19:41:08 UTC] MailService::initialize - SMTP config check: host=set, user=set, pass=set
 [09-Dec-2025 19:41:08 UTC] MailService::initialize - completed successfully
+[10-Dec-2025 03:55:11 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 03:55:11 UTC] REQUEST_URI: /backend/api/v1/payments/creat
+[10-Dec-2025 03:55:11 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 03:55:11 UTC] QUERY_STRING: url=api/v1/payments/creat
+[10-Dec-2025 03:55:11 UTC] GET url param: api/v1/payments/creat
+[10-Dec-2025 03:55:11 UTC] URI Segments: ["api","v1","payments","creat"]
+[10-Dec-2025 03:55:11 UTC] Router constructor - URI segments: ["api","v1","payments","creat"]
+[10-Dec-2025 03:55:11 UTC] Router parsed - version: v1, resource: payments, id: creat, method: POST
+[10-Dec-2025 03:55:11 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: creat
+[10-Dec-2025 03:55:11 UTC] Checking auth route: POST payments
+[10-Dec-2025 03:55:11 UTC] Checking auth route with action: POST payments/creat
+[10-Dec-2025 03:55:17 UTC] Database connection failed: SQLSTATE[HY000] [2002] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+[10-Dec-2025 03:55:17 UTC] Error loading controller PaymentController: Database connection failed: SQLSTATE[HY000] [2002] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+[10-Dec-2025 03:55:17 UTC] Stack trace: #0 F:\laragon\www\backend\app\models\OrderModel.php(16): Database->__construct()
+#1 F:\laragon\www\backend\app\api\controllers\v1\PaymentController.php(21): OrderModel->__construct()
+#2 F:\laragon\www\backend\app\core\Router.php(375): PaymentController->__construct()
+#3 F:\laragon\www\backend\app\core\Router.php(223): Router->loadController('PaymentControll...')
+#4 F:\laragon\www\backend\index.php(103): Router->handleStandardRoute()
+#5 {main}
+[10-Dec-2025 03:55:21 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 03:55:21 UTC] REQUEST_URI: /backend/api/v1/payments/creat
+[10-Dec-2025 03:55:21 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 03:55:21 UTC] QUERY_STRING: url=api/v1/payments/creat
+[10-Dec-2025 03:55:21 UTC] GET url param: api/v1/payments/creat
+[10-Dec-2025 03:55:21 UTC] URI Segments: ["api","v1","payments","creat"]
+[10-Dec-2025 03:55:21 UTC] Router constructor - URI segments: ["api","v1","payments","creat"]
+[10-Dec-2025 03:55:21 UTC] Router parsed - version: v1, resource: payments, id: creat, method: POST
+[10-Dec-2025 03:55:21 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: creat
+[10-Dec-2025 03:55:21 UTC] Checking auth route: POST payments
+[10-Dec-2025 03:55:21 UTC] Checking auth route with action: POST payments/creat
+[10-Dec-2025 03:55:30 UTC] Database connection failed: SQLSTATE[HY000] [2002] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+[10-Dec-2025 03:55:30 UTC] UserModel constructor error: Database connection failed: SQLSTATE[HY000] [2002] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+[10-Dec-2025 03:55:30 UTC] Error loading controller PaymentController: Database connection failed: SQLSTATE[HY000] [2002] A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond
+[10-Dec-2025 03:55:30 UTC] Stack trace: #0 F:\laragon\www\backend\app\models\UserModel.php(77): Database->__construct()
+#1 F:\laragon\www\backend\app\middleware\AuthMiddleware.php(13): Users->__construct()
+#2 F:\laragon\www\backend\app\api\controllers\v1\PaymentController.php(24): AuthMiddleware->__construct()
+#3 F:\laragon\www\backend\app\core\Router.php(375): PaymentController->__construct()
+#4 F:\laragon\www\backend\app\core\Router.php(223): Router->loadController('PaymentControll...')
+#5 F:\laragon\www\backend\index.php(103): Router->handleStandardRoute()
+#6 {main}
+[10-Dec-2025 04:02:26 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:02:26 UTC] REQUEST_URI: /backend/api/v1/payments/create
+[10-Dec-2025 04:02:26 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:02:26 UTC] QUERY_STRING: url=api/v1/payments/create
+[10-Dec-2025 04:02:26 UTC] GET url param: api/v1/payments/create
+[10-Dec-2025 04:02:26 UTC] URI Segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:02:26 UTC] Router constructor - URI segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:02:26 UTC] Router parsed - version: v1, resource: payments, id: create, method: POST
+[10-Dec-2025 04:02:26 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: create
+[10-Dec-2025 04:02:26 UTC] Checking auth route: POST payments
+[10-Dec-2025 04:02:26 UTC] Checking auth route with action: POST payments/create
+[10-Dec-2025 04:02:26 UTC] Router::buildRouteKey - routeKey: POST payments/create
+[10-Dec-2025 04:02:34 UTC] Router::execute - controller: PaymentController, action: create
+[10-Dec-2025 04:02:34 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 04:02:34 UTC] Router::execute - raw input length: 21
+[10-Dec-2025 04:02:34 UTC] Router::execute - raw input preview: {
+  "order_id": 123
+}
+[10-Dec-2025 04:02:34 UTC] Router::execute - final data: {"order_id":123}
+[10-Dec-2025 04:02:58 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:02:58 UTC] REQUEST_URI: /backend/api/v1/payments/create
+[10-Dec-2025 04:02:58 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:02:58 UTC] QUERY_STRING: url=api/v1/payments/create
+[10-Dec-2025 04:02:58 UTC] GET url param: api/v1/payments/create
+[10-Dec-2025 04:02:58 UTC] URI Segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:02:58 UTC] Router constructor - URI segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:02:58 UTC] Router parsed - version: v1, resource: payments, id: create, method: POST
+[10-Dec-2025 04:02:58 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: create
+[10-Dec-2025 04:02:58 UTC] Checking auth route: POST payments
+[10-Dec-2025 04:02:58 UTC] Checking auth route with action: POST payments/create
+[10-Dec-2025 04:03:09 UTC] Router::execute - controller: PaymentController, action: create
+[10-Dec-2025 04:03:09 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 04:03:09 UTC] Router::execute - raw input length: 21
+[10-Dec-2025 04:03:09 UTC] Router::execute - raw input preview: {
+  "order_id": 123
+}
+[10-Dec-2025 04:03:09 UTC] Router::execute - final data: {"order_id":123}
+[10-Dec-2025 04:04:37 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:04:37 UTC] REQUEST_URI: /backend/api/v1/payments/create
+[10-Dec-2025 04:04:37 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:04:37 UTC] QUERY_STRING: url=api/v1/payments/create
+[10-Dec-2025 04:04:37 UTC] GET url param: api/v1/payments/create
+[10-Dec-2025 04:04:37 UTC] URI Segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:04:37 UTC] Router constructor - URI segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:04:37 UTC] Router parsed - version: v1, resource: payments, id: create, method: POST
+[10-Dec-2025 04:04:37 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: create
+[10-Dec-2025 04:04:37 UTC] Checking auth route: POST payments
+[10-Dec-2025 04:04:37 UTC] Checking auth route with action: POST payments/create
+[10-Dec-2025 04:04:46 UTC] Router::execute - controller: PaymentController, action: create
+[10-Dec-2025 04:04:46 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 04:04:46 UTC] Router::execute - raw input length: 21
+[10-Dec-2025 04:04:46 UTC] Router::execute - raw input preview: {
+  "order_id": 123
+}
+[10-Dec-2025 04:04:46 UTC] Router::execute - final data: {"order_id":123}
+[10-Dec-2025 04:05:35 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:05:35 UTC] REQUEST_URI: /backend/api/v1/payments/create
+[10-Dec-2025 04:05:35 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:05:35 UTC] QUERY_STRING: url=api/v1/payments/create
+[10-Dec-2025 04:05:35 UTC] GET url param: api/v1/payments/create
+[10-Dec-2025 04:05:35 UTC] URI Segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:05:35 UTC] Router constructor - URI segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:05:35 UTC] Router parsed - version: v1, resource: payments, id: create, method: POST
+[10-Dec-2025 04:05:35 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: create
+[10-Dec-2025 04:05:35 UTC] Checking auth route: POST payments
+[10-Dec-2025 04:05:35 UTC] Checking auth route with action: POST payments/create
+[10-Dec-2025 04:05:42 UTC] Router::execute - controller: PaymentController, action: create
+[10-Dec-2025 04:05:42 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 04:05:42 UTC] Router::execute - raw input length: 19
+[10-Dec-2025 04:05:42 UTC] Router::execute - raw input preview: {
+  "order_id": 7
+}
+[10-Dec-2025 04:05:42 UTC] Router::execute - final data: {"order_id":7}
+[10-Dec-2025 04:06:51 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:06:51 UTC] REQUEST_URI: /backend/api/v1/payments/create
+[10-Dec-2025 04:06:51 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:06:51 UTC] QUERY_STRING: url=api/v1/payments/create
+[10-Dec-2025 04:06:51 UTC] GET url param: api/v1/payments/create
+[10-Dec-2025 04:06:51 UTC] URI Segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:06:51 UTC] Router constructor - URI segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:06:51 UTC] Router parsed - version: v1, resource: payments, id: create, method: POST
+[10-Dec-2025 04:06:51 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: create
+[10-Dec-2025 04:06:51 UTC] Checking auth route: POST payments
+[10-Dec-2025 04:06:51 UTC] Checking auth route with action: POST payments/create
+[10-Dec-2025 04:06:59 UTC] Router::execute - controller: PaymentController, action: create
+[10-Dec-2025 04:06:59 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 04:06:59 UTC] Router::execute - raw input length: 19
+[10-Dec-2025 04:06:59 UTC] Router::execute - raw input preview: {
+  "order_id": 8
+}
+[10-Dec-2025 04:06:59 UTC] Router::execute - final data: {"order_id":8}
+[10-Dec-2025 04:07:15 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:07:15 UTC] REQUEST_URI: /backend/api/v1/payments/create
+[10-Dec-2025 04:07:15 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:07:15 UTC] QUERY_STRING: url=api/v1/payments/create
+[10-Dec-2025 04:07:15 UTC] GET url param: api/v1/payments/create
+[10-Dec-2025 04:07:15 UTC] URI Segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:07:15 UTC] Router constructor - URI segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:07:15 UTC] Router parsed - version: v1, resource: payments, id: create, method: POST
+[10-Dec-2025 04:07:15 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: create
+[10-Dec-2025 04:07:15 UTC] Checking auth route: POST payments
+[10-Dec-2025 04:07:15 UTC] Checking auth route with action: POST payments/create
+[10-Dec-2025 04:07:23 UTC] Router::execute - controller: PaymentController, action: create
+[10-Dec-2025 04:07:23 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 04:07:23 UTC] Router::execute - raw input length: 20
+[10-Dec-2025 04:07:23 UTC] Router::execute - raw input preview: {
+  "order_id": 12
+}
+[10-Dec-2025 04:07:23 UTC] Router::execute - final data: {"order_id":12}
+[10-Dec-2025 04:11:31 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:11:31 UTC] REQUEST_URI: /backend/api/v1/payments/create
+[10-Dec-2025 04:11:31 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:11:31 UTC] QUERY_STRING: url=api/v1/payments/create
+[10-Dec-2025 04:11:31 UTC] GET url param: api/v1/payments/create
+[10-Dec-2025 04:11:31 UTC] URI Segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:11:31 UTC] Router constructor - URI segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:11:31 UTC] Router parsed - version: v1, resource: payments, id: create, method: POST
+[10-Dec-2025 04:11:31 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: create
+[10-Dec-2025 04:11:31 UTC] Checking auth route: POST payments
+[10-Dec-2025 04:11:31 UTC] Checking auth route with action: POST payments/create
+[10-Dec-2025 04:11:39 UTC] Router::execute - controller: PaymentController, action: create
+[10-Dec-2025 04:11:39 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 04:11:39 UTC] Router::execute - raw input length: 20
+[10-Dec-2025 04:11:39 UTC] Router::execute - raw input preview: {
+  "order_id": 12
+}
+[10-Dec-2025 04:11:39 UTC] Router::execute - final data: {"order_id":12}
+[10-Dec-2025 04:12:16 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:12:16 UTC] REQUEST_URI: /backend/reviews?page=1&limit=10
+[10-Dec-2025 04:12:16 UTC] REQUEST_METHOD: GET
+[10-Dec-2025 04:12:16 UTC] QUERY_STRING: url=reviews&page=1&limit=10
+[10-Dec-2025 04:12:16 UTC] GET url param: reviews
+[10-Dec-2025 04:12:16 UTC] URI Segments: ["reviews"]
+[10-Dec-2025 04:12:16 UTC] Invalid URI structure - returning 400
+[10-Dec-2025 04:12:30 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:12:30 UTC] REQUEST_URI: /backend/reviews
+[10-Dec-2025 04:12:30 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:12:30 UTC] QUERY_STRING: url=reviews
+[10-Dec-2025 04:12:30 UTC] GET url param: reviews
+[10-Dec-2025 04:12:30 UTC] URI Segments: ["reviews"]
+[10-Dec-2025 04:12:30 UTC] Invalid URI structure - returning 400
+[10-Dec-2025 04:13:37 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:13:37 UTC] REQUEST_URI: /backend/home
+[10-Dec-2025 04:13:37 UTC] REQUEST_METHOD: GET
+[10-Dec-2025 04:13:37 UTC] QUERY_STRING: url=home
+[10-Dec-2025 04:13:37 UTC] GET url param: home
+[10-Dec-2025 04:13:37 UTC] URI Segments: ["home"]
+[10-Dec-2025 04:13:37 UTC] Invalid URI structure - returning 400
+[10-Dec-2025 04:13:55 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:13:55 UTC] REQUEST_URI: /backend/api/v1/payments/create
+[10-Dec-2025 04:13:55 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:13:55 UTC] QUERY_STRING: url=api/v1/payments/create
+[10-Dec-2025 04:13:55 UTC] GET url param: api/v1/payments/create
+[10-Dec-2025 04:13:55 UTC] URI Segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:13:55 UTC] Router constructor - URI segments: ["api","v1","payments","create"]
+[10-Dec-2025 04:13:55 UTC] Router parsed - version: v1, resource: payments, id: create, method: POST
+[10-Dec-2025 04:13:55 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: create
+[10-Dec-2025 04:13:55 UTC] Checking auth route: POST payments
+[10-Dec-2025 04:13:55 UTC] Checking auth route with action: POST payments/create
+[10-Dec-2025 04:14:01 UTC] Router::execute - controller: PaymentController, action: create
+[10-Dec-2025 04:14:01 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 04:14:01 UTC] Router::execute - raw input length: 19
+[10-Dec-2025 04:14:01 UTC] Router::execute - raw input preview: {
+  "order_id": 7
+}
+[10-Dec-2025 04:14:01 UTC] Router::execute - final data: {"order_id":7}
+[10-Dec-2025 04:51:39 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:51:39 UTC] REQUEST_URI: /backend/reviews
+[10-Dec-2025 04:51:39 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:51:39 UTC] QUERY_STRING: url=reviews
+[10-Dec-2025 04:51:39 UTC] GET url param: reviews
+[10-Dec-2025 04:51:39 UTC] URI Segments: ["reviews"]
+[10-Dec-2025 04:51:39 UTC] Invalid URI structure - returning 400
+[10-Dec-2025 04:55:18 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:55:18 UTC] REQUEST_URI: /backend/reviews
+[10-Dec-2025 04:55:18 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:55:18 UTC] QUERY_STRING: url=reviews
+[10-Dec-2025 04:55:18 UTC] GET url param: reviews
+[10-Dec-2025 04:55:18 UTC] URI Segments: ["reviews"]
+[10-Dec-2025 04:55:18 UTC] Invalid URI structure - returning 400
+[10-Dec-2025 04:55:20 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:55:20 UTC] REQUEST_URI: /backend/reviews
+[10-Dec-2025 04:55:20 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:55:20 UTC] QUERY_STRING: url=reviews
+[10-Dec-2025 04:55:20 UTC] GET url param: reviews
+[10-Dec-2025 04:55:20 UTC] URI Segments: ["reviews"]
+[10-Dec-2025 04:55:20 UTC] Invalid URI structure - returning 400
+[10-Dec-2025 04:55:59 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:55:59 UTC] REQUEST_URI: /backend%20/api/v1/reviews
+[10-Dec-2025 04:55:59 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:55:59 UTC] QUERY_STRING: url=api/v1/reviews
+[10-Dec-2025 04:55:59 UTC] GET url param: api/v1/reviews
+[10-Dec-2025 04:55:59 UTC] URI Segments: ["api","v1","reviews"]
+[10-Dec-2025 04:55:59 UTC] Router constructor - URI segments: ["api","v1","reviews"]
+[10-Dec-2025 04:55:59 UTC] Router parsed - version: v1, resource: reviews, id: , method: POST
+[10-Dec-2025 04:55:59 UTC] Router::handleSpecialRoute - method: POST, resource: reviews, id: 
+[10-Dec-2025 04:55:59 UTC] Checking auth route: POST reviews
+[10-Dec-2025 04:56:02 UTC] Router::execute - controller: ReviewsController, action: store
+[10-Dec-2025 04:56:02 UTC] Router::execute - Content-Type: 
+[10-Dec-2025 04:56:02 UTC] Router::execute - raw input length: 0
+[10-Dec-2025 04:56:02 UTC] Router::execute - raw input preview: 
+[10-Dec-2025 04:56:02 UTC] Router::execute - final data: null
+[10-Dec-2025 04:56:59 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:56:59 UTC] REQUEST_URI: /backend%20/api/v1/reviews
+[10-Dec-2025 04:56:59 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:56:59 UTC] QUERY_STRING: url=api/v1/reviews
+[10-Dec-2025 04:56:59 UTC] GET url param: api/v1/reviews
+[10-Dec-2025 04:56:59 UTC] URI Segments: ["api","v1","reviews"]
+[10-Dec-2025 04:56:59 UTC] Router constructor - URI segments: ["api","v1","reviews"]
+[10-Dec-2025 04:56:59 UTC] Router parsed - version: v1, resource: reviews, id: , method: POST
+[10-Dec-2025 04:56:59 UTC] Router::handleSpecialRoute - method: POST, resource: reviews, id: 
+[10-Dec-2025 04:56:59 UTC] Checking auth route: POST reviews
+[10-Dec-2025 04:57:02 UTC] Router::execute - controller: ReviewsController, action: store
+[10-Dec-2025 04:57:02 UTC] Router::execute - Content-Type: text/plain
+[10-Dec-2025 04:57:02 UTC] Router::execute - raw input length: 75
+[10-Dec-2025 04:57:02 UTC] Router::execute - raw input preview:  "product_id": 1,
+  "content": "Sản phẩm rất tốt!",
+  "rating": 5
+[10-Dec-2025 04:57:02 UTC] Router::execute - final data: {"\"product_id\":_1,\r\n__\"content\":_\"S\u1ea3n_ph\u1ea9m_r\u1ea5t_t\u1ed1t!\",\r\n__\"rating\":_5":""}
+[10-Dec-2025 04:57:09 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:57:09 UTC] REQUEST_URI: /backend%20/api/v1/reviews
+[10-Dec-2025 04:57:09 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:57:09 UTC] QUERY_STRING: url=api/v1/reviews
+[10-Dec-2025 04:57:09 UTC] GET url param: api/v1/reviews
+[10-Dec-2025 04:57:09 UTC] URI Segments: ["api","v1","reviews"]
+[10-Dec-2025 04:57:09 UTC] Router constructor - URI segments: ["api","v1","reviews"]
+[10-Dec-2025 04:57:09 UTC] Router parsed - version: v1, resource: reviews, id: , method: POST
+[10-Dec-2025 04:57:09 UTC] Router::handleSpecialRoute - method: POST, resource: reviews, id: 
+[10-Dec-2025 04:57:09 UTC] Checking auth route: POST reviews
+[10-Dec-2025 04:57:11 UTC] Router::execute - controller: ReviewsController, action: store
+[10-Dec-2025 04:57:11 UTC] Router::execute - Content-Type: text/plain
+[10-Dec-2025 04:57:11 UTC] Router::execute - raw input length: 77
+[10-Dec-2025 04:57:11 UTC] Router::execute - raw input preview: { "product_id": 1,
+  "content": "Sản phẩm rất tốt!",
+  "rating": 5}
+[10-Dec-2025 04:57:11 UTC] Router::execute - final data: {"{_\"product_id\":_1,\r\n__\"content\":_\"S\u1ea3n_ph\u1ea9m_r\u1ea5t_t\u1ed1t!\",\r\n__\"rating\":_5}":""}
+[10-Dec-2025 04:57:22 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:57:22 UTC] REQUEST_URI: /backend%20/api/v1/reviews
+[10-Dec-2025 04:57:22 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:57:22 UTC] QUERY_STRING: url=api/v1/reviews
+[10-Dec-2025 04:57:22 UTC] GET url param: api/v1/reviews
+[10-Dec-2025 04:57:22 UTC] URI Segments: ["api","v1","reviews"]
+[10-Dec-2025 04:57:22 UTC] Router constructor - URI segments: ["api","v1","reviews"]
+[10-Dec-2025 04:57:22 UTC] Router parsed - version: v1, resource: reviews, id: , method: POST
+[10-Dec-2025 04:57:22 UTC] Router::handleSpecialRoute - method: POST, resource: reviews, id: 
+[10-Dec-2025 04:57:22 UTC] Checking auth route: POST reviews
+[10-Dec-2025 04:57:25 UTC] Router::execute - controller: ReviewsController, action: store
+[10-Dec-2025 04:57:25 UTC] Router::execute - Content-Type: text/plain
+[10-Dec-2025 04:57:25 UTC] Router::execute - raw input length: 87
+[10-Dec-2025 04:57:25 UTC] Router::execute - raw input preview: { 
+    "product_id": 1,
+  "content": "Sản phẩm rất tốt!",
+  "rating": 5
+  }
+[10-Dec-2025 04:57:25 UTC] Router::execute - final data: {"{_\r\n____\"product_id\":_1,\r\n__\"content\":_\"S\u1ea3n_ph\u1ea9m_r\u1ea5t_t\u1ed1t!\",\r\n__\"rating\":_5\r\n__}":""}
+[10-Dec-2025 04:58:18 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:58:18 UTC] REQUEST_URI: /backend%20/api/v1/reviews
+[10-Dec-2025 04:58:18 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:58:18 UTC] QUERY_STRING: url=api/v1/reviews
+[10-Dec-2025 04:58:18 UTC] GET url param: api/v1/reviews
+[10-Dec-2025 04:58:18 UTC] URI Segments: ["api","v1","reviews"]
+[10-Dec-2025 04:58:18 UTC] Router constructor - URI segments: ["api","v1","reviews"]
+[10-Dec-2025 04:58:18 UTC] Router parsed - version: v1, resource: reviews, id: , method: POST
+[10-Dec-2025 04:58:18 UTC] Router::handleSpecialRoute - method: POST, resource: reviews, id: 
+[10-Dec-2025 04:58:18 UTC] Checking auth route: POST reviews
+[10-Dec-2025 04:58:21 UTC] Router::execute - controller: ReviewsController, action: store
+[10-Dec-2025 04:58:21 UTC] Router::execute - Content-Type: text/plain
+[10-Dec-2025 04:58:21 UTC] Router::execute - raw input length: 91
+[10-Dec-2025 04:58:21 UTC] Router::execute - raw input preview: { 
+    "product_id": 1,
+    "content": "Sản phẩm rất tốt!",
+    "rating": 5
+  }
+[10-Dec-2025 04:58:21 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 04:58:21 UTC] Router::execute - final data: {"product_id":1,"content":"S\u1ea3n ph\u1ea9m r\u1ea5t t\u1ed1t!","rating":5}
+[10-Dec-2025 04:58:54 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:58:54 UTC] REQUEST_URI: /backend%20/api/v1/reviews
+[10-Dec-2025 04:58:54 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:58:54 UTC] QUERY_STRING: url=api/v1/reviews
+[10-Dec-2025 04:58:54 UTC] GET url param: api/v1/reviews
+[10-Dec-2025 04:58:54 UTC] URI Segments: ["api","v1","reviews"]
+[10-Dec-2025 04:58:54 UTC] Router constructor - URI segments: ["api","v1","reviews"]
+[10-Dec-2025 04:58:54 UTC] Router parsed - version: v1, resource: reviews, id: , method: POST
+[10-Dec-2025 04:58:54 UTC] Router::handleSpecialRoute - method: POST, resource: reviews, id: 
+[10-Dec-2025 04:58:54 UTC] Checking auth route: POST reviews
+[10-Dec-2025 04:58:57 UTC] Router::execute - controller: ReviewsController, action: store
+[10-Dec-2025 04:58:57 UTC] Router::execute - Content-Type: text/plain
+[10-Dec-2025 04:58:57 UTC] Router::execute - raw input length: 83
+[10-Dec-2025 04:58:57 UTC] Router::execute - raw input preview: { 
+    "id": 1,
+    "content": "Sản phẩm rất tốt!",
+    "rating": 5
+  }
+[10-Dec-2025 04:58:57 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 04:58:57 UTC] Router::execute - final data: {"id":1,"content":"S\u1ea3n ph\u1ea9m r\u1ea5t t\u1ed1t!","rating":5}
+[10-Dec-2025 04:59:10 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:59:10 UTC] REQUEST_URI: /backend/reviews
+[10-Dec-2025 04:59:10 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:59:10 UTC] QUERY_STRING: url=reviews
+[10-Dec-2025 04:59:10 UTC] GET url param: reviews
+[10-Dec-2025 04:59:10 UTC] URI Segments: ["reviews"]
+[10-Dec-2025 04:59:10 UTC] Invalid URI structure - returning 400
+[10-Dec-2025 04:59:12 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:59:12 UTC] REQUEST_URI: /backend/reviews
+[10-Dec-2025 04:59:12 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:59:12 UTC] QUERY_STRING: url=reviews
+[10-Dec-2025 04:59:12 UTC] GET url param: reviews
+[10-Dec-2025 04:59:12 UTC] URI Segments: ["reviews"]
+[10-Dec-2025 04:59:12 UTC] Invalid URI structure - returning 400
+[10-Dec-2025 04:59:13 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:59:13 UTC] REQUEST_URI: /backend/reviews
+[10-Dec-2025 04:59:13 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:59:13 UTC] QUERY_STRING: url=reviews
+[10-Dec-2025 04:59:13 UTC] GET url param: reviews
+[10-Dec-2025 04:59:13 UTC] URI Segments: ["reviews"]
+[10-Dec-2025 04:59:13 UTC] Invalid URI structure - returning 400
+[10-Dec-2025 04:59:22 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 04:59:22 UTC] REQUEST_URI: /backend/api/v1/reviews
+[10-Dec-2025 04:59:22 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 04:59:22 UTC] QUERY_STRING: url=api/v1/reviews
+[10-Dec-2025 04:59:22 UTC] GET url param: api/v1/reviews
+[10-Dec-2025 04:59:22 UTC] URI Segments: ["api","v1","reviews"]
+[10-Dec-2025 04:59:22 UTC] Router constructor - URI segments: ["api","v1","reviews"]
+[10-Dec-2025 04:59:22 UTC] Router parsed - version: v1, resource: reviews, id: , method: POST
+[10-Dec-2025 04:59:22 UTC] Router::handleSpecialRoute - method: POST, resource: reviews, id: 
+[10-Dec-2025 04:59:22 UTC] Checking auth route: POST reviews
+[10-Dec-2025 04:59:25 UTC] Router::execute - controller: ReviewsController, action: store
+[10-Dec-2025 04:59:25 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 04:59:25 UTC] Router::execute - raw input length: 120
+[10-Dec-2025 04:59:25 UTC] Router::execute - raw input preview: {
+    "product_id": 9,
+    "content": "Đồng hồ đẹp, chất lượng tốt, giao hàng nhanh!",
+    "rating": 5
+}
+[10-Dec-2025 04:59:25 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 04:59:25 UTC] Router::execute - final data: {"product_id":9,"content":"\u0110\u1ed3ng h\u1ed3 \u0111\u1eb9p, ch\u1ea5t l\u01b0\u1ee3ng t\u1ed1t, giao h\u00e0ng nhanh!","rating":5}
+[10-Dec-2025 05:00:35 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 05:00:35 UTC] REQUEST_URI: /backend/api/v1/reviews
+[10-Dec-2025 05:00:35 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 05:00:35 UTC] QUERY_STRING: url=api/v1/reviews
+[10-Dec-2025 05:00:35 UTC] GET url param: api/v1/reviews
+[10-Dec-2025 05:00:35 UTC] URI Segments: ["api","v1","reviews"]
+[10-Dec-2025 05:00:35 UTC] Router constructor - URI segments: ["api","v1","reviews"]
+[10-Dec-2025 05:00:35 UTC] Router parsed - version: v1, resource: reviews, id: , method: POST
+[10-Dec-2025 05:00:35 UTC] Router::handleSpecialRoute - method: POST, resource: reviews, id: 
+[10-Dec-2025 05:00:35 UTC] Checking auth route: POST reviews
+[10-Dec-2025 05:00:40 UTC] Router::execute - controller: ReviewsController, action: store
+[10-Dec-2025 05:00:40 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 05:00:40 UTC] Router::execute - raw input length: 120
+[10-Dec-2025 05:00:40 UTC] Router::execute - raw input preview: {
+    "product_id": 9,
+    "content": "Đồng hồ đẹp, chất lượng tốt, giao hàng nhanh!",
+    "rating": 5
+}
+[10-Dec-2025 05:00:40 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 05:00:40 UTC] Router::execute - final data: {"product_id":9,"content":"\u0110\u1ed3ng h\u1ed3 \u0111\u1eb9p, ch\u1ea5t l\u01b0\u1ee3ng t\u1ed1t, giao h\u00e0ng nhanh!","rating":5}
+[10-Dec-2025 05:12:53 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 05:12:53 UTC] REQUEST_URI: /backend/api/v1/forgot-password/send-code
+[10-Dec-2025 05:12:53 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 05:12:53 UTC] QUERY_STRING: url=api/v1/forgot-password/send-code
+[10-Dec-2025 05:12:53 UTC] GET url param: api/v1/forgot-password/send-code
+[10-Dec-2025 05:12:53 UTC] URI Segments: ["api","v1","forgot-password","send-code"]
+[10-Dec-2025 05:12:53 UTC] Router constructor - URI segments: ["api","v1","forgot-password","send-code"]
+[10-Dec-2025 05:12:53 UTC] Router parsed - version: v1, resource: forgot-password, id: send-code, method: POST
+[10-Dec-2025 05:12:53 UTC] Router::handleSpecialRoute - method: POST, resource: forgot-password, id: send-code
+[10-Dec-2025 05:12:53 UTC] Checking auth route: POST forgot-password
+[10-Dec-2025 05:12:53 UTC] Checking auth route with action: POST forgot-password/send-code
+[10-Dec-2025 05:12:53 UTC] Found route: POST forgot-password/send-code
+[10-Dec-2025 05:12:59 UTC] MailService::__construct - initializing
+[10-Dec-2025 05:12:59 UTC] MailService::__construct - PHPMailer created
+[10-Dec-2025 05:12:59 UTC] Router::execute - controller: ForgotPasswordController, action: sendCode
+[10-Dec-2025 05:12:59 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 05:12:59 UTC] Router::execute - raw input length: 43
+[10-Dec-2025 05:12:59 UTC] Router::execute - raw input preview: {
+    "email": "phanbinh150504@gmail.com"
+}
+[10-Dec-2025 05:12:59 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 05:12:59 UTC] Router::execute - final data: {"email":"phanbinh150504@gmail.com"}
+[10-Dec-2025 05:13:13 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 05:13:13 UTC] REQUEST_URI: /backend/api/v1/forgot-password/send-code
+[10-Dec-2025 05:13:13 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 05:13:13 UTC] QUERY_STRING: url=api/v1/forgot-password/send-code
+[10-Dec-2025 05:13:13 UTC] GET url param: api/v1/forgot-password/send-code
+[10-Dec-2025 05:13:13 UTC] URI Segments: ["api","v1","forgot-password","send-code"]
+[10-Dec-2025 05:13:13 UTC] Router constructor - URI segments: ["api","v1","forgot-password","send-code"]
+[10-Dec-2025 05:13:13 UTC] Router parsed - version: v1, resource: forgot-password, id: send-code, method: POST
+[10-Dec-2025 05:13:13 UTC] Router::handleSpecialRoute - method: POST, resource: forgot-password, id: send-code
+[10-Dec-2025 05:13:13 UTC] Checking auth route: POST forgot-password
+[10-Dec-2025 05:13:13 UTC] Checking auth route with action: POST forgot-password/send-code
+[10-Dec-2025 05:13:13 UTC] Found route: POST forgot-password/send-code
+[10-Dec-2025 05:13:16 UTC] MailService::__construct - initializing
+[10-Dec-2025 05:13:16 UTC] MailService::__construct - PHPMailer created
+[10-Dec-2025 05:13:16 UTC] Router::execute - controller: ForgotPasswordController, action: sendCode
+[10-Dec-2025 05:13:16 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 05:13:16 UTC] Router::execute - raw input length: 43
+[10-Dec-2025 05:13:16 UTC] Router::execute - raw input preview: {
+    "email": "phanbinh150504@gmail.com"
+}
+[10-Dec-2025 05:13:16 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 05:13:16 UTC] Router::execute - final data: {"email":"phanbinh150504@gmail.com"}
+[10-Dec-2025 05:14:58 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 05:14:58 UTC] REQUEST_URI: /backend/api/v1/forgot-password/send-code
+[10-Dec-2025 05:14:58 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 05:14:58 UTC] QUERY_STRING: url=api/v1/forgot-password/send-code
+[10-Dec-2025 05:14:58 UTC] GET url param: api/v1/forgot-password/send-code
+[10-Dec-2025 05:14:58 UTC] URI Segments: ["api","v1","forgot-password","send-code"]
+[10-Dec-2025 05:14:58 UTC] Router constructor - URI segments: ["api","v1","forgot-password","send-code"]
+[10-Dec-2025 05:14:58 UTC] Router parsed - version: v1, resource: forgot-password, id: send-code, method: POST
+[10-Dec-2025 05:14:58 UTC] Router::handleSpecialRoute - method: POST, resource: forgot-password, id: send-code
+[10-Dec-2025 05:14:58 UTC] Checking auth route: POST forgot-password
+[10-Dec-2025 05:14:58 UTC] Checking auth route with action: POST forgot-password/send-code
+[10-Dec-2025 05:14:58 UTC] Found route: POST forgot-password/send-code
+[10-Dec-2025 05:15:09 UTC] MailService::__construct - initializing
+[10-Dec-2025 05:15:09 UTC] MailService::__construct - PHPMailer created
+[10-Dec-2025 05:15:09 UTC] Router::execute - controller: ForgotPasswordController, action: sendCode
+[10-Dec-2025 05:15:09 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 05:15:09 UTC] Router::execute - raw input length: 43
+[10-Dec-2025 05:15:09 UTC] Router::execute - raw input preview: {
+    "email": "phanbinh150504@gmail.com"
+}
+[10-Dec-2025 05:15:09 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 05:15:09 UTC] Router::execute - final data: {"email":"phanbinh150504@gmail.com"}
+[10-Dec-2025 05:15:14 UTC] MailService::initialize - starting
+[10-Dec-2025 05:15:14 UTC] MailService::initialize - SMTP config check: host=set, user=set, pass=set
+[10-Dec-2025 05:15:14 UTC] MailService::initialize - completed successfully
+[10-Dec-2025 05:16:18 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 05:16:18 UTC] REQUEST_URI: /backend/api/v1/payments/create
+[10-Dec-2025 05:16:18 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 05:16:18 UTC] QUERY_STRING: url=api/v1/payments/create
+[10-Dec-2025 05:16:18 UTC] GET url param: api/v1/payments/create
+[10-Dec-2025 05:16:18 UTC] URI Segments: ["api","v1","payments","create"]
+[10-Dec-2025 05:16:18 UTC] Router constructor - URI segments: ["api","v1","payments","create"]
+[10-Dec-2025 05:16:18 UTC] Router parsed - version: v1, resource: payments, id: create, method: POST
+[10-Dec-2025 05:16:18 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: create
+[10-Dec-2025 05:16:18 UTC] Checking auth route: POST payments
+[10-Dec-2025 05:16:18 UTC] Checking auth route with action: POST payments/create
+[10-Dec-2025 05:16:31 UTC] Router::execute - controller: PaymentController, action: create
+[10-Dec-2025 05:16:31 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 05:16:31 UTC] Router::execute - raw input length: 19
+[10-Dec-2025 05:16:31 UTC] Router::execute - raw input preview: {
+  "order_id": 7
+}
+[10-Dec-2025 05:16:31 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 05:16:31 UTC] Router::execute - final data: {"order_id":7}

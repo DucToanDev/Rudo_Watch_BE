@@ -312,25 +312,30 @@ class Router
                         $data = null;
                     }
                 } else {
-                    // Có body - chỉ decode nếu là JSON request
-                    if ($isJsonRequest) {
-                        $data = json_decode($rawInput, true);
-                        if (json_last_error() !== JSON_ERROR_NONE) {
+                    // Có body - thử decode JSON trước (bất kể Content-Type)
+                    $data = json_decode($rawInput, true);
+                    if (json_last_error() === JSON_ERROR_NONE && $data !== null) {
+                        // JSON hợp lệ, sử dụng data đã decode
+                        error_log("Router::execute - Successfully decoded JSON");
+                    } else {
+                        // Không phải JSON hợp lệ, xử lý theo Content-Type
+                        if ($isJsonRequest) {
+                            // Content-Type là JSON nhưng decode lỗi
                             $errorMsg = json_last_error_msg();
                             error_log("JSON decode error: " . $errorMsg);
                             error_log("Raw input that failed: " . substr($rawInput, 0, 500));
                             $this->response->json(['error' => 'Invalid JSON: ' . $errorMsg], 400);
                             return true;
-                        }
-                    } else {
-                        // Không phải JSON request, sử dụng $_POST hoặc parse form-data
-                        if (!empty($_POST)) {
-                            $data = $_POST;
                         } else {
-                            // Parse form-data hoặc x-www-form-urlencoded
-                            parse_str($rawInput, $data);
-                            if (empty($data)) {
-                                $data = null;
+                            // Không phải JSON request, sử dụng $_POST hoặc parse form-data
+                            if (!empty($_POST)) {
+                                $data = $_POST;
+                            } else {
+                                // Parse form-data hoặc x-www-form-urlencoded
+                                parse_str($rawInput, $data);
+                                if (empty($data)) {
+                                    $data = null;
+                                }
                             }
                         }
                     }

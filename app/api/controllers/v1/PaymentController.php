@@ -36,7 +36,12 @@ class PaymentController
             return;
         }
 
-        if (empty($data->order_id)) {
+        // Chuyển đổi data thành object nếu là array
+        if (is_array($data)) {
+            $data = (object)$data;
+        }
+
+        if (empty($data) || empty($data->order_id)) {
             $this->response->json(['error' => 'Vui lòng cung cấp order_id'], 400);
             return;
         }
@@ -44,7 +49,16 @@ class PaymentController
         // Kiểm tra đơn hàng
         $order = $this->orderModel->getOrderById($data->order_id, $user['id']);
         if (!$order || !$order['success']) {
-            $this->response->json(['error' => 'Đơn hàng không tồn tại'], 404);
+            $errorMessage = $order['message'] ?? 'Đơn hàng không tồn tại';
+            // Nếu không tìm thấy, có thể do đơn hàng không thuộc về user này
+            // Hoặc đơn hàng không tồn tại
+            $this->response->json([
+                'error' => $errorMessage,
+                'debug' => [
+                    'order_id' => $data->order_id,
+                    'user_id' => $user['id']
+                ]
+            ], 404);
             return;
         }
 
