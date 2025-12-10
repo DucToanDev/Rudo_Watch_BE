@@ -1,0 +1,46 @@
+[09-Dec-2025 19:32:37 UTC] === REQUEST DEBUG ===
+[09-Dec-2025 19:32:37 UTC] REQUEST_URI: /backend/api/v1/forgot-password/send-code
+[09-Dec-2025 19:32:37 UTC] REQUEST_METHOD: POST
+[09-Dec-2025 19:32:37 UTC] QUERY_STRING: url=api/v1/forgot-password/send-code
+[09-Dec-2025 19:32:37 UTC] GET url param: api/v1/forgot-password/send-code
+[09-Dec-2025 19:32:37 UTC] URI Segments: ["api","v1","forgot-password","send-code"]
+[09-Dec-2025 19:32:37 UTC] Router constructor - URI segments: ["api","v1","forgot-password","send-code"]
+[09-Dec-2025 19:32:37 UTC] Router parsed - version: v1, resource: forgot-password, id: send-code, method: POST
+[09-Dec-2025 19:32:37 UTC] Router::handleSpecialRoute - method: POST, resource: forgot-password, id: send-code
+[09-Dec-2025 19:32:37 UTC] Checking auth route: POST forgot-password
+[09-Dec-2025 19:32:37 UTC] Checking auth route with action: POST forgot-password/send-code
+[09-Dec-2025 19:32:37 UTC] Found route: POST forgot-password/send-code
+[09-Dec-2025 19:32:40 UTC] Router::execute - controller: ForgotPasswordController, action: sendCode
+[09-Dec-2025 19:32:40 UTC] Router::execute - raw input: {
+    "email": "phanbinh150504@gmail.com"
+}
+[09-Dec-2025 19:32:40 UTC] Router::execute - decoded data: {"email":"phanbinh150504@gmail.com"}
+[09-Dec-2025 19:41:05 UTC] === REQUEST DEBUG ===
+[09-Dec-2025 19:41:05 UTC] REQUEST_URI: /backend/api/v1/forgot-password/send-code
+[09-Dec-2025 19:41:05 UTC] REQUEST_METHOD: POST
+[09-Dec-2025 19:41:05 UTC] QUERY_STRING: url=api/v1/forgot-password/send-code
+[09-Dec-2025 19:41:05 UTC] GET url param: api/v1/forgot-password/send-code
+[09-Dec-2025 19:41:05 UTC] URI Segments: ["api","v1","forgot-password","send-code"]
+[09-Dec-2025 19:41:05 UTC] Router constructor - URI segments: ["api","v1","forgot-password","send-code"]
+[09-Dec-2025 19:41:05 UTC] Router parsed - version: v1, resource: forgot-password, id: send-code, method: POST
+[09-Dec-2025 19:41:05 UTC] Router::handleSpecialRoute - method: POST, resource: forgot-password, id: send-code
+[09-Dec-2025 19:41:05 UTC] Checking auth route: POST forgot-password
+[09-Dec-2025 19:41:05 UTC] Checking auth route with action: POST forgot-password/send-code
+[09-Dec-2025 19:41:05 UTC] Found route: POST forgot-password/send-code
+[09-Dec-2025 19:41:05 UTC] ForgotPasswordController::__construct - initializing
+[09-Dec-2025 19:41:06 UTC] ForgotPasswordController::__construct - UserModel created
+[09-Dec-2025 19:41:07 UTC] ForgotPasswordController::__construct - PasswordResetModel created
+[09-Dec-2025 19:41:07 UTC] ForgotPasswordController::__construct - Response created
+[09-Dec-2025 19:41:07 UTC] MailService::__construct - initializing
+[09-Dec-2025 19:41:07 UTC] MailService::__construct - PHPMailer created
+[09-Dec-2025 19:41:07 UTC] ForgotPasswordController::__construct - MailService created
+[09-Dec-2025 19:41:07 UTC] Router::execute - controller: ForgotPasswordController, action: sendCode
+[09-Dec-2025 19:41:07 UTC] Router::execute - raw input: {
+    "email": "phanbinh150504@gmail.com"
+}
+[09-Dec-2025 19:41:07 UTC] Router::execute - decoded data: {"email":"phanbinh150504@gmail.com"}
+[09-Dec-2025 19:41:07 UTC] ForgotPasswordController::sendCode called
+[09-Dec-2025 19:41:07 UTC] Data received: {"email":"phanbinh150504@gmail.com"}
+[09-Dec-2025 19:41:08 UTC] MailService::initialize - starting
+[09-Dec-2025 19:41:08 UTC] MailService::initialize - SMTP config check: host=set, user=set, pass=set
+[09-Dec-2025 19:41:08 UTC] MailService::initialize - completed successfully

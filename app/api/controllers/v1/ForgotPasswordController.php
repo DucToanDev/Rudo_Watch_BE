@@ -13,10 +13,25 @@ class ForgotPasswordController
 
     public function __construct()
     {
-        $this->userModel = new Users();
-        $this->passwordResetModel = new PasswordResetModel();
-        $this->response = new Response();
-        $this->mailService = new MailService();
+        try {
+            error_log('ForgotPasswordController::__construct - initializing');
+            $this->userModel = new Users();
+            error_log('ForgotPasswordController::__construct - UserModel created');
+            $this->passwordResetModel = new PasswordResetModel();
+            error_log('ForgotPasswordController::__construct - PasswordResetModel created');
+            $this->response = new Response();
+            error_log('ForgotPasswordController::__construct - Response created');
+            $this->mailService = new MailService();
+            error_log('ForgotPasswordController::__construct - MailService created');
+        } catch (\Exception $e) {
+            error_log('ForgotPasswordController constructor error: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            throw $e;
+        } catch (\Throwable $e) {
+            error_log('ForgotPasswordController constructor throwable: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            throw $e;
+        }
     }
 
     /**
@@ -25,7 +40,11 @@ class ForgotPasswordController
     public function sendCode($data)
     {
         try {
+            error_log('ForgotPasswordController::sendCode called');
+            error_log('Data received: ' . json_encode($data));
+            
             if (!$data || empty($data->email)) {
+                error_log('ForgotPasswordController::sendCode - missing email');
                 $this->response->json(['error' => 'Vui lòng nhập email'], 400);
                 return;
             }
@@ -86,11 +105,19 @@ class ForgotPasswordController
                     'error' => 'Gửi email thất bại. Vui lòng thử lại sau.'
                 ], 500);
             }
-        } catch (Exception $e) {
-            error_log('ForgotPasswordController sendCode error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            error_log('ForgotPasswordController sendCode exception: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
             $this->response->json([
-                'error' => 'Đã có lỗi xảy ra. Vui lòng thử lại sau.'
+                'error' => 'Đã có lỗi xảy ra. Vui lòng thử lại sau.',
+                'debug' => getenv('APP_ENV') === 'development' ? $e->getMessage() : null
+            ], 500);
+        } catch (\Throwable $e) {
+            error_log('ForgotPasswordController sendCode throwable: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            $this->response->json([
+                'error' => 'Đã có lỗi xảy ra. Vui lòng thử lại sau.',
+                'debug' => getenv('APP_ENV') === 'development' ? $e->getMessage() : null
             ], 500);
         }
     }

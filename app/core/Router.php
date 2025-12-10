@@ -294,15 +294,50 @@ class Router
             if ($param !== null) {
                 $controller->$action($param);
             } else {
+                // Chỉ đọc và decode JSON nếu request có body và Content-Type là JSON
+                $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+                $isJsonRequest = strpos(strtolower($contentType), 'application/json') !== false;
+                
                 $rawInput = file_get_contents("php://input");
-                error_log("Router::execute - raw input: " . substr($rawInput, 0, 200));
-                $data = json_decode($rawInput);
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    error_log("JSON decode error: " . json_last_error_msg());
-                    $this->response->json(['error' => 'Invalid JSON: ' . json_last_error_msg()], 400);
-                    return true;
+                error_log("Router::execute - Content-Type: " . $contentType);
+                error_log("Router::execute - raw input length: " . strlen($rawInput));
+                error_log("Router::execute - raw input preview: " . substr($rawInput, 0, 200));
+                
+                // Nếu request rỗng hoặc không phải JSON request, truyền null hoặc $_POST
+                if (empty($rawInput)) {
+                    // Nếu là GET request hoặc request không có body, truyền null
+                    if ($this->method === 'GET' || !$isJsonRequest) {
+                        $data = null;
+                    } else {
+                        // POST/PUT/DELETE nhưng body rỗng
+                        $data = null;
+                    }
+                } else {
+                    // Có body - chỉ decode nếu là JSON request
+                    if ($isJsonRequest) {
+                        $data = json_decode($rawInput, true);
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            $errorMsg = json_last_error_msg();
+                            error_log("JSON decode error: " . $errorMsg);
+                            error_log("Raw input that failed: " . substr($rawInput, 0, 500));
+                            $this->response->json(['error' => 'Invalid JSON: ' . $errorMsg], 400);
+                            return true;
+                        }
+                    } else {
+                        // Không phải JSON request, sử dụng $_POST hoặc parse form-data
+                        if (!empty($_POST)) {
+                            $data = $_POST;
+                        } else {
+                            // Parse form-data hoặc x-www-form-urlencoded
+                            parse_str($rawInput, $data);
+                            if (empty($data)) {
+                                $data = null;
+                            }
+                        }
+                    }
                 }
-                error_log("Router::execute - decoded data: " . json_encode($data));
+                
+                error_log("Router::execute - final data: " . json_encode($data));
                 $controller->$action($data);
             }
             return true;

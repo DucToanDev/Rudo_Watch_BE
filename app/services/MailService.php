@@ -25,7 +25,14 @@ class MailService
 
     public function __construct()
     {
-        $this->mailer = new PHPMailer(true);
+        try {
+            error_log('MailService::__construct - initializing');
+            $this->mailer = new PHPMailer(true);
+            error_log('MailService::__construct - PHPMailer created');
+        } catch (\Exception $e) {
+            error_log('MailService constructor error: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     /**
@@ -38,6 +45,8 @@ class MailService
         }
 
         try {
+            error_log('MailService::initialize - starting');
+            
             // Sử dụng getenv() hoặc $_ENV với fallback
             $smtpHost = getenv('SMTP_HOST') ?: ($_ENV['SMTP_HOST'] ?? null);
             $smtpUser = getenv('SMTP_USER') ?: ($_ENV['SMTP_USER'] ?? null);
@@ -46,8 +55,12 @@ class MailService
             $from = getenv('SMTP_FROM') ?: ($_ENV['SMTP_FROM'] ?? null);
             $fromName = getenv('SMTP_FROM_NAME') ?: ($_ENV['SMTP_FROM_NAME'] ?? null);
 
+            error_log('MailService::initialize - SMTP config check: host=' . ($smtpHost ? 'set' : 'missing') . ', user=' . ($smtpUser ? 'set' : 'missing') . ', pass=' . ($smtpPass ? 'set' : 'missing'));
+
             if (empty($smtpHost) || empty($smtpUser) || empty($smtpPass)) {
-                throw new Exception('Thiếu cấu hình SMTP! Vui lòng kiểm tra biến môi trường SMTP_HOST, SMTP_USER, SMTP_PASS');
+                $error = 'Thiếu cấu hình SMTP! Vui lòng kiểm tra biến môi trường SMTP_HOST, SMTP_USER, SMTP_PASS';
+                error_log('MailService::initialize - ' . $error);
+                throw new Exception($error);
             }
 
             if (empty($from) || empty($fromName)) {
@@ -72,8 +85,14 @@ class MailService
             };
 
             $this->initialized = true;
-        } catch (Exception $e) {
+            error_log('MailService::initialize - completed successfully');
+        } catch (\Exception $e) {
             error_log('MailService initialize error: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            throw $e;
+        } catch (\Throwable $e) {
+            error_log('MailService initialize throwable: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
             throw $e;
         }
     }
