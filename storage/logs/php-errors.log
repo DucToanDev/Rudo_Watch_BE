@@ -528,3 +528,364 @@
 }
 [10-Dec-2025 05:16:31 UTC] Router::execute - Successfully decoded JSON
 [10-Dec-2025 05:16:31 UTC] Router::execute - final data: {"order_id":7}
+[10-Dec-2025 05:41:15 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 05:41:15 UTC] REQUEST_URI: /backend/
+[10-Dec-2025 05:41:15 UTC] REQUEST_METHOD: GET
+[10-Dec-2025 05:41:15 UTC] QUERY_STRING: 
+[10-Dec-2025 05:41:15 UTC] GET url param: N/A
+[10-Dec-2025 05:41:15 UTC] Parsed REQUEST_URI: /backend/
+[10-Dec-2025 05:41:15 UTC] Final URI: 
+[10-Dec-2025 05:41:15 UTC] URI Segments: [""]
+[10-Dec-2025 05:41:15 UTC] Invalid URI structure - returning 400
+[10-Dec-2025 05:41:27 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 05:41:27 UTC] REQUEST_URI: /backend/api/v1/payments/create
+[10-Dec-2025 05:41:27 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 05:41:27 UTC] QUERY_STRING: url=api/v1/payments/create
+[10-Dec-2025 05:41:27 UTC] GET url param: api/v1/payments/create
+[10-Dec-2025 05:41:27 UTC] URI Segments: ["api","v1","payments","create"]
+[10-Dec-2025 05:41:27 UTC] Router constructor - URI segments: ["api","v1","payments","create"]
+[10-Dec-2025 05:41:27 UTC] Router parsed - version: v1, resource: payments, id: create, method: POST
+[10-Dec-2025 05:41:27 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: create
+[10-Dec-2025 05:41:27 UTC] Checking auth route: POST payments
+[10-Dec-2025 05:41:27 UTC] Checking auth route with action: POST payments/create
+[10-Dec-2025 05:41:33 UTC] Router::execute - controller: PaymentController, action: create
+[10-Dec-2025 05:41:33 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 05:41:33 UTC] Router::execute - raw input length: 20
+[10-Dec-2025 05:41:33 UTC] Router::execute - raw input preview: {
+  "order_id": 21
+}
+[10-Dec-2025 05:41:33 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 05:41:33 UTC] Router::execute - final data: {"order_id":21}
+[10-Dec-2025 05:42:00 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 05:42:00 UTC] REQUEST_URI: /backend/api/v1/payments/create
+[10-Dec-2025 05:42:00 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 05:42:00 UTC] QUERY_STRING: url=api/v1/payments/create
+[10-Dec-2025 05:42:00 UTC] GET url param: api/v1/payments/create
+[10-Dec-2025 05:42:00 UTC] URI Segments: ["api","v1","payments","create"]
+[10-Dec-2025 05:42:00 UTC] Router constructor - URI segments: ["api","v1","payments","create"]
+[10-Dec-2025 05:42:00 UTC] Router parsed - version: v1, resource: payments, id: create, method: POST
+[10-Dec-2025 05:42:00 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: create
+[10-Dec-2025 05:42:00 UTC] Checking auth route: POST payments
+[10-Dec-2025 05:42:00 UTC] Checking auth route with action: POST payments/create
+[10-Dec-2025 05:42:07 UTC] Router::execute - controller: PaymentController, action: create
+[10-Dec-2025 05:42:07 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 05:42:07 UTC] Router::execute - raw input length: 0
+[10-Dec-2025 05:42:07 UTC] Router::execute - raw input preview: 
+[10-Dec-2025 05:42:07 UTC] Router::execute - final data: null
+[10-Dec-2025 05:44:11 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 05:44:11 UTC] REQUEST_URI: /backend/api/v1/payments/create
+[10-Dec-2025 05:44:11 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 05:44:11 UTC] QUERY_STRING: url=api/v1/payments/create
+[10-Dec-2025 05:44:11 UTC] GET url param: api/v1/payments/create
+[10-Dec-2025 05:44:11 UTC] URI Segments: ["api","v1","payments","create"]
+[10-Dec-2025 05:44:11 UTC] Router constructor - URI segments: ["api","v1","payments","create"]
+[10-Dec-2025 05:44:11 UTC] Router parsed - version: v1, resource: payments, id: create, method: POST
+[10-Dec-2025 05:44:11 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: create
+[10-Dec-2025 05:44:11 UTC] Checking auth route: POST payments
+[10-Dec-2025 05:44:11 UTC] Checking auth route with action: POST payments/create
+[10-Dec-2025 05:44:17 UTC] Router::execute - controller: PaymentController, action: create
+[10-Dec-2025 05:44:17 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 05:44:17 UTC] Router::execute - raw input length: 20
+[10-Dec-2025 05:44:17 UTC] Router::execute - raw input preview: {
+  "order_id": 21
+}
+[10-Dec-2025 05:44:17 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 05:44:17 UTC] Router::execute - final data: {"order_id":21}
+[10-Dec-2025 05:44:17 UTC] PaymentController::create - received data type: array
+[10-Dec-2025 05:44:17 UTC] PaymentController::create - received data: {"order_id":21}
+[10-Dec-2025 05:44:35 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 05:44:35 UTC] REQUEST_URI: /backend/api/v1/payments/create
+[10-Dec-2025 05:44:35 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 05:44:35 UTC] QUERY_STRING: url=api/v1/payments/create
+[10-Dec-2025 05:44:35 UTC] GET url param: api/v1/payments/create
+[10-Dec-2025 05:44:35 UTC] URI Segments: ["api","v1","payments","create"]
+[10-Dec-2025 05:44:35 UTC] Router constructor - URI segments: ["api","v1","payments","create"]
+[10-Dec-2025 05:44:35 UTC] Router parsed - version: v1, resource: payments, id: create, method: POST
+[10-Dec-2025 05:44:35 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: create
+[10-Dec-2025 05:44:35 UTC] Checking auth route: POST payments
+[10-Dec-2025 05:44:35 UTC] Checking auth route with action: POST payments/create
+[10-Dec-2025 05:44:41 UTC] Router::execute - controller: PaymentController, action: create
+[10-Dec-2025 05:44:41 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 05:44:41 UTC] Router::execute - raw input length: 20
+[10-Dec-2025 05:44:41 UTC] Router::execute - raw input preview: {
+  "order_id": 13
+}
+[10-Dec-2025 05:44:41 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 05:44:41 UTC] Router::execute - final data: {"order_id":13}
+[10-Dec-2025 05:44:41 UTC] PaymentController::create - received data type: array
+[10-Dec-2025 05:44:41 UTC] PaymentController::create - received data: {"order_id":13}
+[10-Dec-2025 05:53:13 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 05:53:13 UTC] REQUEST_URI: /backend/api/v1/payments/webhook
+[10-Dec-2025 05:53:13 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 05:53:13 UTC] QUERY_STRING: url=api/v1/payments/webhook
+[10-Dec-2025 05:53:13 UTC] GET url param: api/v1/payments/webhook
+[10-Dec-2025 05:53:13 UTC] URI Segments: ["api","v1","payments","webhook"]
+[10-Dec-2025 05:53:13 UTC] Router constructor - URI segments: ["api","v1","payments","webhook"]
+[10-Dec-2025 05:53:13 UTC] Router parsed - version: v1, resource: payments, id: webhook, method: POST
+[10-Dec-2025 05:53:13 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: webhook
+[10-Dec-2025 05:53:13 UTC] Checking auth route: POST payments
+[10-Dec-2025 05:53:13 UTC] Checking auth route with action: POST payments/webhook
+[10-Dec-2025 05:53:19 UTC] Router::execute - controller: PaymentController, action: webhook
+[10-Dec-2025 05:53:19 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 05:53:19 UTC] Router::execute - raw input length: 235
+[10-Dec-2025 05:53:19 UTC] Router::execute - raw input preview: {
+  "gateway": "MBBank",
+  "transactionDate": "2025-12-10T10:00:00Z",
+  "accountNumber": "0903252427",
+  "transferType": "in",
+  "transferAmount": 10000,
+  "code": "TEST123",
+  "content": "DH21
+[10-Dec-2025 05:53:19 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 05:53:19 UTC] Router::execute - final data: {"gateway":"MBBank","transactionDate":"2025-12-10T10:00:00Z","accountNumber":"0903252427","transferType":"in","transferAmount":10000,"code":"TEST123","content":"DH21","referenceCode":"REF123"}
+[10-Dec-2025 05:53:19 UTC] === WEBHOOK RECEIVED ===
+[10-Dec-2025 05:53:19 UTC] Request method: POST
+[10-Dec-2025 05:53:19 UTC] Content-Type: application/json
+[10-Dec-2025 05:53:19 UTC] Raw webhook data length: 235
+[10-Dec-2025 05:53:19 UTC] Raw webhook data: {
+  "gateway": "MBBank",
+  "transactionDate": "2025-12-10T10:00:00Z",
+  "accountNumber": "0903252427",
+  "transferType": "in",
+  "transferAmount": 10000,
+  "code": "TEST123",
+  "content": "DH21",  
+  "referenceCode": "REF123"
+}
+[10-Dec-2025 05:53:19 UTC] Webhook data decoded: {"gateway":"MBBank","transactionDate":"2025-12-10T10:00:00Z","accountNumber":"0903252427","transferType":"in","transferAmount":10000,"code":"TEST123","content":"DH21","referenceCode":"REF123"}
+[10-Dec-2025 05:53:19 UTC] Webhook result: {"success":false,"message":"Webhook signature kh\u00f4ng h\u1ee3p l\u1ec7"}
+[10-Dec-2025 06:00:16 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 06:00:16 UTC] REQUEST_URI: /backend/api/v1/payments/create
+[10-Dec-2025 06:00:16 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 06:00:16 UTC] QUERY_STRING: url=api/v1/payments/create
+[10-Dec-2025 06:00:16 UTC] GET url param: api/v1/payments/create
+[10-Dec-2025 06:00:16 UTC] URI Segments: ["api","v1","payments","create"]
+[10-Dec-2025 06:00:16 UTC] Router constructor - URI segments: ["api","v1","payments","create"]
+[10-Dec-2025 06:00:16 UTC] Router parsed - version: v1, resource: payments, id: create, method: POST
+[10-Dec-2025 06:00:16 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: create
+[10-Dec-2025 06:00:16 UTC] Checking auth route: POST payments
+[10-Dec-2025 06:00:16 UTC] Checking auth route with action: POST payments/create
+[10-Dec-2025 06:00:22 UTC] Router::execute - controller: PaymentController, action: create
+[10-Dec-2025 06:00:22 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 06:00:22 UTC] Router::execute - raw input length: 20
+[10-Dec-2025 06:00:22 UTC] Router::execute - raw input preview: {
+  "order_id": 13
+}
+[10-Dec-2025 06:00:22 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 06:00:22 UTC] Router::execute - final data: {"order_id":13}
+[10-Dec-2025 06:03:25 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 06:03:25 UTC] REQUEST_URI: /backend/api/v1/payments/webhook
+[10-Dec-2025 06:03:25 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 06:03:25 UTC] QUERY_STRING: url=api/v1/payments/webhook
+[10-Dec-2025 06:03:25 UTC] GET url param: api/v1/payments/webhook
+[10-Dec-2025 06:03:25 UTC] URI Segments: ["api","v1","payments","webhook"]
+[10-Dec-2025 06:03:25 UTC] Router constructor - URI segments: ["api","v1","payments","webhook"]
+[10-Dec-2025 06:03:25 UTC] Router parsed - version: v1, resource: payments, id: webhook, method: POST
+[10-Dec-2025 06:03:25 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: webhook
+[10-Dec-2025 06:03:25 UTC] Checking auth route: POST payments
+[10-Dec-2025 06:03:25 UTC] Checking auth route with action: POST payments/webhook
+[10-Dec-2025 06:03:30 UTC] Router::execute - controller: PaymentController, action: webhook
+[10-Dec-2025 06:03:30 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 06:03:30 UTC] Router::execute - raw input length: 233
+[10-Dec-2025 06:03:30 UTC] Router::execute - raw input preview: {
+  "gateway": "BIDV",
+  "transactionDate": "2025-12-10T10:00:00Z",
+  "accountNumber": "8836563558",
+  "transferType": "in",
+  "transferAmount": 10000,
+  "code": "TEST123",
+  "content": "DH13",
+[10-Dec-2025 06:03:30 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 06:03:30 UTC] Router::execute - final data: {"gateway":"BIDV","transactionDate":"2025-12-10T10:00:00Z","accountNumber":"8836563558","transferType":"in","transferAmount":10000,"code":"TEST123","content":"DH13","referenceCode":"REF123"}
+[10-Dec-2025 06:03:30 UTC] === WEBHOOK RECEIVED ===
+[10-Dec-2025 06:03:30 UTC] Request method: POST
+[10-Dec-2025 06:03:30 UTC] Content-Type: application/json
+[10-Dec-2025 06:03:30 UTC] All headers: {"Content-Length":"233","Connection":"close","Accept-Encoding":"gzip, deflate, br","Host":"localhost","Postman-Token":"d2046668-18e0-4118-a66c-d1d215cd1d7f","Accept":"*\/*","User-Agent":"PostmanRuntime\/7.49.1","Content-Type":"application\/json"}
+[10-Dec-2025 06:03:30 UTC] Header SERVER_SIGNATURE: 
+[10-Dec-2025 06:03:30 UTC] Header HTTP_CONNECTION: close
+[10-Dec-2025 06:03:30 UTC] Header HTTP_ACCEPT_ENCODING: gzip, deflate, br
+[10-Dec-2025 06:03:30 UTC] Header HTTP_HOST: localhost
+[10-Dec-2025 06:03:30 UTC] Header HTTP_POSTMAN_TOKEN: d2046668-18e0-4118-a66c-d1d215cd1d7f
+[10-Dec-2025 06:03:30 UTC] Header HTTP_ACCEPT: */*
+[10-Dec-2025 06:03:30 UTC] Header HTTP_USER_AGENT: PostmanRuntime/7.49.1
+[10-Dec-2025 06:03:30 UTC] Raw webhook data length: 233
+[10-Dec-2025 06:03:30 UTC] Raw webhook data: {
+  "gateway": "BIDV",
+  "transactionDate": "2025-12-10T10:00:00Z",
+  "accountNumber": "8836563558",
+  "transferType": "in",
+  "transferAmount": 10000,
+  "code": "TEST123",
+  "content": "DH13",  
+  "referenceCode": "REF123"
+}
+[10-Dec-2025 06:03:30 UTC] Webhook data decoded: {"gateway":"BIDV","transactionDate":"2025-12-10T10:00:00Z","accountNumber":"8836563558","transferType":"in","transferAmount":10000,"code":"TEST123","content":"DH13","referenceCode":"REF123"}
+[10-Dec-2025 06:03:30 UTC] SePayService::handleWebhook - Webhook secret configured: Yes
+[10-Dec-2025 06:03:30 UTC] SePayService::handleWebhook - Signature received: None
+[10-Dec-2025 06:03:30 UTC] SePayService::handleWebhook - WARNING: Webhook secret configured but no signature received. Processing anyway for testing.
+[10-Dec-2025 06:03:30 UTC] Router execute throwable: Cannot use object of type stdClass as array
+[10-Dec-2025 06:03:30 UTC] Stack trace: #0 F:\laragon\www\backend\app\api\controllers\v1\PaymentController.php(169): SePayService->handleWebhook(Object(stdClass))
+#1 F:\laragon\www\backend\app\core\Router.php(345): PaymentController->webhook(Array)
+#2 F:\laragon\www\backend\app\core\Router.php(282): Router->execute(Object(PaymentController), 'webhook', NULL)
+#3 F:\laragon\www\backend\app\core\Router.php(211): Router->call(Array, NULL)
+#4 F:\laragon\www\backend\index.php(99): Router->handleSpecialRoute()
+#5 {main}
+[10-Dec-2025 06:05:03 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 06:05:03 UTC] REQUEST_URI: /backend/api/v1/payments/webhook
+[10-Dec-2025 06:05:03 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 06:05:03 UTC] QUERY_STRING: url=api/v1/payments/webhook
+[10-Dec-2025 06:05:03 UTC] GET url param: api/v1/payments/webhook
+[10-Dec-2025 06:05:03 UTC] URI Segments: ["api","v1","payments","webhook"]
+[10-Dec-2025 06:05:03 UTC] Router constructor - URI segments: ["api","v1","payments","webhook"]
+[10-Dec-2025 06:05:03 UTC] Router parsed - version: v1, resource: payments, id: webhook, method: POST
+[10-Dec-2025 06:05:03 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: webhook
+[10-Dec-2025 06:05:03 UTC] Checking auth route: POST payments
+[10-Dec-2025 06:05:03 UTC] Checking auth route with action: POST payments/webhook
+[10-Dec-2025 06:05:08 UTC] Router::execute - controller: PaymentController, action: webhook
+[10-Dec-2025 06:05:08 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 06:05:08 UTC] Router::execute - raw input length: 232
+[10-Dec-2025 06:05:08 UTC] Router::execute - raw input preview: {
+  "gateway": "BIDV",
+  "transactionDate": "2025-12-10T10:00:00Z",
+  "accountNumber": "8836563558",
+  "transferType": "in",
+  "transferAmount": 10000,
+  "code": "TEST123",
+  "content": "DH13",
+[10-Dec-2025 06:05:08 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 06:05:08 UTC] Router::execute - final data: {"gateway":"BIDV","transactionDate":"2025-12-10T10:00:00Z","accountNumber":"8836563558","transferType":"in","transferAmount":10000,"code":"TEST123","content":"DH13","referenceCode":"REF123"}
+[10-Dec-2025 06:05:08 UTC] === WEBHOOK RECEIVED ===
+[10-Dec-2025 06:05:08 UTC] Request method: POST
+[10-Dec-2025 06:05:08 UTC] Content-Type: application/json
+[10-Dec-2025 06:05:08 UTC] All headers: {"Content-Length":"232","Connection":"close","Accept-Encoding":"gzip, deflate, br","Host":"localhost","Postman-Token":"3a200a3c-fdce-4783-95be-ae562e04fcb7","Accept":"*\/*","User-Agent":"PostmanRuntime\/7.49.1","Content-Type":"application\/json"}
+[10-Dec-2025 06:05:08 UTC] Header SERVER_SIGNATURE: 
+[10-Dec-2025 06:05:08 UTC] Header HTTP_CONNECTION: close
+[10-Dec-2025 06:05:08 UTC] Header HTTP_ACCEPT_ENCODING: gzip, deflate, br
+[10-Dec-2025 06:05:08 UTC] Header HTTP_HOST: localhost
+[10-Dec-2025 06:05:08 UTC] Header HTTP_POSTMAN_TOKEN: 3a200a3c-fdce-4783-95be-ae562e04fcb7
+[10-Dec-2025 06:05:08 UTC] Header HTTP_ACCEPT: */*
+[10-Dec-2025 06:05:08 UTC] Header HTTP_USER_AGENT: PostmanRuntime/7.49.1
+[10-Dec-2025 06:05:08 UTC] Raw webhook data length: 232
+[10-Dec-2025 06:05:08 UTC] Raw webhook data: {
+  "gateway": "BIDV",
+  "transactionDate": "2025-12-10T10:00:00Z",
+  "accountNumber": "8836563558",
+  "transferType": "in",
+  "transferAmount": 10000,
+  "code": "TEST123",
+  "content": "DH13",
+  "referenceCode": "REF123"
+}
+[10-Dec-2025 06:05:08 UTC] Webhook data decoded: {"gateway":"BIDV","transactionDate":"2025-12-10T10:00:00Z","accountNumber":"8836563558","transferType":"in","transferAmount":10000,"code":"TEST123","content":"DH13","referenceCode":"REF123"}
+[10-Dec-2025 06:05:08 UTC] SePayService::handleWebhook - Webhook secret configured: Yes
+[10-Dec-2025 06:05:08 UTC] SePayService::handleWebhook - Signature received: None
+[10-Dec-2025 06:05:08 UTC] SePayService::handleWebhook - WARNING: Webhook secret configured but no signature received. Processing anyway for testing.
+[10-Dec-2025 06:05:08 UTC] Webhook result: {"success":true,"order_id":13,"status":"paid","amount":10000,"transaction_data":{"gateway":"BIDV","transaction_date":"2025-12-10T10:00:00Z","account_number":"8836563558","sub_account":null,"amount_in":10000,"amount_out":0,"accumulated":null,"code":"TEST123","transaction_content":"DH13","reference_number":"REF123","body":null},"raw_data":{"gateway":"BIDV","transactionDate":"2025-12-10T10:00:00Z","accountNumber":"8836563558","transferType":"in","transferAmount":10000,"code":"TEST123","content":"DH13","referenceCode":"REF123"}}
+[10-Dec-2025 06:05:08 UTC] Transaction data to save: {"gateway":"BIDV","transaction_date":"2025-12-10T10:00:00Z","account_number":"8836563558","sub_account":null,"amount_in":10000,"amount_out":0,"accumulated":null,"code":"TEST123","transaction_content":"DH13","reference_number":"REF123","body":null}
+[10-Dec-2025 06:05:08 UTC] Transaction save result: {"success":false,"message":"L\u1ed7i khi l\u01b0u giao d\u1ecbch: SQLSTATE[22007]: Invalid datetime format: 1292 Incorrect datetime value: '2025-12-10T10:00:00Z' for column 'transaction_date' at row 1"}
+[10-Dec-2025 06:05:54 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 06:05:54 UTC] REQUEST_URI: /backend/api/v1/payments/webhook
+[10-Dec-2025 06:05:54 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 06:05:54 UTC] QUERY_STRING: url=api/v1/payments/webhook
+[10-Dec-2025 06:05:54 UTC] GET url param: api/v1/payments/webhook
+[10-Dec-2025 06:05:54 UTC] URI Segments: ["api","v1","payments","webhook"]
+[10-Dec-2025 06:05:54 UTC] Router constructor - URI segments: ["api","v1","payments","webhook"]
+[10-Dec-2025 06:05:54 UTC] Router parsed - version: v1, resource: payments, id: webhook, method: POST
+[10-Dec-2025 06:05:54 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: webhook
+[10-Dec-2025 06:05:54 UTC] Checking auth route: POST payments
+[10-Dec-2025 06:05:54 UTC] Checking auth route with action: POST payments/webhook
+[10-Dec-2025 06:05:59 UTC] Router::execute - controller: PaymentController, action: webhook
+[10-Dec-2025 06:05:59 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 06:05:59 UTC] Router::execute - raw input length: 232
+[10-Dec-2025 06:05:59 UTC] Router::execute - raw input preview: {
+  "gateway": "BIDV",
+  "transactionDate": "2025-12-10T10:00:00Z",
+  "accountNumber": "8836563558",
+  "transferType": "in",
+  "transferAmount": 10000,
+  "code": "TEST123",
+  "content": "DH13",
+[10-Dec-2025 06:05:59 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 06:05:59 UTC] Router::execute - final data: {"gateway":"BIDV","transactionDate":"2025-12-10T10:00:00Z","accountNumber":"8836563558","transferType":"in","transferAmount":10000,"code":"TEST123","content":"DH13","referenceCode":"REF123"}
+[10-Dec-2025 06:05:59 UTC] === WEBHOOK RECEIVED ===
+[10-Dec-2025 06:05:59 UTC] Request method: POST
+[10-Dec-2025 06:05:59 UTC] Content-Type: application/json
+[10-Dec-2025 06:05:59 UTC] All headers: {"Content-Length":"232","Connection":"close","Accept-Encoding":"gzip, deflate, br","Host":"localhost","Postman-Token":"573730c3-f78d-4fd3-86c7-7c913d29b0f2","Accept":"*\/*","User-Agent":"PostmanRuntime\/7.49.1","Content-Type":"application\/json"}
+[10-Dec-2025 06:05:59 UTC] Header SERVER_SIGNATURE: 
+[10-Dec-2025 06:05:59 UTC] Header HTTP_CONNECTION: close
+[10-Dec-2025 06:05:59 UTC] Header HTTP_ACCEPT_ENCODING: gzip, deflate, br
+[10-Dec-2025 06:05:59 UTC] Header HTTP_HOST: localhost
+[10-Dec-2025 06:05:59 UTC] Header HTTP_POSTMAN_TOKEN: 573730c3-f78d-4fd3-86c7-7c913d29b0f2
+[10-Dec-2025 06:05:59 UTC] Header HTTP_ACCEPT: */*
+[10-Dec-2025 06:05:59 UTC] Header HTTP_USER_AGENT: PostmanRuntime/7.49.1
+[10-Dec-2025 06:05:59 UTC] Raw webhook data length: 232
+[10-Dec-2025 06:05:59 UTC] Raw webhook data: {
+  "gateway": "BIDV",
+  "transactionDate": "2025-12-10T10:00:00Z",
+  "accountNumber": "8836563558",
+  "transferType": "in",
+  "transferAmount": 10000,
+  "code": "TEST123",
+  "content": "DH13",
+  "referenceCode": "REF123"
+}
+[10-Dec-2025 06:05:59 UTC] Webhook data decoded: {"gateway":"BIDV","transactionDate":"2025-12-10T10:00:00Z","accountNumber":"8836563558","transferType":"in","transferAmount":10000,"code":"TEST123","content":"DH13","referenceCode":"REF123"}
+[10-Dec-2025 06:05:59 UTC] SePayService::handleWebhook - Webhook secret configured: Yes
+[10-Dec-2025 06:05:59 UTC] SePayService::handleWebhook - Signature received: None
+[10-Dec-2025 06:05:59 UTC] SePayService::handleWebhook - WARNING: Webhook secret configured but no signature received. Processing anyway for testing.
+[10-Dec-2025 06:05:59 UTC] Webhook result: {"success":true,"order_id":13,"status":"paid","amount":10000,"transaction_data":{"gateway":"BIDV","transaction_date":"2025-12-10 10:00:00","account_number":"8836563558","sub_account":null,"amount_in":10000,"amount_out":0,"accumulated":null,"code":"TEST123","transaction_content":"DH13","reference_number":"REF123","body":null},"raw_data":{"gateway":"BIDV","transactionDate":"2025-12-10T10:00:00Z","accountNumber":"8836563558","transferType":"in","transferAmount":10000,"code":"TEST123","content":"DH13","referenceCode":"REF123"}}
+[10-Dec-2025 06:05:59 UTC] Transaction data to save: {"gateway":"BIDV","transaction_date":"2025-12-10 10:00:00","account_number":"8836563558","sub_account":null,"amount_in":10000,"amount_out":0,"accumulated":null,"code":"TEST123","transaction_content":"DH13","reference_number":"REF123","body":null}
+[10-Dec-2025 06:05:59 UTC] Transaction save result: {"success":true,"transaction_id":"1"}
+[10-Dec-2025 06:06:41 UTC] === REQUEST DEBUG ===
+[10-Dec-2025 06:06:41 UTC] REQUEST_URI: /backend/api/v1/payments/webhook
+[10-Dec-2025 06:06:41 UTC] REQUEST_METHOD: POST
+[10-Dec-2025 06:06:41 UTC] QUERY_STRING: url=api/v1/payments/webhook
+[10-Dec-2025 06:06:41 UTC] GET url param: api/v1/payments/webhook
+[10-Dec-2025 06:06:41 UTC] URI Segments: ["api","v1","payments","webhook"]
+[10-Dec-2025 06:06:41 UTC] Router constructor - URI segments: ["api","v1","payments","webhook"]
+[10-Dec-2025 06:06:41 UTC] Router parsed - version: v1, resource: payments, id: webhook, method: POST
+[10-Dec-2025 06:06:41 UTC] Router::handleSpecialRoute - method: POST, resource: payments, id: webhook
+[10-Dec-2025 06:06:41 UTC] Checking auth route: POST payments
+[10-Dec-2025 06:06:41 UTC] Checking auth route with action: POST payments/webhook
+[10-Dec-2025 06:06:47 UTC] Router::execute - controller: PaymentController, action: webhook
+[10-Dec-2025 06:06:47 UTC] Router::execute - Content-Type: application/json
+[10-Dec-2025 06:06:47 UTC] Router::execute - raw input length: 232
+[10-Dec-2025 06:06:47 UTC] Router::execute - raw input preview: {
+  "gateway": "BIDV",
+  "transactionDate": "2025-12-10T10:00:00Z",
+  "accountNumber": "8836563558",
+  "transferType": "in",
+  "transferAmount": 31000,
+  "code": "TEST123",
+  "content": "DH13",
+[10-Dec-2025 06:06:47 UTC] Router::execute - Successfully decoded JSON
+[10-Dec-2025 06:06:47 UTC] Router::execute - final data: {"gateway":"BIDV","transactionDate":"2025-12-10T10:00:00Z","accountNumber":"8836563558","transferType":"in","transferAmount":31000,"code":"TEST123","content":"DH13","referenceCode":"REF123"}
+[10-Dec-2025 06:06:47 UTC] === WEBHOOK RECEIVED ===
+[10-Dec-2025 06:06:47 UTC] Request method: POST
+[10-Dec-2025 06:06:47 UTC] Content-Type: application/json
+[10-Dec-2025 06:06:47 UTC] All headers: {"Content-Length":"232","Connection":"close","Accept-Encoding":"gzip, deflate, br","Host":"localhost","Postman-Token":"5e63e016-6fd6-4cc2-85c9-9e4f0abf4b10","Accept":"*\/*","User-Agent":"PostmanRuntime\/7.49.1","Content-Type":"application\/json"}
+[10-Dec-2025 06:06:47 UTC] Header SERVER_SIGNATURE: 
+[10-Dec-2025 06:06:47 UTC] Header HTTP_CONNECTION: close
+[10-Dec-2025 06:06:47 UTC] Header HTTP_ACCEPT_ENCODING: gzip, deflate, br
+[10-Dec-2025 06:06:47 UTC] Header HTTP_HOST: localhost
+[10-Dec-2025 06:06:47 UTC] Header HTTP_POSTMAN_TOKEN: 5e63e016-6fd6-4cc2-85c9-9e4f0abf4b10
+[10-Dec-2025 06:06:47 UTC] Header HTTP_ACCEPT: */*
+[10-Dec-2025 06:06:47 UTC] Header HTTP_USER_AGENT: PostmanRuntime/7.49.1
+[10-Dec-2025 06:06:47 UTC] Raw webhook data length: 232
+[10-Dec-2025 06:06:47 UTC] Raw webhook data: {
+  "gateway": "BIDV",
+  "transactionDate": "2025-12-10T10:00:00Z",
+  "accountNumber": "8836563558",
+  "transferType": "in",
+  "transferAmount": 31000,
+  "code": "TEST123",
+  "content": "DH13",
+  "referenceCode": "REF123"
+}
+[10-Dec-2025 06:06:47 UTC] Webhook data decoded: {"gateway":"BIDV","transactionDate":"2025-12-10T10:00:00Z","accountNumber":"8836563558","transferType":"in","transferAmount":31000,"code":"TEST123","content":"DH13","referenceCode":"REF123"}
+[10-Dec-2025 06:06:47 UTC] SePayService::handleWebhook - Webhook secret configured: Yes
+[10-Dec-2025 06:06:47 UTC] SePayService::handleWebhook - Signature received: None
+[10-Dec-2025 06:06:47 UTC] SePayService::handleWebhook - WARNING: Webhook secret configured but no signature received. Processing anyway for testing.
+[10-Dec-2025 06:06:47 UTC] Webhook result: {"success":true,"order_id":13,"status":"paid","amount":31000,"transaction_data":{"gateway":"BIDV","transaction_date":"2025-12-10 10:00:00","account_number":"8836563558","sub_account":null,"amount_in":31000,"amount_out":0,"accumulated":null,"code":"TEST123","transaction_content":"DH13","reference_number":"REF123","body":null},"raw_data":{"gateway":"BIDV","transactionDate":"2025-12-10T10:00:00Z","accountNumber":"8836563558","transferType":"in","transferAmount":31000,"code":"TEST123","content":"DH13","referenceCode":"REF123"}}
+[10-Dec-2025 06:06:47 UTC] Transaction data to save: {"gateway":"BIDV","transaction_date":"2025-12-10 10:00:00","account_number":"8836563558","sub_account":null,"amount_in":31000,"amount_out":0,"accumulated":null,"code":"TEST123","transaction_content":"DH13","reference_number":"REF123","body":null}
+[10-Dec-2025 06:06:47 UTC] Transaction save result: {"success":true,"transaction_id":"2"}

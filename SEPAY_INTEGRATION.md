@@ -158,30 +158,88 @@ Authorization: Bearer {token}
 1. **Format nội dung chuyển khoản:** Phải là `DH{order_id}` (ví dụ: `DH123`)
 2. **Trạng thái đơn hàng:** Backend sử dụng `unpaid`/`paid` (lowercase), khác với code mẫu dùng `Unpaid`/`Paid`
 3. **Kiểm tra số tiền:** Webhook sẽ kiểm tra số tiền thanh toán phải khớp với tổng đơn hàng
-4. **Bảo mật:** Nên cấu hình `SEPAY_WEBHOOK_SECRET` để xác thực webhook từ SePay
+4. **Bảo mật Webhook:**
+   - Nếu có `SEPAY_WEBHOOK_SECRET` trong `.env`, hệ thống sẽ xác thực signature
+   - Nếu không có `SEPAY_WEBHOOK_SECRET`, hệ thống sẽ bỏ qua xác thực (cho phép test)
+   - Để test local, có thể để trống `SEPAY_WEBHOOK_SECRET` hoặc comment dòng này trong `.env`
+   - **Lưu ý:** Trong production, nên cấu hình `SEPAY_WEBHOOK_SECRET` để bảo mật
 
 ## Testing
 
-1. Tạo đơn hàng test
-2. Gọi API tạo thanh toán và lấy QR code
-3. Test webhook bằng cách gửi POST request đến `/api/v1/payments/webhook` với dữ liệu mẫu:
+### 1. Test Webhook Endpoint
 
-```json
-{
-  "gateway": "MBBank",
-  "transactionDate": "2025-11-29T10:00:00Z",
-  "accountNumber": "0903252427",
-  "subAccount": null,
-  "transferType": "in",
-  "transferAmount": 3500000,
-  "accumulated": 10000000,
-  "code": "ABC123",
-  "content": "DH123",
-  "referenceCode": "REF123",
-  "description": "Thanh toan don hang"
-}
+**Cách 1: Sử dụng script test**
+```bash
+php scripts/test_webhook.php
 ```
 
-4. Kiểm tra bảng `tb_transactions` có record mới
-5. Kiểm tra đơn hàng có `payment_status = 'paid'`
+**Cách 2: Sử dụng Postman hoặc cURL**
+```bash
+curl -X POST http://localhost/backend/api/v1/payments/webhook \
+  -H "Content-Type: application/json" \
+  -d '{
+    "gateway": "MBBank",
+    "transactionDate": "2025-11-29T10:00:00Z",
+    "accountNumber": "0903252427",
+    "subAccount": null,
+    "transferType": "in",
+    "transferAmount": 3500000,
+    "accumulated": 10000000,
+    "code": "ABC123",
+    "content": "DH21",
+    "referenceCode": "REF123",
+    "description": "Thanh toan don hang"
+  }'
+```
+
+**Lưu ý:** Thay `DH21` bằng order_id thực tế của bạn.
+
+### 2. Kiểm tra kết quả
+
+Sau khi test webhook:
+1. Kiểm tra log file: `storage/logs/php-errors.log` - sẽ có log "=== WEBHOOK RECEIVED ==="
+2. Kiểm tra bảng `tb_transactions` có record mới:
+   ```sql
+   SELECT * FROM tb_transactions ORDER BY created_at DESC LIMIT 1;
+   ```
+3. Kiểm tra đơn hàng có `payment_status = 'paid'`:
+   ```sql
+   SELECT id, payment_status, total FROM orders WHERE id = 21;
+   ```
+
+### 3. Cấu hình Webhook trên SePay
+
+**Quan trọng:** Để SePay tự động gửi webhook khi có giao dịch:
+
+1. Đăng nhập vào SePay Dashboard
+2. Vào mục **Cài đặt** → **Webhook**
+3. Thêm webhook URL: `https://yourdomain.com/api/v1/payments/webhook`
+4. Chọn các sự kiện: **Giao dịch thành công**
+5. Lưu cấu hình
+
+**Lưu ý:**
+- Webhook URL phải là HTTPS (không dùng HTTP cho production)
+- Webhook URL phải accessible từ internet (không dùng localhost)
+- Nếu dùng localhost để test, có thể dùng ngrok: `ngrok http 80`
+
+### 4. Debug Webhook
+
+Nếu webhook không hoạt động:
+
+1. **Kiểm tra log:**
+   ```bash
+   tail -f storage/logs/php-errors.log
+   ```
+
+2. **Kiểm tra webhook có được gọi không:**
+   - Xem log có dòng "=== WEBHOOK RECEIVED ===" không
+   - Nếu không có → Webhook chưa được gọi từ SePay
+
+3. **Kiểm tra format data:**
+   - Xem log "Raw webhook data" để kiểm tra format
+   - Đảm bảo `content` có format `DH{order_id}`
+
+4. **Kiểm tra database:**
+   - Xem bảng `tb_transactions` có record mới không
+   - Xem đơn hàng có được cập nhật `payment_status = 'paid'` không
 

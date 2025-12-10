@@ -131,8 +131,25 @@ class PaymentController
      */
     public function webhook()
     {
+        // Log để debug
+        error_log("=== WEBHOOK RECEIVED ===");
+        error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
+        error_log("Content-Type: " . ($_SERVER['CONTENT_TYPE'] ?? 'not set'));
+        
+        // Log tất cả headers liên quan đến signature
+        $allHeaders = getallheaders();
+        error_log("All headers: " . json_encode($allHeaders));
+        foreach ($_SERVER as $key => $value) {
+            if (stripos($key, 'HTTP_') === 0 || stripos($key, 'SIGNATURE') !== false) {
+                error_log("Header $key: " . (is_string($value) ? substr($value, 0, 100) : json_encode($value)));
+            }
+        }
+        
         // Lấy dữ liệu từ webhook (SePay gửi dạng JSON object, không phải array)
         $rawData = file_get_contents('php://input');
+        error_log("Raw webhook data length: " . strlen($rawData));
+        error_log("Raw webhook data: " . substr($rawData, 0, 500));
+        
         $data = json_decode($rawData);
 
         // Nếu decode thành array, chuyển thành object
@@ -141,12 +158,16 @@ class PaymentController
         }
 
         if (!$data || !is_object($data)) {
+            error_log("Webhook: Invalid data format");
             $this->response->json(['success' => false, 'message' => 'No data'], 400);
             return;
         }
 
+        error_log("Webhook data decoded: " . json_encode($data));
+
         // Xử lý webhook từ SePay
         $webhookResult = $this->sepayService->handleWebhook($data);
+        error_log("Webhook result: " . json_encode($webhookResult));
 
         if (!$webhookResult['success']) {
             $this->response->json(['success' => false, 'message' => $webhookResult['message']], 400);
@@ -155,7 +176,16 @@ class PaymentController
 
         // Lưu giao dịch vào bảng tb_transactions
         $transactionData = $webhookResult['transaction_data'];
+        
+        // Đảm bảo transaction_data là array (TransactionModel expect array)
+        if (is_object($transactionData)) {
+            $transactionData = (array)$transactionData;
+        }
+        
+        error_log("Transaction data to save: " . json_encode($transactionData));
+        
         $transactionResult = $this->transactionModel->createTransaction($transactionData);
+        error_log("Transaction save result: " . json_encode($transactionResult));
 
         if (!$transactionResult['success']) {
             $this->response->json(['success' => false, 'message' => $transactionResult['message']], 500);
