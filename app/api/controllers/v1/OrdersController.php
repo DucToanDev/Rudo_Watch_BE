@@ -17,9 +17,7 @@ class OrdersController
     }
 
     /**
-     * GET /api/v1/orders
      * Lấy danh sách đơn hàng của user đang đăng nhập
-     * Query params: page, limit, status
      */
     public function index()
     {
@@ -44,7 +42,6 @@ class OrdersController
     }
 
     /**
-     * GET /api/v1/orders/{id}
      * Lấy chi tiết đơn hàng
      */
     public function show($id)
@@ -54,7 +51,6 @@ class OrdersController
             return;
         }
 
-        // Nếu là admin, có thể xem tất cả đơn hàng
         $userId = ($user['role'] === 'admin') ? null : $user['id'];
 
         $result = $this->orderModel->getOrderById($id, $userId);
@@ -67,16 +63,7 @@ class OrdersController
     }
 
     /**
-     * POST /api/v1/orders
      * Tạo đơn hàng mới
-     * Body: { 
-     *   items: [{ variant_id: int, quantity: int }], 
-     *   address: { name, phone, province, district, ward, detail },
-     *   payment_method: 'cod' | 'sepay' | 'banking' | 'momo',
-     *   note: string,
-     *   voucher_id: int,
-     *   shipping_method_id: int
-     * }
      */
     public function store($data)
     {
@@ -98,7 +85,6 @@ class OrdersController
     }
 
     /**
-     * PUT /api/v1/orders/{id}/cancel
      * User hủy đơn hàng
      */
     public function cancel($id)
@@ -118,9 +104,7 @@ class OrdersController
     }
 
     /**
-     * PUT /api/v1/orders/{id}/status
      * Admin cập nhật trạng thái đơn hàng
-     * Body: { status: 'pending' | 'confirmed' | 'processing' | 'shipping' | 'delivered' | 'cancelled' }
      */
     public function updateStatus($id)
     {
@@ -151,9 +135,7 @@ class OrdersController
     }
 
     /**
-     * PUT /api/v1/orders/{id}/payment-status
      * Admin cập nhật trạng thái thanh toán
-     * Body: { payment_status: 'unpaid' | 'paid' | 'refunded' }
      */
     public function updatePaymentStatus($id)
     {
@@ -184,9 +166,7 @@ class OrdersController
     }
 
     /**
-     * GET /api/v1/orders/admin
      * Admin lấy tất cả đơn hàng
-     * Query params: page, limit, status, search
      */
     public function admin()
     {
@@ -216,7 +196,6 @@ class OrdersController
     }
 
     /**
-     * GET /api/v1/orders/statistics
      * Admin xem thống kê đơn hàng
      */
     public function statistics()

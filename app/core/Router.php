@@ -16,7 +16,6 @@ class Router
         'GET health'        => ['HomeController', 'health'], // Test endpoint
         'POST register'     => ['AuthController', 'register'],
         'POST login'        => ['AuthController', 'login'],
-        'POST auth/reset-password' => ['AuthController', 'resetPassword'],
         'GET facebook'      => ['SocialAuthController', 'facebookStart'],
         'GET facebook-callback' => ['SocialAuthController', 'facebookCallback'],
         'GET google'        => ['SocialAuthController', 'googleStart'],

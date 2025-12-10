@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../../models/PaymentModel.php';
 require_once __DIR__ . '/../../../models/OrderModel.php';
+require_once __DIR__ . '/../../../models/TransactionModel.php';
 require_once __DIR__ . '/../../../services/SePayService.php';
 require_once __DIR__ . '/../../../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../../../core/Response.php';
@@ -9,6 +10,7 @@ class PaymentController
 {
     private $paymentModel;
     private $orderModel;
+    private $transactionModel;
     private $sepayService;
     private $authMiddleware;
     private $response;
@@ -17,6 +19,7 @@ class PaymentController
     {
         $this->paymentModel = new PaymentModel();
         $this->orderModel = new OrderModel();
+        $this->transactionModel = new TransactionModel();
         $this->sepayService = new SePayService();
         $this->authMiddleware = new AuthMiddleware();
         $this->response = new Response();
@@ -67,12 +70,12 @@ class PaymentController
             return;
         }
 
-        // Tạo thanh toán SePay
-        $description = "Thanh toan don hang #{$data->order_id}";
+        // Tạo thanh toán SePay với nội dung chuyển khoản: DH{order_id}
+        $paymentContent = "DH{$data->order_id}";
         $qrResult = $this->sepayService->createPaymentQR(
             $data->order_id,
             $orderData['total'],
-            $description
+            $paymentContent
         );
 
         if (!$qrResult['success']) {
@@ -110,14 +113,21 @@ class PaymentController
     /**
      * POST /api/v1/payments/webhook
      * Webhook nhận thông báo từ SePay
+     * Logic theo code mẫu: lưu vào tb_transactions, tách mã đơn hàng từ nội dung chuyển khoản
      */
     public function webhook()
     {
+        // Lấy dữ liệu từ webhook (SePay gửi dạng JSON object, không phải array)
         $rawData = file_get_contents('php://input');
-        $data = json_decode($rawData, true);
+        $data = json_decode($rawData);
 
-        if (!$data) {
-            $this->response->json(['error' => 'Dữ liệu không hợp lệ'], 400);
+        // Nếu decode thành array, chuyển thành object
+        if (is_array($data)) {
+            $data = (object)$data;
+        }
+
+        if (!$data || !is_object($data)) {
+            $this->response->json(['success' => false, 'message' => 'No data'], 400);
             return;
         }
 
@@ -125,47 +135,86 @@ class PaymentController
         $webhookResult = $this->sepayService->handleWebhook($data);
 
         if (!$webhookResult['success']) {
-            $this->response->json(['error' => $webhookResult['message']], 400);
+            $this->response->json(['success' => false, 'message' => $webhookResult['message']], 400);
             return;
         }
 
+        // Lưu giao dịch vào bảng tb_transactions
+        $transactionData = $webhookResult['transaction_data'];
+        $transactionResult = $this->transactionModel->createTransaction($transactionData);
+
+        if (!$transactionResult['success']) {
+            $this->response->json(['success' => false, 'message' => $transactionResult['message']], 500);
+            return;
+        }
+
+        // Lấy mã đơn hàng từ kết quả xử lý webhook
         $orderId = $webhookResult['order_id'];
         $status = $webhookResult['status'];
-        $transactionId = $webhookResult['transaction_id'];
+        $amount = $webhookResult['amount'];
 
-        // Tìm payment theo transaction_id hoặc order_id
-        $payment = null;
-        if ($transactionId) {
-            $payment = $this->paymentModel->getPaymentByTransactionId($transactionId);
-        }
-        
-        if (!$payment && $orderId) {
-            $payment = $this->paymentModel->getPaymentByOrderId($orderId);
-        }
-
-        if (!$payment) {
-            $this->response->json(['error' => 'Không tìm thấy giao dịch thanh toán'], 404);
+        // Nếu không tìm thấy mã đơn hàng từ nội dung thanh toán
+        if (!is_numeric($orderId)) {
+            $this->response->json([
+                'success' => false, 
+                'message' => 'Order not found. Order_id ' . $orderId
+            ], 400);
             return;
         }
 
-        // Cập nhật trạng thái thanh toán
-        $paymentStatus = 'pending';
-        if ($status === 'paid') {
-            $paymentStatus = 'paid';
-        } elseif ($status === 'failed') {
-            $paymentStatus = 'failed';
+        // Tìm đơn hàng với mã đơn hàng và số tiền tương ứng
+        // Điều kiện: id đơn hàng, số tiền, trạng thái đơn hàng phải là 'unpaid'
+        $order = $this->orderModel->getOrderById($orderId);
+        if (!$order || !$order['success']) {
+            $this->response->json([
+                'success' => false, 
+                'message' => 'Order not found. Order_id ' . $orderId
+            ], 404);
+            return;
         }
 
-        $this->paymentModel->updatePaymentStatus($payment['id'], $paymentStatus, $transactionId);
+        $orderData = $order['data'];
 
-        // Cập nhật trạng thái đơn hàng
-        if ($status === 'paid') {
-            $this->orderModel->updatePaymentStatus($orderId, 'paid');
+        // Kiểm tra số tiền và trạng thái thanh toán
+        if ($orderData['payment_status'] !== 'unpaid') {
+            // Đơn hàng đã thanh toán rồi, chỉ trả về success
+            $this->response->json(['success' => true, 'message' => 'Order already paid']);
+            return;
+        }
+
+        // Kiểm tra số tiền (cho phép sai số nhỏ do làm tròn)
+        $orderTotal = (float)$orderData['total'];
+        $paymentAmount = (float)$amount;
+        if (abs($orderTotal - $paymentAmount) > 0.01) {
+            $this->response->json([
+                'success' => false, 
+                'message' => 'Payment amount mismatch. Expected: ' . $orderTotal . ', Received: ' . $paymentAmount
+            ], 400);
+            return;
+        }
+
+        // Cập nhật trạng thái đơn hàng thành 'paid'
+        $updateResult = $this->orderModel->updatePaymentStatus($orderId, 'paid');
+        
+        if (!$updateResult['success']) {
+            $this->response->json([
+                'success' => false, 
+                'message' => 'Failed to update order status: ' . $updateResult['message']
+            ], 500);
+            return;
+        }
+
+        // Cập nhật payment record nếu có
+        $payment = $this->paymentModel->getPaymentByOrderId($orderId);
+        if ($payment && $status === 'paid') {
+            $this->paymentModel->updatePaymentStatus($payment['id'], 'paid');
         }
 
         $this->response->json([
-            'message' => 'Webhook xử lý thành công',
-            'status' => $paymentStatus
+            'success' => true,
+            'message' => 'Payment processed successfully',
+            'order_id' => $orderId,
+            'status' => 'paid'
         ], 200);
     }
 

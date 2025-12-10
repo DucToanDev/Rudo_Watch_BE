@@ -218,7 +218,6 @@ class CategoriesController
 
     /**
      * Lấy danh sách danh mục đang hoạt động
-     * GET /api/v1/categories/active
      */
     public function active()
     {

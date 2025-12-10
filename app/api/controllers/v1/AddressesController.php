@@ -17,7 +17,6 @@ class AddressesController
     }
 
     /**
-     * GET /api/v1/addresses
      * Lấy danh sách địa chỉ của user hiện tại
      */
     public function index()
@@ -42,7 +41,6 @@ class AddressesController
     }
 
     /**
-     * GET /api/v1/addresses/{id}
      * Lấy chi tiết địa chỉ theo ID
      */
     public function show($id)
@@ -61,11 +59,10 @@ class AddressesController
                 return;
             }
 
-            // Kiểm tra địa chỉ thuộc về user
             if (!$this->addressModel->belongsToUser($id, $user['id'])) {
                 $this->response->json([
                     'success' => false,
-                    'error' => 'Địa chỉ không tồn tại hoặc không thuộc về bạn'
+                    'error' => 'Địa chỉ không tồn tại!'
                 ], 404);
                 return;
             }
@@ -84,7 +81,6 @@ class AddressesController
     }
 
     /**
-     * GET /api/v1/addresses/default
      * Lấy địa chỉ mặc định của user
      */
     public function default()
@@ -100,7 +96,7 @@ class AddressesController
             if (!$address) {
                 $this->response->json([
                     'success' => false,
-                    'error' => 'Chưa có địa chỉ mặc định'
+                    'error' => 'Chưa có địa chỉ mặc định!'
                 ], 404);
                 return;
             }
@@ -118,7 +114,6 @@ class AddressesController
     }
 
     /**
-     * POST /api/v1/addresses
      * Tạo địa chỉ mới
      */
     public function store($data)
@@ -129,12 +124,10 @@ class AddressesController
         }
 
         try {
-            // Convert object to array if needed
             if (is_object($data)) {
                 $data = json_decode(json_encode($data), true);
             }
 
-            // Validate dữ liệu
             $errors = $this->validateAddressData($data);
             if (!empty($errors)) {
                 $this->response->json([
@@ -144,7 +137,6 @@ class AddressesController
                 return;
             }
 
-            // Giới hạn số địa chỉ tối đa
             $maxAddresses = 10;
             $currentCount = $this->addressModel->countByUserId($user['id']);
             if ($currentCount >= $maxAddresses) {
@@ -155,9 +147,7 @@ class AddressesController
                 return;
             }
 
-            // Thêm user_id vào data
             $data['user_id'] = $user['id'];
-
             $result = $this->addressModel->create($data);
 
             if ($result['success']) {
@@ -181,7 +171,6 @@ class AddressesController
     }
 
     /**
-     * PUT /api/v1/addresses/{id}
      * Cập nhật địa chỉ
      */
     public function update($id)
@@ -200,11 +189,10 @@ class AddressesController
                 return;
             }
 
-            // Kiểm tra địa chỉ thuộc về user
             if (!$this->addressModel->belongsToUser($id, $user['id'])) {
                 $this->response->json([
                     'success' => false,
-                    'error' => 'Địa chỉ không tồn tại hoặc không thuộc về bạn'
+                    'error' => 'Địa chỉ không tồn tại!'
                 ], 404);
                 return;
             }
@@ -219,7 +207,6 @@ class AddressesController
                 return;
             }
 
-            // Validate dữ liệu (không bắt buộc các trường)
             $errors = $this->validateAddressData($data, false);
             if (!empty($errors)) {
                 $this->response->json([
@@ -252,7 +239,6 @@ class AddressesController
     }
 
     /**
-     * DELETE /api/v1/addresses/{id}
      * Xóa địa chỉ
      */
     public function destroy($id)
@@ -271,11 +257,10 @@ class AddressesController
                 return;
             }
 
-            // Kiểm tra địa chỉ thuộc về user
             if (!$this->addressModel->belongsToUser($id, $user['id'])) {
                 $this->response->json([
                     'success' => false,
-                    'error' => 'Địa chỉ không tồn tại hoặc không thuộc về bạn'
+                    'error' => 'Địa chỉ không tồn tại!'
                 ], 404);
                 return;
             }
@@ -302,7 +287,6 @@ class AddressesController
     }
 
     /**
-     * PUT /api/v1/addresses/{id}/set-default
      * Đặt địa chỉ làm mặc định
      */
     public function setDefault($id)
@@ -351,7 +335,6 @@ class AddressesController
         $errors = [];
 
         if ($isCreate) {
-            // Khi tạo mới, bắt buộc một số trường
             if (empty($data['receiver_name'])) {
                 $errors['receiver_name'] = 'Tên người nhận không được để trống';
             }
@@ -369,7 +352,6 @@ class AddressesController
             }
         }
 
-        // Validate số điện thoại nếu có
         if (!empty($data['receiver_phone'])) {
             $phone = preg_replace('/\s+/', '', $data['receiver_phone']);
             if (!preg_match('/^(0|\+84)[0-9]{9,10}$/', $phone)) {
@@ -377,14 +359,12 @@ class AddressesController
             }
         }
 
-        // Validate tên người nhận nếu có
         if (isset($data['receiver_name']) && !empty($data['receiver_name'])) {
             if (strlen($data['receiver_name']) > 150) {
                 $errors['receiver_name'] = 'Tên người nhận không được quá 150 ký tự';
             }
         }
 
-        // Validate địa chỉ cụ thể nếu có
         if (isset($data['street']) && !empty($data['street'])) {
             if (strlen($data['street']) > 255) {
                 $errors['street'] = 'Địa chỉ không được quá 255 ký tự';

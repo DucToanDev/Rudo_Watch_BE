@@ -17,21 +17,16 @@ class CartsController
     }
 
     /**
-     * GET /api/v1/cart
      * Lấy giỏ hàng
-     * - Nếu đã đăng nhập: lấy từ database
-     * - Nếu chưa đăng nhập: trả về hướng dẫn lấy từ localStorage
      */
     public function index()
     {
-        // Kiểm tra token có được gửi không
         $token = $this->authMiddleware->getTokenFromHeader();
 
         if ($token) {
-            // Đã đăng nhập - lấy từ database
             $user = $this->authMiddleware->authenticate();
             if (!$user) {
-                return; // Response đã được gửi trong authenticate()
+                return;
             }
 
             $result = $this->cartModel->getCartByUserId($user['id']);
@@ -47,7 +42,6 @@ class CartsController
                 ], 500);
             }
         } else {
-            // Chưa đăng nhập - hướng dẫn lấy từ localStorage
             $this->response->json([
                 'source' => 'local',
                 'message' => 'Vui lòng lấy giỏ hàng từ localStorage',
@@ -57,16 +51,13 @@ class CartsController
     }
 
     /**
-     * POST /api/v1/cart/add
      * Thêm sản phẩm vào giỏ hàng
-     * Body: { variant_id: int, quantity: int }
      */
     public function add($data)
     {
         $token = $this->authMiddleware->getTokenFromHeader();
 
         if ($token) {
-            // Đã đăng nhập - lưu vào database
             $user = $this->authMiddleware->authenticate();
             if (!$user) {
                 return;
@@ -86,7 +77,6 @@ class CartsController
                 ], 400);
             }
         } else {
-            // Chưa đăng nhập - trả về hướng dẫn lưu localStorage
             $this->response->json([
                 'source' => 'local',
                 'message' => 'Vui lòng lưu sản phẩm vào localStorage',
@@ -101,16 +91,13 @@ class CartsController
     }
 
     /**
-     * PUT /api/v1/cart/update
      * Cập nhật số lượng sản phẩm
-     * Body: { item_id: int (hoặc variant_id), quantity: int }
      */
     public function update($data)
     {
         $token = $this->authMiddleware->getTokenFromHeader();
 
         if ($token) {
-            // Đã đăng nhập - cập nhật database
             $user = $this->authMiddleware->authenticate();
             if (!$user) {
                 return;
@@ -130,7 +117,6 @@ class CartsController
                 ], 400);
             }
         } else {
-            // Chưa đăng nhập - trả về hướng dẫn cập nhật localStorage
             $this->response->json([
                 'source' => 'local',
                 'message' => 'Vui lòng cập nhật sản phẩm trong localStorage',
@@ -145,13 +131,10 @@ class CartsController
     }
 
     /**
-     * DELETE /api/v1/cart/remove
      * Xóa sản phẩm khỏi giỏ hàng
-     * Body hoặc Query: { item_id: int } hoặc { variant_id: int }
      */
     public function remove($data = null)
     {
-        // Lấy data từ query string nếu DELETE không có body
         if (!$data) {
             $data = (object)[
                 'item_id' => $_GET['item_id'] ?? null,
@@ -162,7 +145,6 @@ class CartsController
         $token = $this->authMiddleware->getTokenFromHeader();
 
         if ($token) {
-            // Đã đăng nhập - xóa từ database
             $user = $this->authMiddleware->authenticate();
             if (!$user) {
                 return;
@@ -182,7 +164,6 @@ class CartsController
                 ], 400);
             }
         } else {
-            // Chưa đăng nhập - trả về hướng dẫn xóa từ localStorage
             $this->response->json([
                 'source' => 'local',
                 'message' => 'Vui lòng xóa sản phẩm từ localStorage',
@@ -196,7 +177,6 @@ class CartsController
     }
 
     /**
-     * DELETE /api/v1/cart/clear
      * Xóa toàn bộ giỏ hàng
      */
     public function clear()
@@ -204,7 +184,6 @@ class CartsController
         $token = $this->authMiddleware->getTokenFromHeader();
 
         if ($token) {
-            // Đã đăng nhập - xóa từ database
             $user = $this->authMiddleware->authenticate();
             if (!$user) {
                 return;
@@ -223,7 +202,6 @@ class CartsController
                 ], 500);
             }
         } else {
-            // Chưa đăng nhập - trả về hướng dẫn xóa localStorage
             $this->response->json([
                 'source' => 'local',
                 'message' => 'Vui lòng xóa giỏ hàng từ localStorage',
@@ -234,12 +212,10 @@ class CartsController
     }
 
     /**
-     * POST /api/v1/cart/sync
      * Đồng bộ giỏ hàng từ localStorage khi đăng nhập
      */
     public function sync($data)
     {
-        // Bắt buộc phải đăng nhập
         $user = $this->authMiddleware->authenticate();
         if (!$user) {
             return;
@@ -264,7 +240,6 @@ class CartsController
     }
 
     /**
-     * GET /api/v1/cart/count
      * Lấy số lượng sản phẩm trong giỏ hàng
      */
     public function count()

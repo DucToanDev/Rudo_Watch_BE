@@ -17,15 +17,16 @@ class BrandsController
         $this->productsModel = new Products();
         $this->response = new Response();
         
-        // Khởi tạo Railway Storage Service
         try {
             $this->storageService = new RailwayStorageService();
         } catch (Exception $e) {
-            // Nếu không cấu hình Railway S3, sẽ dùng local storage
             $this->storageService = null;
         }
     }
 
+    /**
+     * Lấy danh sách thương hiệu
+     */
     public function index()
     {
         try {
@@ -36,6 +37,9 @@ class BrandsController
         }
     }
 
+    /**
+     * Lấy thông tin thương hiệu theo ID
+     */
     public function show($id)
     {
         try {
@@ -58,6 +62,9 @@ class BrandsController
         }
     }
 
+    /**
+     * Lấy thông tin thương hiệu theo slug
+     */
     public function showBySlug($slug)
     {
         try {
@@ -79,6 +86,9 @@ class BrandsController
         }
     }
 
+    /**
+     * Tạo thương hiệu mới
+     */
     public function store($data)
     {
         try {
@@ -97,7 +107,6 @@ class BrandsController
             // Xử lý upload logo
             $logoPath = null;
             if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
-                // Sử dụng Railway S3 nếu có
                 if ($this->storageService) {
                     $uploadResult = $this->storageService->uploadFile($_FILES['logo'], 'brands');
                     if ($uploadResult['success']) {
@@ -107,7 +116,6 @@ class BrandsController
                         return;
                     }
                 } else {
-                    // Fallback: upload local
                     $logoPath = $this->uploadLogo($_FILES['logo']);
                     if ($logoPath === false) {
                         $this->response->json(['error' => 'Không thể upload logo'], 400);
@@ -167,12 +175,10 @@ class BrandsController
             // Xử lý upload logo
             $logoPath = null;
             if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
-                // Sử dụng Railway S3 nếu có
                 if ($this->storageService) {
                     $uploadResult = $this->storageService->uploadFile($_FILES['logo'], 'brands');
                     if ($uploadResult['success']) {
                         $logoPath = $uploadResult['url'];
-                        // Xóa logo cũ từ S3 nếu có
                         if (!empty($brand['logo'])) {
                             $oldKey = $this->extractS3Key($brand['logo']);
                             if ($oldKey) {
@@ -184,13 +190,11 @@ class BrandsController
                         return;
                     }
                 } else {
-                    // Fallback: upload local
                     $logoPath = $this->uploadLogo($_FILES['logo']);
                     if ($logoPath === false) {
                         $this->response->json(['error' => 'Không thể upload logo'], 400);
                         return;
                     }
-                    // Xóa logo cũ nếu có
                     if (!empty($brand['logo'])) {
                         $oldLogoPath = __DIR__ . '/../../../../' . $brand['logo'];
                         if (file_exists($oldLogoPath)) {
@@ -247,7 +251,6 @@ class BrandsController
                     return;
                 }
 
-                // Xóa tất cả sản phẩm của brand
                 $deleteResult = $this->productsModel->deleteByBrand($id);
 
                 if (!$deleteResult) {
@@ -290,7 +293,6 @@ class BrandsController
             }
         }
 
-        // Validate logo nếu có upload
         if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
             $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
             if (!in_array($_FILES['logo']['type'], $allowedTypes)) {
@@ -330,7 +332,6 @@ class BrandsController
      */
     private function extractS3Key($url)
     {
-        // URL format: https://storage.railway.app/{bucket}/{key}
         if (preg_match('/\/' . preg_quote($_ENV['RAILWAY_S3_BUCKET'] ?? $_ENV['AWS_S3_BUCKET_NAME'] ?? '', '/') . '\/(.+)$/', $url, $matches)) {
             return $matches[1];
         }
@@ -339,7 +340,6 @@ class BrandsController
 
     /**
      * Lấy danh sách thương hiệu đang hoạt động
-     * GET /api/v1/brands/active
      */
     public function active()
     {

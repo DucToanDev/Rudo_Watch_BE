@@ -35,11 +35,12 @@ class SePayService
                 return $this->createPaymentViaAPI($orderId, $amount, $description);
             }
 
-            // Tạo QR Code URL
+            // Tạo QR Code URL với format nội dung chuyển khoản: DH{order_id}
+            $paymentContent = "DH{$orderId}";
             $qrUrl = "https://qr.sepay.vn/img?acc=" . urlencode($account) . 
                      "&bank=" . urlencode($bank) . 
                      "&amount=" . $amount . 
-                     "&des=" . urlencode($description ?: "Thanh toan don hang #{$orderId}");
+                     "&des=" . urlencode($paymentContent);
 
             return [
                 'success' => true,
@@ -152,32 +153,81 @@ class SePayService
 
     /**
      * Xử lý webhook từ SePay
+     * Logic theo code mẫu: tách mã đơn hàng từ nội dung chuyển khoản (format: DH{order_id})
      */
     public function handleWebhook($data)
     {
         try {
-            // Xác thực webhook
+            // Xác thực webhook (tùy chọn, có thể bỏ qua nếu SePay không gửi signature)
             $signature = $_SERVER['HTTP_X_SEPAY_SIGNATURE'] ?? '';
-            if (!$this->verifyWebhook($data, $signature)) {
+            if (!empty($this->webhookSecret) && !$this->verifyWebhook($data, $signature)) {
                 return [
                     'success' => false,
                     'message' => 'Webhook signature không hợp lệ'
                 ];
             }
 
-            // Xử lý dữ liệu webhook
-            $transactionId = $data['transaction_id'] ?? null;
-            $orderId = $data['order_id'] ?? null;
-            $status = $data['status'] ?? 'pending';
-            $amount = $data['amount'] ?? 0;
+            // Xử lý dữ liệu webhook theo format SePay
+            // Xem: https://docs.sepay.vn/tich-hop-webhooks.html#du-lieu
+            $gateway = $data->gateway ?? $data['gateway'] ?? null;
+            $transactionDate = $data->transactionDate ?? $data['transactionDate'] ?? null;
+            $accountNumber = $data->accountNumber ?? $data['accountNumber'] ?? null;
+            $subAccount = $data->subAccount ?? $data['subAccount'] ?? null;
+            $transferType = $data->transferType ?? $data['transferType'] ?? null;
+            $transferAmount = $data->transferAmount ?? $data['transferAmount'] ?? 0;
+            $accumulated = $data->accumulated ?? $data['accumulated'] ?? null;
+            $code = $data->code ?? $data['code'] ?? null;
+            $transactionContent = $data->content ?? $data['content'] ?? null;
+            $referenceNumber = $data->referenceCode ?? $data['referenceCode'] ?? null;
+            $body = $data->description ?? $data['description'] ?? null;
+
+            // Tính amount_in và amount_out
+            $amountIn = 0;
+            $amountOut = 0;
+            if ($transferType == "in") {
+                $amountIn = $transferAmount;
+            } else if ($transferType == "out") {
+                $amountOut = $transferAmount;
+            }
+
+            // Tách mã đơn hàng từ nội dung chuyển khoản
+            // Format: DH{order_id} (ví dụ: DH123)
+            $orderId = null;
+            if ($transactionContent) {
+                $regex = '/DH(\d+)/';
+                preg_match($regex, $transactionContent, $matches);
+                if (isset($matches[1]) && is_numeric($matches[1])) {
+                    $orderId = (int)$matches[1];
+                }
+            }
+
+            // Xác định trạng thái thanh toán
+            $status = 'pending';
+            if ($transferType == "in" && $amountIn > 0) {
+                $status = 'paid';
+            } else if ($transferType == "out") {
+                $status = 'failed';
+            }
 
             return [
                 'success' => true,
-                'transaction_id' => $transactionId,
                 'order_id' => $orderId,
                 'status' => $status, // paid, pending, failed
-                'amount' => $amount,
-                'data' => $data
+                'amount' => $amountIn,
+                'transaction_data' => [
+                    'gateway' => $gateway,
+                    'transaction_date' => $transactionDate,
+                    'account_number' => $accountNumber,
+                    'sub_account' => $subAccount,
+                    'amount_in' => $amountIn,
+                    'amount_out' => $amountOut,
+                    'accumulated' => $accumulated,
+                    'code' => $code,
+                    'transaction_content' => $transactionContent,
+                    'reference_number' => $referenceNumber,
+                    'body' => $body
+                ],
+                'raw_data' => $data
             ];
         } catch (Exception $e) {
             return [
