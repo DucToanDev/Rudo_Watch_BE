@@ -56,6 +56,11 @@ class CategoriesController
     public function store($data)
     {
         try {
+            // Chuyển đổi data thành object nếu là array
+            if (is_array($data)) {
+                $data = (object)$data;
+            }
+
             $errors = $this->validateCategoryData($data, false);
             if (!empty($errors)) {
                 $this->response->json(['errors' => $errors], 400);

@@ -72,6 +72,19 @@ class OrdersController
             return;
         }
 
+        // Chuyển đổi data thành object nếu là array
+        if (is_array($data)) {
+            $data = (object)$data;
+            // Chuyển đổi items thành array các object nếu cần
+            if (isset($data->items) && is_array($data->items)) {
+                $items = [];
+                foreach ($data->items as $item) {
+                    $items[] = is_array($item) ? (object)$item : $item;
+                }
+                $data->items = $items;
+            }
+        }
+
         $result = $this->orderModel->createOrder($user['id'], $data);
 
         if ($result['success']) {

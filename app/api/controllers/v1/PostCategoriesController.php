@@ -65,6 +65,11 @@ class PostCategoriesController
                 $data = json_decode(file_get_contents("php://input"));
             }
 
+            // Chuyển đổi data thành object nếu là array
+            if (is_array($data)) {
+                $data = (object)$data;
+            }
+
             $errors = $this->validateCategoryData($data, false);
             if (!empty($errors)) {
                 $this->response->json(['errors' => $errors], 400);

@@ -62,6 +62,11 @@ class ShippingMethodsController
             return;
         }
 
+        // Chuyển đổi data thành object nếu là array
+        if (is_array($data)) {
+            $data = (object)$data;
+        }
+
         $result = $this->shippingModel->create($data);
 
         if ($result['success']) {
@@ -134,6 +139,11 @@ class ShippingMethodsController
      */
     public function calculate($data)
     {
+        // Chuyển đổi data thành object nếu là array
+        if (is_array($data)) {
+            $data = (object)$data;
+        }
+
         $methodId = $data->method_id ?? null;
         $orderTotal = $data->order_total ?? 0;
 

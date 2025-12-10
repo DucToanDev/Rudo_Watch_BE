@@ -92,6 +92,11 @@ class PostsController
             // Kiểm tra nếu có file upload (multipart/form-data)
             if (!empty($_FILES['featured_image']) || !empty($_POST)) {
                 $data = (object) $_POST;
+            } else {
+                // Chuyển đổi data thành object nếu là array (JSON request)
+                if (is_array($data)) {
+                    $data = (object)$data;
+                }
             }
 
             $errors = $this->validatePostData($data, false);

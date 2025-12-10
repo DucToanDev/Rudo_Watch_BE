@@ -90,6 +90,11 @@ class ProductsController
             // Kiểm tra nếu có file upload (multipart/form-data)
             if (!empty($_FILES['image']) || !empty($_POST)) {
                 $data = (object) $_POST;
+            } else {
+                // Chuyển đổi data thành object nếu là array (JSON request)
+                if (is_array($data)) {
+                    $data = (object)$data;
+                }
             }
 
             // Validate dữ liệu đầu vào

@@ -55,6 +55,11 @@ class CartsController
      */
     public function add($data)
     {
+        // Chuyển đổi data thành object nếu là array
+        if (is_array($data)) {
+            $data = (object)$data;
+        }
+
         $token = $this->authMiddleware->getTokenFromHeader();
 
         if ($token) {
@@ -95,6 +100,11 @@ class CartsController
      */
     public function update($data)
     {
+        // Chuyển đổi data thành object nếu là array
+        if (is_array($data)) {
+            $data = (object)$data;
+        }
+
         $token = $this->authMiddleware->getTokenFromHeader();
 
         if ($token) {
@@ -216,6 +226,11 @@ class CartsController
      */
     public function sync($data)
     {
+        // Chuyển đổi data thành object nếu là array
+        if (is_array($data)) {
+            $data = (object)$data;
+        }
+
         $user = $this->authMiddleware->authenticate();
         if (!$user) {
             return;

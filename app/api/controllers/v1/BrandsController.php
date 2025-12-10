@@ -95,6 +95,11 @@ class BrandsController
             // Xử lý dữ liệu từ form-data
             if (empty($data)) {
                 $data = (object)$_POST;
+            } else {
+                // Chuyển đổi data thành object nếu là array (JSON request)
+                if (is_array($data)) {
+                    $data = (object)$data;
+                }
             }
 
             $errors = $this->validateBrandData($data, false);

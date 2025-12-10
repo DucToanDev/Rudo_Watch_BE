@@ -69,6 +69,11 @@ class VouchersController
             // Xử lý dữ liệu từ form-data hoặc JSON
             if (empty($data)) {
                 $data = (object)$_POST;
+            } else {
+                // Chuyển đổi data thành object nếu là array (JSON request)
+                if (is_array($data)) {
+                    $data = (object)$data;
+                }
             }
 
             $errors = $this->validateVoucherData($data, false);
@@ -212,7 +217,12 @@ class VouchersController
                 $data = json_decode(file_get_contents("php://input"));
             }
 
-            if (empty($data->code)) {
+            // Chuyển đổi data thành object nếu là array
+            if (is_array($data)) {
+                $data = (object)$data;
+            }
+
+            if (empty($data) || empty($data->code)) {
                 $this->response->json(['error' => 'Vui lòng nhập mã giảm giá'], 400);
                 return;
             }
