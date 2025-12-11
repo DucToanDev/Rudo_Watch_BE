@@ -17,10 +17,22 @@ fi
 echo "MPM: Only mpm_prefork enabled"
 
 # Fix Apache port cho Railway
-echo "Step 2: Configure port..."
-sed -i "s/Listen 80/Listen ${PORT:-80}/g" /etc/apache2/ports.conf
-sed -i "s/:80/:${PORT:-80}/g" /etc/apache2/sites-available/000-default.conf 2>/dev/null || true
+echo "Step 2: Configure port ${PORT:-80}..."
+
+# Fix ports.conf
+sed -i "s/Listen 80$/Listen ${PORT:-80}/g" /etc/apache2/ports.conf
+
+# Fix VirtualHost - thay thế <VirtualHost *:80> thành <VirtualHost *:PORT>
+sed -i "s/<VirtualHost \*:80>/<VirtualHost *:${PORT:-80}>/g" /etc/apache2/sites-available/000-default.conf
+sed -i "s/<VirtualHost \*:80>/<VirtualHost *:${PORT:-80}>/g" /etc/apache2/sites-enabled/000-default.conf 2>/dev/null || true
+
 echo "Apache will listen on port ${PORT:-80}"
+
+# Debug: Show config
+echo "ports.conf:"
+cat /etc/apache2/ports.conf | grep -i listen
+echo "VirtualHost:"
+head -5 /etc/apache2/sites-available/000-default.conf
 
 # Test config
 echo "Step 3: Testing Apache config..."
