@@ -1,4 +1,32 @@
 <?php
+// Parse URL sớm để check health check
+$uri = isset($_GET['url']) ? trim($_GET['url'], '/') : '';
+
+if (empty($uri) && isset($_SERVER['REQUEST_URI'])) {
+    $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $requestUri = strtok($requestUri, '?');
+    $requestUri = preg_replace('#^/backend/#', '/', $requestUri);
+    $requestUri = preg_replace('#^/backend$#', '/', $requestUri);
+    $requestUri = preg_replace('#/index\.php$#', '', $requestUri);
+    $requestUri = preg_replace('#^/index\.php#', '', $requestUri);
+    $uri = trim($requestUri, '/');
+}
+
+// Handle health check SỚM - trước khi load bất kỳ thứ gì
+if (empty($uri) || $uri === 'health' || $uri === 'status') {
+    header('Content-Type: application/json');
+    http_response_code(200);
+    echo json_encode([
+        'status' => 'success',
+        'statusCode' => 200,
+        'data' => [
+            'message' => 'API is running',
+            'timestamp' => date('Y-m-d H:i:s')
+        ]
+    ], JSON_UNESCAPED_UNICODE);
+    exit();
+}
+
 // CORS helper function
 function setCorsHeaders() {
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
@@ -44,7 +72,10 @@ set_exception_handler(function ($exception) {
 
 // Load autoloader
 if (!class_exists('Dotenv\Dotenv')) {
-    require_once __DIR__ . '/vendor/autoload.php';
+    $autoloadPath = __DIR__ . '/vendor/autoload.php';
+    if (file_exists($autoloadPath)) {
+        require_once $autoloadPath;
+    }
 }
 
 // Load .env
@@ -57,27 +88,14 @@ if (file_exists(__DIR__ . '/.env')) {
     }
 }
 
-// Parse URL
-$uri = isset($_GET['url']) ? trim($_GET['url'], '/') : '';
-
-if (empty($uri) && isset($_SERVER['REQUEST_URI'])) {
-    $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-    $requestUri = strtok($requestUri, '?');
-    $requestUri = preg_replace('#^/backend/#', '/', $requestUri);
-    $requestUri = preg_replace('#^/backend$#', '/', $requestUri);
-    $requestUri = preg_replace('#/index\.php$#', '', $requestUri);
-    $requestUri = preg_replace('#^/index\.php#', '', $requestUri);
-    $uri = trim($requestUri, '/');
-}
-
 $uriSegments = explode('/', $uri);
 
 // Load core classes
 require_once __DIR__ . '/app/core/Response.php';
 require_once __DIR__ . '/app/core/Router.php';
 
-// Validate URL format
-if (empty($uri) || $uriSegments[0] !== 'api' || !isset($uriSegments[1])) {
+// Validate URL format - phải bắt đầu bằng api
+if ($uriSegments[0] !== 'api' || !isset($uriSegments[1])) {
     (new Response())->json(['error' => 'Yêu cầu không hợp lệ'], 400);
     exit();
 }
