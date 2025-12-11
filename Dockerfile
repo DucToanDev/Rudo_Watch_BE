@@ -1,19 +1,23 @@
 # 1. Sử dụng image PHP kèm Apache (Web server phổ biến nhất)
 FROM php:8.2-apache
 
-# 2. Bật mod_rewrite và mod_headers cho Apache
+# 2. Copy entrypoint script để fix MPM conflict và PORT (copy sớm để có thể dùng)
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# 3. Bật mod_rewrite và mod_headers cho Apache
 RUN a2enmod rewrite headers
 
-# 3. Copy toàn bộ code của bạn vào thư mục web của server
+# 4. Copy toàn bộ code của bạn vào thư mục web của server
 COPY . /var/www/html/
 
-# 4. Cài đặt các extension cơ bản nếu bạn cần kết nối Database (MySQL)
+# 5. Cài đặt các extension cơ bản nếu bạn cần kết nối Database (MySQL)
 RUN docker-php-ext-install mysqli pdo pdo_mysql
 
-# 5. Cấu hình Apache để cho phép .htaccess và set CORS headers
+# 6. Cấu hình Apache để cho phép .htaccess và set CORS headers
 RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 
-# 5.1 Thêm CORS headers vào Apache config
+# 6.1 Thêm CORS headers vào Apache config
 RUN echo '<IfModule mod_headers.c>\n\
     Header always set Access-Control-Allow-Origin "*"\n\
     Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, PATCH, OPTIONS"\n\
@@ -21,14 +25,17 @@ RUN echo '<IfModule mod_headers.c>\n\
     Header always set Access-Control-Max-Age "86400"\n\
 </IfModule>' >> /etc/apache2/conf-available/cors.conf && a2enconf cors
 
-# 5.2 Fix Apache ServerName warning
+# 6.2 Fix Apache ServerName warning
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# 6. Mở cổng 80 (Render sẽ tự động map cổng này ra ngoài)
+# 7. Mở cổng 80 (Railway sẽ tự động map cổng này ra ngoài qua PORT env variable)
 EXPOSE 80
 
-# 7. Tạo thư mục logs và cấp quyền
+# 8. Tạo thư mục logs và cấp quyền
 RUN mkdir -p /var/www/html/storage/logs && \
     chown -R www-data:www-data /var/www/html && \
     chmod -R 755 /var/www/html && \
     chmod -R 775 /var/www/html/storage
+
+# 8. Set entrypoint để fix MPM conflict và PORT mỗi khi container start
+ENTRYPOINT ["docker-entrypoint.sh"]

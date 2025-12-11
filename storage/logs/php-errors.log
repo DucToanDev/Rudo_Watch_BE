@@ -4281,3 +4281,8 @@
 [11-Dec-2025 16:41:58 UTC]   CLOUDINARY_CLOUD_NAME: SET (length: 9)
 [11-Dec-2025 16:41:58 UTC]   CLOUDINARY_API_KEY: SET (length: 15)
 [11-Dec-2025 16:41:58 UTC]   CLOUDINARY_API_SECRET: SET (length: 27)
+[11-Dec-2025 18:55:09 UTC] MailService::__construct - initializing
+[11-Dec-2025 18:55:09 UTC] MailService::__construct - PHPMailer created
+[11-Dec-2025 18:55:09 UTC] MailService::initialize - starting
+[11-Dec-2025 18:55:09 UTC] MailService::initialize - SMTP config check: host=set, user=set, pass=set
+[11-Dec-2025 18:55:09 UTC] MailService::initialize - completed successfully
