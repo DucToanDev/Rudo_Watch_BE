@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-# Fix MPM conflict - chỉ giữ mpm_prefork (bắt buộc cho PHP)
-echo "=== Fixing MPM conflict ==="
+# Fix MPM conflict TRƯỚC KHI Apache start - chỉ giữ mpm_prefork (bắt buộc cho PHP)
+echo "=== Fixing MPM conflict (before Apache start) ==="
 a2dismod -f mpm_event mpm_worker 2>/dev/null || true
 rm -rf /etc/apache2/mods-enabled/mpm_event.* 2>/dev/null || true
 rm -rf /etc/apache2/mods-enabled/mpm_worker.* 2>/dev/null || true
@@ -22,13 +22,21 @@ if [ "$MPM_COUNT" -ne 1 ]; then
     exit 1
 fi
 echo "SUCCESS: Only mpm_prefork is enabled"
-echo "=== MPM fix completed ==="
 
 # Fix Apache port cho Railway (Railway sử dụng PORT env variable)
 # https://github.com/docker-library/wordpress/issues/293
 sed -i "s/Listen 80/Listen ${PORT:-80}/g" /etc/apache2/ports.conf
 echo "Apache will listen on port ${PORT:-80}"
 
-# Gọi entrypoint gốc của PHP Apache image
+# Test Apache config để đảm bảo không có lỗi MPM
+echo "Testing Apache configuration..."
+apache2ctl configtest || {
+    echo "ERROR: Apache configuration test failed!"
+    exit 1
+}
+echo "Apache configuration is valid"
+echo "=== MPM fix completed ==="
+
+# Gọi entrypoint gốc của PHP Apache image để start Apache
 exec /usr/local/bin/docker-php-entrypoint apache2-foreground
 
