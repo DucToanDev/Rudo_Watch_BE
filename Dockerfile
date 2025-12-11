@@ -1,9 +1,10 @@
 # 1. Sử dụng image PHP kèm Apache
 FROM php:8.2-apache
 
-# 2. Fix MPM conflict - chỉ enable mpm_prefork (tương thích với PHP)
-RUN a2dismod mpm_event mpm_worker 2>/dev/null || true
-RUN a2enmod mpm_prefork
+# 2. Fix MPM conflict - xóa tất cả MPM symlinks, chỉ giữ mpm_prefork
+RUN rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf 2>/dev/null || true && \
+    ln -s /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.load && \
+    ln -s /etc/apache2/mods-available/mpm_prefork.conf /etc/apache2/mods-enabled/mpm_prefork.conf
 
 # 3. Bật mod_rewrite và mod_headers
 RUN a2enmod rewrite headers
