@@ -1,7 +1,11 @@
-# 1. Sử dụng image PHP kèm Apache (Web server phổ biến nhất)
+# 1. Sử dụng image PHP kèm Apache
 FROM php:8.2-apache
 
-# 2. Bật mod_rewrite và mod_headers cho Apache
+# 2. Fix MPM conflict - chỉ enable mpm_prefork (tương thích với PHP)
+RUN a2dismod mpm_event mpm_worker 2>/dev/null || true
+RUN a2enmod mpm_prefork
+
+# 3. Bật mod_rewrite và mod_headers
 RUN a2enmod rewrite headers
 
 # 3. Copy toàn bộ code của bạn vào thư mục web của server
