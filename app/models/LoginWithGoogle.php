@@ -19,7 +19,7 @@ class LoginWithGoogle
             session_start();
         }
 
-        $this->conn = (new Database())->getConnection();
+        $this->conn = Database::getInstance()->getConnection();
 
         $this->client = new Client();
         $this->client->setClientId($_ENV['GOOGLE_CLIENT_ID']);

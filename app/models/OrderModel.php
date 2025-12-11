@@ -13,8 +13,7 @@ class OrderModel
 
     public function __construct()
     {
-        $database = new Database();
-        $this->conn = $database->getConnection();
+        $this->conn = Database::getInstance()->getConnection();
         $this->response = new Response();
     }
 
@@ -513,13 +512,18 @@ class OrderModel
     public function updatePaymentStatus($orderId, $paymentStatus)
     {
         try {
+            // Hỗ trợ cả chữ hoa và chữ thường (tương thích với code mẫu SePay)
+            $paymentStatusLower = strtolower($paymentStatus);
             $validStatuses = ['unpaid', 'paid', 'refunded'];
-            if (!in_array($paymentStatus, $validStatuses)) {
+            if (!in_array($paymentStatusLower, $validStatuses)) {
                 return [
                     'success' => false,
                     'message' => 'Trạng thái thanh toán không hợp lệ'
                 ];
             }
+            
+            // Sử dụng format lowercase để nhất quán
+            $paymentStatus = $paymentStatusLower;
 
             $query = "UPDATE " . $this->table_name . " SET payment_status = :payment_status, updated_at = NOW() WHERE id = :id";
             $stmt = $this->conn->prepare($query);

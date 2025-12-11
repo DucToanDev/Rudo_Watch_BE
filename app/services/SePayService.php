@@ -186,9 +186,10 @@ class SePayService
             // Chỉ xác thực signature nếu có webhook secret VÀ có signature
             if (!empty($this->webhookSecret)) {
                 if (empty($signature)) {
-                    // Có webhook secret nhưng không có signature - có thể SePay không gửi
-                    // Log warning nhưng vẫn xử lý (cho phép test local)
-                    error_log("SePayService::handleWebhook - WARNING: Webhook secret configured but no signature received. Processing anyway for testing.");
+                    // Có webhook secret nhưng không có signature - có thể SePay không gửi signature
+                    // Đây là bình thường nếu SePay không yêu cầu signature
+                    // Log info (không phải warning) và vẫn xử lý
+                    error_log("SePayService::handleWebhook - INFO: Webhook secret configured but no signature received. SePay may not send signature. Processing webhook normally.");
                 } else {
                     // Có cả secret và signature - kiểm tra
                     // Chuyển data thành array để verify

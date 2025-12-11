@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../../models/PostModel.php';
 require_once __DIR__ . '/../../../models/PostCategoryModel.php';
-require_once __DIR__ . '/../../../services/RailwayStorageService.php';
+require_once __DIR__ . '/../../../services/CloudinaryService.php';
 require_once __DIR__ . '/../../../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../../../core/Response.php';
 
@@ -20,11 +20,10 @@ class PostsController
         $this->authMiddleware = new AuthMiddleware();
         $this->response = new Response();
         
-        // Khởi tạo Railway Storage Service
+        // Khởi tạo Cloudinary Service
         try {
-            $this->storageService = new RailwayStorageService();
+            $this->storageService = CloudinaryService::getInstance();
         } catch (Exception $e) {
-            // Nếu không cấu hình Railway S3, sẽ dùng local storage
             $this->storageService = null;
         }
     }

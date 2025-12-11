@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../../../models/ProductModel.php';
-require_once __DIR__ . '/../../../services/RailwayStorageService.php';
+require_once __DIR__ . '/../../../services/CloudinaryService.php';
 require_once __DIR__ . '/../../../core/Response.php';
 
 class ProductsController
@@ -15,11 +15,10 @@ class ProductsController
         $this->productModel = new Products();
         $this->response = new Response();
         
-        // Khởi tạo Railway Storage Service
+        // Khởi tạo Cloudinary Service
         try {
-            $this->storageService = new RailwayStorageService();
+            $this->storageService = CloudinaryService::getInstance();
         } catch (Exception $e) {
-            // Nếu không cấu hình Railway S3, sẽ dùng local storage
             $this->storageService = null;
         }
 
@@ -110,11 +109,11 @@ class ProductsController
             $thumbnailPath = null;
 
             if (!empty($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-                // Sử dụng Railway S3 nếu có, nếu không dùng local
+                // Sử dụng Cloudinary nếu có, nếu không dùng local
                 if ($this->storageService) {
                     $uploadResult = $this->storageService->uploadFile($_FILES['image'], 'products');
                     if ($uploadResult['success']) {
-                        $imagePath = $uploadResult['url']; // Lưu URL từ S3
+                        $imagePath = $uploadResult['url']; // Lưu URL từ Cloudinary
                     } else {
                         $this->response->json(['error' => 'Không thể upload ảnh: ' . $uploadResult['message']], 400);
                         return;
@@ -130,7 +129,7 @@ class ProductsController
             }
 
             if (!empty($_FILES['thumbnail']) && $_FILES['thumbnail']['error'] === UPLOAD_ERR_OK) {
-                // Sử dụng Railway S3 nếu có
+                // Sử dụng Cloudinary nếu có
                 if ($this->storageService) {
                     $uploadResult = $this->storageService->uploadFile($_FILES['thumbnail'], 'products/thumbnails');
                     if ($uploadResult['success']) {
@@ -207,17 +206,14 @@ class ProductsController
             $thumbnailPath = null;
 
             if (!empty($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-                // Sử dụng Railway S3 nếu có
+                // Sử dụng Cloudinary nếu có
                 if ($this->storageService) {
                     $uploadResult = $this->storageService->uploadFile($_FILES['image'], 'products');
                     if ($uploadResult['success']) {
                         $imagePath = $uploadResult['url'];
-                        // Xóa ảnh cũ từ S3 nếu có
+                        // Xóa ảnh cũ từ Cloudinary nếu có
                         if (!empty($existingProduct['data']['image'])) {
-                            $oldKey = $this->extractS3Key($existingProduct['data']['image']);
-                            if ($oldKey) {
-                                $this->storageService->deleteFile($oldKey);
-                            }
+                            $this->storageService->deleteFile($existingProduct['data']['image']);
                         }
                     } else {
                         $this->response->json(['error' => 'Không thể upload ảnh: ' . $uploadResult['message']], 400);
@@ -242,6 +238,10 @@ class ProductsController
                     $uploadResult = $this->storageService->uploadFile($_FILES['thumbnail'], 'products/thumbnails');
                     if ($uploadResult['success']) {
                         $thumbnailPath = $uploadResult['url'];
+                        // Xóa thumbnail cũ từ Cloudinary
+                        if (!empty($existingProduct['data']['thumbnail'])) {
+                            $this->storageService->deleteFile($existingProduct['data']['thumbnail']);
+                        }
                     }
                 } else {
                     $thumbnailPath = $this->uploadImage($_FILES['thumbnail'], 'thumb_');
@@ -249,10 +249,10 @@ class ProductsController
                         $this->response->json(['error' => 'Không thể upload thumbnail'], 400);
                         return;
                     }
-                }
-                // Xóa thumbnail cũ
-                if (!empty($existingProduct['data']['thumbnail'])) {
-                    $this->deleteImage($existingProduct['data']['thumbnail']);
+                    // Xóa thumbnail cũ
+                    if (!empty($existingProduct['data']['thumbnail'])) {
+                        $this->deleteImage($existingProduct['data']['thumbnail']);
+                    }
                 }
             }
 
@@ -439,12 +439,9 @@ class ProductsController
     {
         if (empty($imagePath)) return;
 
-        // Nếu là URL từ S3, xóa từ S3
+        // Nếu là URL từ Cloudinary, xóa từ Cloudinary
         if ($this->storageService && strpos($imagePath, 'http') === 0) {
-            $key = $this->extractS3Key($imagePath);
-            if ($key) {
-                $this->storageService->deleteFile($key);
-            }
+            $this->storageService->deleteFile($imagePath);
         } else {
             // Xóa file local
             $fullPath = __DIR__ . '/../../../../' . $imagePath;
@@ -452,17 +449,5 @@ class ProductsController
                 unlink($fullPath);
             }
         }
-    }
-
-    /**
-     * Extract S3 key từ URL
-     */
-    private function extractS3Key($url)
-    {
-        // URL format: https://storage.railway.app/{bucket}/{key}
-        if (preg_match('/\/' . preg_quote($_ENV['RAILWAY_S3_BUCKET'] ?? '', '/') . '\/(.+)$/', $url, $matches)) {
-            return $matches[1];
-        }
-        return null;
     }
 }

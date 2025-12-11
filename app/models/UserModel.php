@@ -74,8 +74,7 @@ class Users
     public function __construct()
     {
         try {
-            $database = new Database();
-            $this->conn = $database->getConnection();
+            $this->conn = Database::getInstance()->getConnection();
             if (!$this->conn) {
                 throw new Exception('Database connection is null');
             }

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../../models/BrandModel.php';
 require_once __DIR__ . '/../../../models/ProductModel.php';
-require_once __DIR__ . '/../../../services/RailwayStorageService.php';
+require_once __DIR__ . '/../../../services/CloudinaryService.php';
 require_once __DIR__ . '/../../../core/Response.php';
 
 class BrandsController
@@ -18,7 +18,7 @@ class BrandsController
         $this->response = new Response();
         
         try {
-            $this->storageService = new RailwayStorageService();
+            $this->storageService = CloudinaryService::getInstance();
         } catch (Exception $e) {
             $this->storageService = null;
         }
@@ -185,10 +185,7 @@ class BrandsController
                     if ($uploadResult['success']) {
                         $logoPath = $uploadResult['url'];
                         if (!empty($brand['logo'])) {
-                            $oldKey = $this->extractS3Key($brand['logo']);
-                            if ($oldKey) {
-                                $this->storageService->deleteFile($oldKey);
-                            }
+                            $this->storageService->deleteFile($brand['logo']);
                         }
                     } else {
                         $this->response->json(['error' => 'Không thể upload logo: ' . $uploadResult['message']], 400);
@@ -332,16 +329,6 @@ class BrandsController
         return false;
     }
 
-    /**
-     * Extract S3 key từ URL
-     */
-    private function extractS3Key($url)
-    {
-        if (preg_match('/\/' . preg_quote($_ENV['RAILWAY_S3_BUCKET'] ?? $_ENV['AWS_S3_BUCKET_NAME'] ?? '', '/') . '\/(.+)$/', $url, $matches)) {
-            return $matches[1];
-        }
-        return null;
-    }
 
     /**
      * Lấy danh sách thương hiệu đang hoạt động

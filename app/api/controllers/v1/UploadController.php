@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../../services/RailwayStorageService.php';
+require_once __DIR__ . '/../../../services/CloudinaryService.php';
 require_once __DIR__ . '/../../../middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../../../core/Response.php';
 
@@ -11,19 +11,31 @@ class UploadController
 
     public function __construct()
     {
-        $this->storageService = new RailwayStorageService();
+        try {
+            $this->storageService = CloudinaryService::getInstance();
+        } catch (Exception $e) {
+            $this->storageService = null;
+        }
         $this->authMiddleware = new AuthMiddleware();
         $this->response = new Response();
     }
 
     /**
      * POST /api/v1/upload/image
-     * Upload một ảnh lên Railway S3
+     * Upload một ảnh lên Cloudinary
      */
     public function image()
     {
         $user = $this->authMiddleware->authenticate();
         if (!$user) {
+            return;
+        }
+
+        // Kiểm tra Cloudinary đã được cấu hình chưa
+        if (!$this->storageService) {
+            $this->response->json([
+                'error' => 'Cloudinary chưa được cấu hình. Vui lòng thêm CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET vào file .env'
+            ], 500);
             return;
         }
 
@@ -52,8 +64,11 @@ class UploadController
                 'message' => 'Upload thành công',
                 'data' => [
                     'url' => $result['url'],
-                    'key' => $result['key'],
-                    'bucket' => $result['bucket']
+                    'secure_url' => $result['secure_url'],
+                    'public_id' => $result['public_id'],
+                    'format' => $result['format'] ?? null,
+                    'width' => $result['width'] ?? null,
+                    'height' => $result['height'] ?? null
                 ]
             ], 200);
         } else {
@@ -63,12 +78,20 @@ class UploadController
 
     /**
      * POST /api/v1/upload/images
-     * Upload nhiều ảnh lên Railway S3
+     * Upload nhiều ảnh lên Cloudinary
      */
     public function images()
     {
         $user = $this->authMiddleware->authenticate();
         if (!$user) {
+            return;
+        }
+
+        // Kiểm tra Cloudinary đã được cấu hình chưa
+        if (!$this->storageService) {
+            $this->response->json([
+                'error' => 'Cloudinary chưa được cấu hình. Vui lòng thêm CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET vào file .env'
+            ], 500);
             return;
         }
 
@@ -103,7 +126,8 @@ class UploadController
                         if ($result['success']) {
                             $uploadedFiles[] = [
                                 'url' => $result['url'],
-                                'key' => $result['key']
+                                'secure_url' => $result['secure_url'],
+                                'public_id' => $result['public_id']
                             ];
                         } else {
                             $errors[] = $file['name'] . ': ' . $result['message'];
@@ -121,7 +145,8 @@ class UploadController
                 if ($result['success']) {
                     $uploadedFiles[] = [
                         'url' => $result['url'],
-                        'key' => $result['key']
+                        'secure_url' => $result['secure_url'],
+                        'public_id' => $result['public_id']
                     ];
                 } else {
                     $errors[] = $result['message'];
@@ -143,20 +168,28 @@ class UploadController
     }
 
     /**
-     * DELETE /api/v1/upload/{key}
-     * Xóa file từ Railway S3
+     * DELETE /api/v1/upload/{publicId}
+     * Xóa file từ Cloudinary (có thể truyền public_id hoặc URL)
      */
-    public function delete($key)
+    public function delete($publicId)
     {
         $user = $this->authMiddleware->authenticate();
         if (!$user) {
             return;
         }
 
-        // Decode URL nếu cần
-        $key = urldecode($key);
+        // Kiểm tra Cloudinary đã được cấu hình chưa
+        if (!$this->storageService) {
+            $this->response->json([
+                'error' => 'Cloudinary chưa được cấu hình. Vui lòng thêm CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET vào file .env'
+            ], 500);
+            return;
+        }
 
-        $result = $this->storageService->deleteFile($key);
+        // Decode URL nếu cần
+        $publicId = urldecode($publicId);
+
+        $result = $this->storageService->deleteFile($publicId);
 
         if ($result['success']) {
             $this->response->json(['message' => $result['message']], 200);
@@ -165,4 +198,3 @@ class UploadController
         }
     }
 }
-

@@ -21,7 +21,7 @@ class LoginWithFacebook
             session_start();
         }
 
-        $this->conn = (new Database())->getConnection();
+        $this->conn = Database::getInstance()->getConnection();
         $this->fb = new Facebook([
             'app_id' => $_ENV['FB_APP_ID'],
             'app_secret' => $_ENV['FB_APP_SECRET'],

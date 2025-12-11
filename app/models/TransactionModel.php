@@ -9,8 +9,7 @@ class TransactionModel
 
     public function __construct()
     {
-        $database = new Database();
-        $this->conn = $database->getConnection();
+        $this->conn = Database::getInstance()->getConnection();
     }
 
     /**
@@ -60,6 +59,24 @@ class TransactionModel
             $query = "SELECT * FROM {$this->table_name} WHERE reference_number = :reference_number ORDER BY created_at DESC LIMIT 1";
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':reference_number', $referenceNumber);
+            $stmt->execute();
+
+            return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        } catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Lấy giao dịch theo order_id (từ transaction_content có format DH{order_id})
+     */
+    public function getTransactionByOrderId($orderId)
+    {
+        try {
+            $content = "DH{$orderId}";
+            $query = "SELECT * FROM {$this->table_name} WHERE transaction_content LIKE :content ORDER BY created_at DESC LIMIT 1";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindValue(':content', "%{$content}%");
             $stmt->execute();
 
             return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;

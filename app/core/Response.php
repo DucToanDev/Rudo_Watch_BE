@@ -5,21 +5,25 @@ class Response
 
     public function json($data, $statusCode = 200)
     {
-        // Kiểm tra và clean output buffer nếu có
         if (ob_get_level()) {
             ob_clean();
         }
-        header_remove();
+        
+        // Set CORS headers
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+        header('Access-Control-Allow-Origin: ' . $origin);
+        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept, Origin');
+        header('Access-Control-Max-Age: 86400');
+        
         header("Content-Type: application/json");
         http_response_code($statusCode);
 
-        $response = [
+        echo json_encode([
             'status' => ($statusCode >= 200 && $statusCode < 300) ? 'success' : 'error',
             'statusCode' => $statusCode,
             'data' => $data
-        ];
-
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        ], JSON_UNESCAPED_UNICODE);
         exit();
     }
 }

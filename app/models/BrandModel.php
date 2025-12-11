@@ -20,8 +20,7 @@ class Brands
 
     public function __construct()
     {
-        $database = new Database();
-        $this->conn = $database->getConnection();
+        $this->conn = Database::getInstance()->getConnection();
         $this->response = new Response();
     }
 
