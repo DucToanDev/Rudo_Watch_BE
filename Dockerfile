@@ -28,10 +28,7 @@ RUN echo '<IfModule mod_headers.c>\n\
 # 6.2 Fix Apache ServerName warning
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# 7. Mở cổng 80 (Railway sẽ tự động map cổng này ra ngoài qua PORT env variable)
-EXPOSE 80
-
-# 8. Tạo thư mục logs và cấp quyền
+# 7. Tạo thư mục logs và cấp quyền
 RUN mkdir -p /var/www/html/storage/logs && \
     chown -R www-data:www-data /var/www/html && \
     chmod -R 755 /var/www/html && \
@@ -39,3 +36,4 @@ RUN mkdir -p /var/www/html/storage/logs && \
 
 # 8. Set entrypoint để fix MPM conflict và PORT mỗi khi container start
 ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["apache2-foreground"]
