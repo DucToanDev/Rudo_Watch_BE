@@ -1,5 +1,5 @@
 # ============================================
-# Dockerfile cho Railway Deployment
+# Dockerfile cho Railway/Render Deployment
 # PHP 8.2 + Apache + Composer
 # ============================================
 
@@ -58,15 +58,15 @@ RUN sed -i 's/LogLevel warn/LogLevel error/' /etc/apache2/apache2.conf || \
     echo "LogLevel error" >> /etc/apache2/apache2.conf
 
 # ============================================
-# 4. Copy entrypoint script
+# 4. Setup working directory
+# ============================================
+WORKDIR /var/www/html
+
+# ============================================
+# 5. Copy entrypoint script (sớm để có thể dùng sau)
 # ============================================
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-# ============================================
-# 5. Setup working directory
-# ============================================
-WORKDIR /var/www/html
 
 # ============================================
 # 6. Copy Composer files và cài đặt dependencies
@@ -104,16 +104,16 @@ RUN mkdir -p storage/logs uploads/products && \
     chmod -R 775 /var/www/html/storage /var/www/html/uploads
 
 # ============================================
-# 10. Expose port (Railway sẽ override với PORT env var)
+# 10. Expose port (Render/Railway sẽ override với PORT env var)
 # ============================================
 EXPOSE 8080
 
 # ============================================
-# 11. Health check (Railway sẽ tự động health check)
+# 11. Health check (Render/Railway sẽ tự động health check)
 # ============================================
-# Note: Railway có health check riêng, nhưng có thể dùng để debug
+# Note: Render/Railway có health check riêng, nhưng có thể dùng để debug
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8080}/ || exit 1
+    CMD curl -f http://localhost:${PORT:-8080}/health || exit 1
 
 # ============================================
 # 12. Entrypoint và CMD

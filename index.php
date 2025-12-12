@@ -3,16 +3,50 @@ error_reporting(E_ALL);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
-$uri = isset($_GET['url']) ? trim($_GET['url'], '/') : '';
+$uri = '';
 
+// Thử lấy từ query parameter trước (nếu có .htaccess rewrite)
+if (isset($_GET['url']) && !empty($_GET['url'])) {
+    $uri = trim($_GET['url'], '/');
+}
+
+// Nếu không có, parse từ REQUEST_URI
 if (empty($uri) && isset($_SERVER['REQUEST_URI'])) {
     $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    if ($requestUri === false) {
+        $requestUri = $_SERVER['REQUEST_URI'];
+    }
+    
+    // Loại bỏ query string nếu có
     $requestUri = strtok($requestUri, '?');
+    
+    // Loại bỏ base path nếu có
     $requestUri = preg_replace('#^/backend/#', '/', $requestUri);
     $requestUri = preg_replace('#^/backend$#', '/', $requestUri);
+    
+    // Loại bỏ index.php nếu có
     $requestUri = preg_replace('#/index\.php$#', '', $requestUri);
     $requestUri = preg_replace('#^/index\.php#', '', $requestUri);
+    $requestUri = preg_replace('#^/index\.php/#', '/', $requestUri);
+    
+    // Loại bỏ leading/trailing slashes
     $uri = trim($requestUri, '/');
+}
+
+// Fallback: nếu vẫn empty, kiểm tra SCRIPT_NAME và PATH_INFO
+if (empty($uri)) {
+    // Thử PATH_INFO trước (nếu có)
+    if (isset($_SERVER['PATH_INFO']) && !empty($_SERVER['PATH_INFO'])) {
+        $uri = trim($_SERVER['PATH_INFO'], '/');
+    }
+    // Nếu không có PATH_INFO, thử tính từ SCRIPT_NAME
+    elseif (isset($_SERVER['SCRIPT_NAME']) && isset($_SERVER['REQUEST_URI'])) {
+        $scriptPath = dirname($_SERVER['SCRIPT_NAME']);
+        $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        if ($requestUri !== false && $scriptPath !== '/' && strpos($requestUri, $scriptPath) === 0) {
+            $uri = trim(substr($requestUri, strlen($scriptPath)), '/');
+        }
+    }
 }
 
 if (empty($uri) || $uri === 'health' || $uri === 'status' || $uri === 'api/health') {
@@ -28,6 +62,25 @@ if (empty($uri) || $uri === 'health' || $uri === 'status' || $uri === 'api/healt
             'server' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'
         ]
     ], JSON_UNESCAPED_UNICODE);
+    exit();
+}
+
+// Debug endpoint (có thể xóa sau khi debug xong)
+if ($uri === 'debug' || $uri === 'api/debug') {
+    header('Content-Type: application/json');
+    http_response_code(200);
+    echo json_encode([
+        'status' => 'success',
+        'data' => [
+            'parsed_uri' => $uri,
+            'uri_segments' => explode('/', $uri),
+            'request_uri' => $_SERVER['REQUEST_URI'] ?? 'N/A',
+            'query_url' => $_GET['url'] ?? 'N/A',
+            'path_info' => $_SERVER['PATH_INFO'] ?? 'N/A',
+            'script_name' => $_SERVER['SCRIPT_NAME'] ?? 'N/A',
+            'method' => $_SERVER['REQUEST_METHOD'] ?? 'N/A'
+        ]
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     exit();
 }
 

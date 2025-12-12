@@ -1,0 +1,66 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+README.md
+CHANGELOG.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+storage/logs/*.log
+!storage/logs/.gitkeep
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Node modules (nếu có)
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Testing
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# Build artifacts
+vendor/bin/
+*.cache
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Uploads (sẽ được tạo mới trong container)
+uploads/*
+!uploads/.gitkeep
+
+# Docker files (không cần copy vào image)
+docker-compose.yml
+docker-compose.yaml
+Dockerfile*
+.dockerignore
+
+# Render specific
+render.yaml
+
+# Development files
+.vagrant
+Vagrantfile
+

@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: backend-api
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: PHP_VERSION
+        value: 8.2
+    healthCheckPath: /health
+
