@@ -26,15 +26,15 @@ setCorsHeaders();
 $uri = '';
 
 // -----------------------------------------------------------
-// URI PARSING STRATEGIES (Giữ nguyên logic của bạn)
+// URI PARSING STRATEGIES 
 // -----------------------------------------------------------
 
-// Strategy 1: Thử lấy từ query parameter (nếu có .htaccess rewrite)
+// Thử lấy từ query parameter 
 if (isset($_GET['url']) && !empty($_GET['url'])) {
     $uri = trim($_GET['url'], '/');
 }
 
-// Strategy 2: Parse từ REQUEST_URI
+// Parse từ REQUEST_URI
 if (empty($uri) && isset($_SERVER['REQUEST_URI'])) {
     $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     if ($requestUri === false || empty($requestUri)) {
@@ -59,7 +59,7 @@ if (empty($uri) && isset($_SERVER['REQUEST_URI'])) {
     $uri = trim($requestUri, '/');
 }
 
-// Strategy 3: Thử PATH_INFO
+// Thử PATH_INFO
 if (empty($uri) && isset($_SERVER['PATH_INFO']) && !empty($_SERVER['PATH_INFO'])) {
     $uri = trim($_SERVER['PATH_INFO'], '/');
 }
@@ -292,18 +292,6 @@ if (empty($uri) || $uri === 'health' || $uri === 'status' || $uri === 'api/healt
 // MAIN APP LOGIC
 // -----------------------------------------------------------
 
-set_exception_handler(function ($exception) {
-    setCorsHeaders();
-    http_response_code(500);
-    header('Content-Type: application/json');
-    echo json_encode([
-        'status' => 'error',
-        'statusCode' => 500,
-        'data' => ['error' => sanitize_sql_error($exception)]
-    ], JSON_UNESCAPED_UNICODE);
-    exit();
-});
-
 if (!class_exists('Dotenv\Dotenv')) {
     $autoloadPath = __DIR__ . '/vendor/autoload.php';
     if (file_exists($autoloadPath)) {
@@ -319,6 +307,21 @@ if (file_exists(__DIR__ . '/.env')) {
     } catch (Exception $e) {
     }
 }
+
+// Load helper functions
+require_once __DIR__ . '/config/function.php';
+
+set_exception_handler(function ($exception) {
+    setCorsHeaders();
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'status' => 'error',
+        'statusCode' => 500,
+        'data' => ['error' => sanitize_sql_error($exception)]
+    ], JSON_UNESCAPED_UNICODE);
+    exit();
+});
 
 $uriSegments = explode('/', $uri);
 
