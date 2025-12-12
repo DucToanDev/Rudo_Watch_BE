@@ -34,6 +34,9 @@ RUN mkdir -p /var/www/html/storage/logs && \
     chmod -R 755 /var/www/html && \
     chmod -R 775 /var/www/html/storage
 
-# 8. Set entrypoint để fix MPM conflict và PORT mỗi khi container start
+# 8. Expose port (Railway uses PORT env variable, but this helps documentation)
+EXPOSE 8080
+
+# 9. Set entrypoint để fix MPM conflict và PORT mỗi khi container start
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
