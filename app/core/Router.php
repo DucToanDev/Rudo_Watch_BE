@@ -194,15 +194,23 @@ class Router
     {
         if (!$this->resource) return false;
 
-        $controller = $this->loadController($this->getControllerName());
-        if (!$controller) return false;
+        $controllerName = $this->getControllerName();
+        $controller = $this->loadController($controllerName);
+        if (!$controller) {
+            return false;
+        }
 
         if ($this->id && in_array($this->id, ['category', 'brand']) && $this->subAction) {
             return $this->execute($controller, $this->id, $this->subAction);
         }
 
         $action = $this->getCrudAction();
-        if (!$action || !method_exists($controller, $action)) {
+        if (!$action) {
+            return false;
+        }
+        
+        // Kiểm tra method tồn tại
+        if (!method_exists($controller, $action)) {
             return false;
         }
 
@@ -359,6 +367,37 @@ class Router
         $action = $this->getCrudAction();
         $fileExists = $controllerPath && file_exists($controllerPath);
         
+        // Thử load controller để kiểm tra
+        $controllerLoaded = false;
+        $classExists = false;
+        $methodExists = false;
+        $loadError = null;
+        
+        if ($fileExists) {
+            try {
+                require_once $controllerPath;
+                $classExists = class_exists($controllerName);
+                
+                if ($classExists) {
+                    try {
+                        $testController = new $controllerName();
+                        $controllerLoaded = true;
+                        if ($action) {
+                            $methodExists = method_exists($testController, $action);
+                        }
+                    } catch (\Exception $e) {
+                        $loadError = 'Constructor error: ' . $e->getMessage();
+                    } catch (\Throwable $e) {
+                        $loadError = 'Constructor error: ' . $e->getMessage();
+                    }
+                }
+            } catch (\Exception $e) {
+                $loadError = 'Load error: ' . $e->getMessage();
+            } catch (\Throwable $e) {
+                $loadError = 'Load error: ' . $e->getMessage();
+            }
+        }
+        
         return [
             'version' => $this->version,
             'resource' => $this->resource,
@@ -367,8 +406,12 @@ class Router
             'controller_name' => $controllerName,
             'controller_path' => $controllerPath,
             'controller_file_exists' => $fileExists,
+            'controller_class_exists' => $classExists,
+            'controller_loaded' => $controllerLoaded,
+            'method_exists' => $methodExists,
             'expected_action' => $action,
-            'route_key' => $this->buildRouteKey()
+            'route_key' => $this->buildRouteKey(),
+            'load_error' => $loadError
         ];
     }
 }
