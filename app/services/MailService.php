@@ -7,16 +7,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../vendor/phpmailer/phpmailer/src/PHPMailer.php';
 require_once __DIR__ . '/../../vendor/phpmailer/phpmailer/src/Exception.php';
 
-// Load environment variables nếu chưa được load
-if (!isset($_ENV['DB_HOST'])) {
-    try {
-        $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../..');
-        $dotenv->load();
-    } catch (Exception $e) {
-        // Nếu không có file .env, sử dụng getenv() từ system environment
-        error_log('Dotenv load failed, using getenv() instead: ' . $e->getMessage());
-    }
-}
+
 
 class MailService
 {
@@ -26,18 +17,14 @@ class MailService
     public function __construct()
     {
         try {
-            error_log('MailService::__construct - initializing');
             $this->mailer = new PHPMailer(true);
-            error_log('MailService::__construct - PHPMailer created');
         } catch (\Exception $e) {
-            error_log('MailService constructor error: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    /**
-     * Khởi tạo PHPMailer với cấu hình SMTP
-     */
+    
+    // Khởi tạo PHPMailer 
     private function initialize()
     {
         if ($this->initialized) {
@@ -45,9 +32,6 @@ class MailService
         }
 
         try {
-            error_log('MailService::initialize - starting');
-            
-            // Sử dụng getenv() hoặc $_ENV với fallback
             $smtpHost = getenv('SMTP_HOST') ?: ($_ENV['SMTP_HOST'] ?? null);
             $smtpUser = getenv('SMTP_USER') ?: ($_ENV['SMTP_USER'] ?? null);
             $smtpPass = getenv('SMTP_PASS') ?: ($_ENV['SMTP_PASS'] ?? null);
@@ -55,11 +39,8 @@ class MailService
             $from = getenv('SMTP_FROM') ?: ($_ENV['SMTP_FROM'] ?? null);
             $fromName = getenv('SMTP_FROM_NAME') ?: ($_ENV['SMTP_FROM_NAME'] ?? null);
 
-            error_log('MailService::initialize - SMTP config check: host=' . ($smtpHost ? 'set' : 'missing') . ', user=' . ($smtpUser ? 'set' : 'missing') . ', pass=' . ($smtpPass ? 'set' : 'missing'));
-
             if (empty($smtpHost) || empty($smtpUser) || empty($smtpPass)) {
-                $error = 'Thiếu cấu hình SMTP! Vui lòng kiểm tra biến môi trường SMTP_HOST, SMTP_USER, SMTP_PASS';
-                error_log('MailService::initialize - ' . $error);
+                $error = 'Thiếu cấu hình SMTP!';
                 throw new Exception($error);
             }
 
@@ -77,22 +58,12 @@ class MailService
             $this->mailer->Port = (int)$smtpPort;
             $this->mailer->CharSet = 'UTF-8';
             $this->mailer->setFrom($from, $fromName);
-            
-            // Tắt debug output trong production
             $this->mailer->SMTPDebug = 0;
-            $this->mailer->Debugoutput = function($str, $level) {
-                error_log("PHPMailer: $str");
-            };
 
             $this->initialized = true;
-            error_log('MailService::initialize - completed successfully');
         } catch (\Exception $e) {
-            error_log('MailService initialize error: ' . $e->getMessage());
-            error_log('Stack trace: ' . $e->getTraceAsString());
             throw $e;
         } catch (\Throwable $e) {
-            error_log('MailService initialize throwable: ' . $e->getMessage());
-            error_log('Stack trace: ' . $e->getTraceAsString());
             throw $e;
         }
     }
@@ -115,11 +86,9 @@ class MailService
                 return true;
             } else {
                 $error = $this->mailer->ErrorInfo;
-                error_log('PHPMailer send failed: ' . $error);
                 return $error;
             }
         } catch (Exception $e) {
-            error_log('MailService send exception: ' . $e->getMessage());
             return $e->getMessage();
         }
     }

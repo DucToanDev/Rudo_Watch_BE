@@ -5,48 +5,11 @@ require_once __DIR__ . '/../../config/function.php';
 
 class Users
 {
-    // Tìm user theo email
-    public function findByEmail($email)
-    {
-        try {
-            $query = "SELECT * FROM {$this->table_name} WHERE email = :email LIMIT 1";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':email', $email);
-            $stmt->execute();
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $user ?: null;
-        } catch (PDOException $e) {
-            return null;
-        }
-    }
-
-    // Đổi mật khẩu theo email (không cần mật khẩu cũ)
-    public function updatePasswordByEmail($email, $newPassword)
-    {
-        try {
-            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-            $newToken = bin2hex(random_bytes(32));
-            $query = "UPDATE {$this->table_name} SET password = :password, api_token = :token WHERE email = :email";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':password', $hashedPassword);
-            $stmt->bindParam(':token', $newToken);
-            $stmt->bindParam(':email', $email);
-            $result = $stmt->execute();
-            return $result === true;
-        } catch (Exception $e) {
-            return false;
-        }
-    }
+   
     private $conn;
     private $table_name = 'users';
     public $response;
 
-    // Cache để tránh query lặp lại - dùng SplObjectStorage hoặc array
-    private static $userCache = [];
-    private static $cacheExpiry = [];
-    private const CACHE_TTL = 300; // 5 phút
-
-    // Lookup tables - O(1) access thay vì if-else
     private static $roleLookup = [
         0 => 'User',
         1 => 'Admin'
@@ -57,7 +20,6 @@ class Users
         1 => 'Hoạt động'
     ];
 
-    // Columns cần select - tránh lặp lại string
     private const USER_COLUMNS = 'id, fullname, email, phone, role, status, api_token, created_at';
     private const USER_COLUMNS_NO_TOKEN = 'id, fullname, email, phone, role, status, created_at';
 
@@ -85,41 +47,7 @@ class Users
         }
     }
 
-    /**
-     * Lấy từ cache hoặc null nếu hết hạn
-     */
-    private function getFromCache($key)
-    {
-        if (isset(self::$userCache[$key]) && isset(self::$cacheExpiry[$key])) {
-            if (time() < self::$cacheExpiry[$key]) {
-                return self::$userCache[$key];
-            }
-            // Hết hạn - xóa cache
-            unset(self::$userCache[$key], self::$cacheExpiry[$key]);
-        }
-        return null;
-    }
-
-    /**
-     * Lưu vào cache
-     */
-    private function setCache($key, $value)
-    {
-        self::$userCache[$key] = $value;
-        self::$cacheExpiry[$key] = time() + self::CACHE_TTL;
-    }
-
-    /**
-     * Xóa cache của user
-     */
-    private function clearCache($userId)
-    {
-        unset(self::$userCache["user_$userId"], self::$cacheExpiry["user_$userId"]);
-    }
-
-    /**
-     * Format user data - dùng lookup table O(1)
-     */
+    // Format user data
     private function formatUser(array &$user): void
     {
         $user['role'] = (int)$user['role'];
@@ -128,9 +56,7 @@ class Users
         $user['status_name'] = self::$statusLookup[$user['status']] ?? 'Unknown';
     }
 
-    /**
-     * Format nhiều users - dùng array_walk nhanh hơn foreach
-     */
+    // Format nhiều users
     private function formatUsers(array &$users): void
     {
         array_walk($users, [$this, 'formatUser']);
@@ -140,7 +66,6 @@ class Users
     public function create($data)
     {
         try {
-            // check email ton tai chua
             $checkQuery = "SELECT id FROM " . $this->table_name . " USE INDEX (idx_email) WHERE email = :email LIMIT 1";
             $checkStmt = $this->conn->prepare($checkQuery);
             $checkStmt->bindParam(':email', $data['email']);
@@ -181,7 +106,7 @@ class Users
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Lỗi: ' . $e->getMessage()
+                'message' => sanitize_sql_error($e)
             ];
         }
     }
@@ -231,7 +156,7 @@ class Users
         } catch (PDOException $e) {
             return [
                 'success' => false,
-                'message' => 'Lỗi: ' . $e->getMessage()
+                'message' => sanitize_sql_error($e)
             ];
         }
     }
@@ -240,21 +165,12 @@ class Users
     private function updateToken($userId, $token)
     {
         update($this->conn, $this->table_name, ['api_token' => $token], $userId);
-        $this->clearCache($userId);
     }
 
-    // Lấy user theo ID - có cache
+    // Lấy user theo ID
     public function getById($id)
     {
         try {
-            $cacheKey = "user_$id";
-
-            // Kiểm tra cache trước
-            $cached = $this->getFromCache($cacheKey);
-            if ($cached !== null) {
-                return $cached;
-            }
-
             $query = "SELECT " . self::USER_COLUMNS . " 
                      FROM " . $this->table_name . " 
                      WHERE id = :id LIMIT 1";
@@ -264,29 +180,16 @@ class Users
             $stmt->execute();
 
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($user) {
-                $this->setCache($cacheKey, $user);
-                return $user;
-            }
-            return null;
+            return $user ?: null;
         } catch (PDOException $e) {
             return null;
         }
     }
 
-    // Lấy user theo token - có cache
+    // Lấy user theo token
     public function getByToken($token)
     {
         try {
-            $cacheKey = "token_$token";
-
-            // Kiểm tra cache trước
-            $cached = $this->getFromCache($cacheKey);
-            if ($cached !== null) {
-                return $cached;
-            }
-
             $query = "SELECT " . self::USER_COLUMNS_NO_TOKEN . " 
                      FROM " . $this->table_name . " 
                      WHERE api_token = :token AND status = 1 LIMIT 1";
@@ -296,12 +199,7 @@ class Users
             $stmt->execute();
 
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($user) {
-                $this->setCache($cacheKey, $user);
-                return $user;
-            }
-            return null;
+            return $user ?: null;
         } catch (PDOException $e) {
             return null;
         }
@@ -321,23 +219,6 @@ class Users
                 $updateData['phone'] = $data['phone'];
             }
 
-            if (isset($data['email'])) {
-                $checkQuery = "SELECT id FROM " . $this->table_name . " USE INDEX (idx_email) WHERE email = :email AND id != :id LIMIT 1";
-                $checkStmt = $this->conn->prepare($checkQuery);
-                $checkStmt->bindParam(':email', $data['email']);
-                $checkStmt->bindParam(':id', $userId);
-                $checkStmt->execute();
-
-                if ($checkStmt->rowCount() > 0) {
-                    return [
-                        'success' => false,
-                        'message' => 'Email đã được sử dụng bởi tài khoản khác'
-                    ];
-                }
-
-                $updateData['email'] = $data['email'];
-            }
-
             if (isset($data['password']) && !empty($data['password'])) {
                 $updateData['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
             }
@@ -352,7 +233,6 @@ class Users
             $result = update($this->conn, $this->table_name, $updateData, $userId);
 
             if ($result) {
-                $this->clearCache($userId); // Clear cache sau khi update
                 return [
                     'success' => true,
                     'message' => 'Cập nhật thành công',
@@ -367,7 +247,7 @@ class Users
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Lỗi: ' . $e->getMessage()
+                'message' => sanitize_sql_error($e)
             ];
         }
     }
@@ -428,14 +308,46 @@ class Users
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Lỗi: ' . $e->getMessage()
+                'message' => sanitize_sql_error($e)
             ];
         }
     }
 
-    /**
-     * Lấy tất cả users (Admin) - Tối ưu tốc độ cao
-     */
+     // Tìm user theo email
+     public function findByEmail($email)
+     {
+         try {
+             $query = "SELECT * FROM {$this->table_name} WHERE email = :email LIMIT 1";
+             $stmt = $this->conn->prepare($query);
+             $stmt->bindParam(':email', $email);
+             $stmt->execute();
+             $user = $stmt->fetch(PDO::FETCH_ASSOC);
+             return $user ?: null;
+         } catch (PDOException $e) {
+             return null;
+         }
+     }
+ 
+     // Đổi mật khẩu theo email
+     public function updatePasswordByEmail($email, $newPassword)
+     {
+         try {
+             $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+             $newToken = bin2hex(random_bytes(32));
+             $query = "UPDATE {$this->table_name} SET password = :password, api_token = :token WHERE email = :email";
+             $stmt = $this->conn->prepare($query);
+             $stmt->bindParam(':password', $hashedPassword);
+             $stmt->bindParam(':token', $newToken);
+             $stmt->bindParam(':email', $email);
+             $result = $stmt->execute();
+             return $result === true;
+         } catch (Exception $e) {
+             return false;
+         }
+     }
+ 
+
+    // Lấy tất cả Admin
     public function getAllUsers($params = [])
     {
         try {
@@ -467,13 +379,11 @@ class Users
                 $bindParams[] = (int)$status;
             }
 
-            // Count
             $countSql = "SELECT COUNT(*) FROM {$this->table_name} WHERE {$where}";
             $countStmt = $this->conn->prepare($countSql);
             $countStmt->execute($bindParams);
             $total = (int)$countStmt->fetchColumn();
 
-            // Query lấy data
             $sql = "SELECT id, fullname, email, phone, role, status, created_at 
                     FROM {$this->table_name} 
                     WHERE {$where} 
@@ -484,7 +394,6 @@ class Users
             $stmt->execute($bindParams);
             $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Format inline
             foreach ($users as &$u) {
                 $u['role'] = (int)$u['role'];
                 $u['status'] = (int)$u['status'];
@@ -507,18 +416,15 @@ class Users
         } catch (PDOException $e) {
             return [
                 'success' => false,
-                'message' => 'Lỗi: ' . $e->getMessage()
+                'message' => sanitize_sql_error($e)
             ];
         }
     }
 
-    /**
-     * Cập nhật trạng thái user (Admin)
-     */
+    // Cập nhật trạng thái user
     public function updateStatus($adminId, $userId, $status)
     {
         try {
-            // Kiểm tra admin có quyền không
             $admin = $this->getById($adminId);
             if (!$admin || $admin['role'] != 1) {
                 return [
@@ -527,7 +433,6 @@ class Users
                 ];
             }
 
-            // Không cho phép admin tự khóa chính mình
             if ($adminId == $userId) {
                 return [
                     'success' => false,
@@ -535,18 +440,16 @@ class Users
                 ];
             }
 
-            // Validate status
             if (!in_array($status, [0, 1])) {
                 return [
                     'success' => false,
-                    'message' => 'Trạng thái không hợp lệ. Chỉ chấp nhận 0 (Khóa) hoặc 1 (Hoạt động)'
+                    'message' => 'Trạng thái không hợp lệ'
                 ];
             }
 
             $result = update($this->conn, $this->table_name, ['status' => $status], $userId);
 
             if ($result) {
-                $this->clearCache($userId); // Clear cache
                 $statusName = self::$statusLookup[$status] ?? 'Unknown';
                 return [
                     'success' => true,
@@ -562,16 +465,15 @@ class Users
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Lỗi: ' . $e->getMessage()
+                'message' => sanitize_sql_error($e)
             ];
         }
     }
 
-    // Cập nhật role - tối ưu với cache
+    // Cập nhật role
     public function updateRole($adminId, $userId, $newRole)
     {
         try {
-            // Dùng getById có cache thay vì query riêng
             $admin = $this->getById($adminId);
 
             if (!$admin || $admin['status'] != 1) {
@@ -588,7 +490,6 @@ class Users
                 ];
             }
 
-            // Dùng getById có cache
             $user = $this->getById($userId);
 
             if (!$user) {
@@ -598,15 +499,13 @@ class Users
                 ];
             }
 
-            // Validate role dùng isset với lookup table - O(1)
             if (!isset(self::$roleLookup[$newRole])) {
                 return [
                     'success' => false,
-                    'message' => 'Role không hợp lệ. Chỉ chấp nhận 0 (User) hoặc 1 (Admin)'
+                    'message' => 'Role không hợp lệ'
                 ];
             }
 
-            // Không cho phép admin tự thay đổi role của chính mình
             if ($adminId == $userId) {
                 return [
                     'success' => false,
@@ -614,7 +513,6 @@ class Users
                 ];
             }
 
-            // Cập nhật role 
             $updateQuery = "UPDATE " . $this->table_name . " SET role = :role WHERE id = :id";
             $updateStmt = $this->conn->prepare($updateQuery);
             $updateStmt->bindValue(':role', $newRole, PDO::PARAM_INT);
@@ -622,7 +520,6 @@ class Users
             $result = $updateStmt->execute();
 
             if ($result) {
-                $this->clearCache($userId); // Clear cache
                 $roleName = self::$roleLookup[$newRole];
                 return [
                     'success' => true,
@@ -638,7 +535,7 @@ class Users
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Lỗi: ' . $e->getMessage()
+                'message' => sanitize_sql_error($e)
             ];
         }
     }

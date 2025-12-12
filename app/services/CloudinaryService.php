@@ -22,20 +22,7 @@ class CloudinaryService
 
     private function __construct()
     {
-        // Load .env chỉ khi chưa được load (đã load trong index.php)
-        if (!getenv('CLOUDINARY_CLOUD_NAME') && !isset($_ENV['CLOUDINARY_CLOUD_NAME'])) {
-            $envFile = __DIR__ . '/../../.env';
-            if (file_exists($envFile) && class_exists('\Dotenv\Dotenv')) {
-                try {
-                    $dotenv = \Dotenv\Dotenv::createImmutable(__DIR__ . '/../..');
-                    $dotenv->load();
-                } catch (Exception $e) {
-                    // Ignore .env load errors
-                }
-            }
-        }
-
-        // Lấy cấu hình từ environment
+        // Lấy cấu hình từ environment (đã được load toàn cục trong index.php)
         $cloudName = getenv('CLOUDINARY_CLOUD_NAME') ?: ($_ENV['CLOUDINARY_CLOUD_NAME'] ?? '');
         $apiKey = getenv('CLOUDINARY_API_KEY') ?: ($_ENV['CLOUDINARY_API_KEY'] ?? '');
         $apiSecret = getenv('CLOUDINARY_API_SECRET') ?: ($_ENV['CLOUDINARY_API_SECRET'] ?? '');

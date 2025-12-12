@@ -4,6 +4,42 @@ function get_datetime()
     return date('Y-m-d H:i:s');
 }
 
+// Chỉ trả về thông báo an toàn cho client
+function sanitize_sql_error($exception, $isProduction = null)
+{
+    if ($isProduction === null) {
+        $isProduction = (getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'production')) === 'production';
+    }
+    
+    if ($isProduction) {
+        if ($exception instanceof PDOException) {
+            error_log('SQL Error: ' . $exception->getMessage());
+            error_log('SQL State: ' . $exception->getCode());
+        } else {
+            error_log('Error: ' . $exception->getMessage());
+        }
+        return 'Đã xảy ra lỗi. Vui lòng thử lại sau.';
+    }
+    
+    if ($exception instanceof PDOException) {
+        $code = $exception->getCode();
+        $message = $exception->getMessage();
+        
+        if (strpos($message, 'SQLSTATE[23000]') !== false || strpos($message, 'Duplicate entry') !== false) {
+            return 'Dữ liệu đã tồn tại';
+        } elseif (strpos($message, 'SQLSTATE[42S22]') !== false || strpos($message, 'Unknown column') !== false) {
+            return 'Lỗi cấu trúc dữ liệu';
+        } elseif (strpos($message, 'SQLSTATE[HY000]') !== false) {
+            return 'Lỗi kết nối database';
+        }
+        
+        error_log('SQL Error (dev): ' . $message);
+        return 'Lỗi database: ' . substr($message, 0, 100);
+    }
+    
+    return $exception->getMessage();
+}
+
 function create_slug($string, $checkExistsCallback = null, $excludeId = null)
 {
     $search = array(
@@ -76,7 +112,6 @@ function slug_exists($conn, $table_name, $slug, $excludeId = null)
     return $stmt->rowCount() > 0;
 }
 
-
 function insert($conn, $table_name, $data)
 {
     try {
@@ -121,10 +156,9 @@ function insert($conn, $table_name, $data)
 
         return false;
     } catch (PDOException $e) {
-        throw new Exception("Lỗi insert: " . $e->getMessage());
+        throw new Exception(sanitize_sql_error($e));
     }
 }
-
 
 function update($conn, $table_name, $data, $where)
 {
@@ -189,6 +223,6 @@ function update($conn, $table_name, $data, $where)
 
         return $stmt->execute();
     } catch (PDOException $e) {
-        throw new Exception("Lỗi update: " . $e->getMessage());
+        throw new Exception(sanitize_sql_error($e));
     }
 }
