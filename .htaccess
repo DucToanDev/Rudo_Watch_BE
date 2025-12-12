@@ -12,9 +12,11 @@ RewriteEngine On
     php_value opcache.enable_cli 0
 </IfModule>
 
-# XÓA CORS headers từ Apache config - để PHP xử lý hoàn toàn
+# CORS headers - để PHP xử lý hoàn toàn, không set ở server level
+# Xóa tất cả CORS headers từ server để PHP có thể set
 <IfModule mod_headers.c>
     Header unset Access-Control-Allow-Origin
+    Header unset Access-Control-Allow-Credentials
     Header unset Access-Control-Allow-Methods
     Header unset Access-Control-Allow-Headers
     Header unset Access-Control-Max-Age
@@ -26,6 +28,11 @@ RewriteEngine On
 # Pass Authorization header cho FastCGI/PHP
 RewriteCond %{HTTP:Authorization} .
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Fix Authorization header cho FastCGI (nếu dùng FastCGI)
+<IfModule mod_setenvif.c>
+    SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+</IfModule>
 
 # Handle OPTIONS preflight requests - redirect to index.php để PHP xử lý CORS
 RewriteCond %{REQUEST_METHOD} OPTIONS
