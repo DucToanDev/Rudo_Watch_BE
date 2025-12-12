@@ -78,37 +78,15 @@ if (empty($uri) || $uri === 'health' || $uri === 'status' || $uri === 'api/healt
 }
 
 function setCorsHeaders() {
-    // Lấy origin từ request
+    // Lấy origin từ request - luôn dùng origin từ request nếu có
     $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
     
-    // Whitelist các origins được phép
-    $allowedOrigins = [
-        'http://localhost:3000',
-        'http://localhost:5173',
-        'http://localhost:8080',
-        'https://rudowatch.store',
-        'https://www.rudowatch.store',
-        'https://api.rudowatch.store',
-        'http://rudowatch.store',
-        'http://www.rudowatch.store',
-        'http://api.rudowatch.store'
-    ];
-    
-    // Nếu có origin, kiểm tra và set
+    // Nếu có origin header, luôn set origin đó (browser sẽ validate)
     if ($origin) {
-        // Kiểm tra origin có trong whitelist hoặc là localhost/127.0.0.1
-        if (in_array($origin, $allowedOrigins) || 
-            strpos($origin, 'localhost') !== false || 
-            strpos($origin, '127.0.0.1') !== false ||
-            strpos($origin, 'rudowatch.store') !== false) {
-            header('Access-Control-Allow-Origin: ' . $origin);
-            header('Access-Control-Allow-Credentials: true');
-        } else {
-            // Nếu không match, vẫn set origin đó nhưng không dùng credentials
-            header('Access-Control-Allow-Origin: ' . $origin);
-        }
+        header('Access-Control-Allow-Origin: ' . $origin);
+        header('Access-Control-Allow-Credentials: true');
     } else {
-        // Nếu không có origin header, dùng wildcard
+        // Chỉ khi không có origin header mới dùng wildcard
         header('Access-Control-Allow-Origin: *');
     }
     
