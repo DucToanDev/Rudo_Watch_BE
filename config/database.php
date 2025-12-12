@@ -13,7 +13,7 @@ class Database {
             $password = getenv('DB_PASSWORD') ?: ($_ENV['DB_PASSWORD'] ?? null);
 
             if (empty($host) || empty($database) || empty($username)) {
-                throw new PDOException('Database configuration missing');
+                throw new PDOException('Thiếu cấu hình cơ sở dữ liệu!');
             }
 
             $dsn = "mysql:host={$host};port={$port};dbname={$database};charset=utf8mb4";
@@ -26,11 +26,12 @@ class Database {
                 PDO::ATTR_EMULATE_PREPARES => false
             ]);
         } catch (PDOException $e) {
-            error_log("Database connection failed: " . $e->getMessage());
+            error_log("Lỗi kết nối cơ sở dữ liệu: " . $e->getMessage());
             throw $e;
         }
     }
-
+    
+    // sinh ra đúng 1 object khi chạy 
     public static function getInstance() {
         if (self::$instance === null) {
             self::$instance = new self();
