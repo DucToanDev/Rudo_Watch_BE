@@ -1,37 +1,48 @@
-# 1. Sử dụng image PHP kèm Apache (Web server phổ biến nhất)
+# ============================================
+# Dockerfile cho Railway Deployment
+# PHP 8.2 + Apache + Composer
+# ============================================
+
+# Base image: PHP 8.2 với Apache
 FROM php:8.2-apache
 
-# 2. Copy entrypoint script để fix MPM conflict và PORT (copy sớm để có thể dùng)
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Metadata
+LABEL maintainer="Rudo Watch Backend"
+LABEL description="Backend API for Rudo Watch E-commerce"
 
-# 3. Bật mod_rewrite và mod_headers cho Apache
-RUN a2enmod rewrite headers
+# ============================================
+# 1. Cài đặt system dependencies và PHP extensions
+# ============================================
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    curl \
+    libzip-dev \
+    libicu-dev \
+    && docker-php-ext-install -j$(nproc) \
+    mysqli \
+    pdo \
+    pdo_mysql \
+    zip \
+    intl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# 3.1 Cài đặt Composer
+# ============================================
+# 2. Cài đặt Composer
+# ============================================
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 4. Copy composer files trước để cache dependencies
-COPY composer.json composer.lock* /var/www/html/
+# ============================================
+# 3. Cấu hình Apache
+# ============================================
+# Bật các modules cần thiết
+RUN a2enmod rewrite headers
 
-# 5. Cài đặt dependencies (nếu có composer.lock)
-WORKDIR /var/www/html
-RUN if [ -f composer.lock ]; then \
-        composer install --no-dev --optimize-autoloader --no-interaction; \
-    elif [ -f composer.json ]; then \
-        composer install --no-dev --optimize-autoloader --no-interaction; \
-    fi || echo "No composer.json found or composer install failed"
-
-# 6. Copy toàn bộ code của bạn vào thư mục web của server
-COPY . /var/www/html/
-
-# 7. Cài đặt các extension cơ bản nếu bạn cần kết nối Database (MySQL)
-RUN docker-php-ext-install mysqli pdo pdo_mysql
-
-# 8. Cấu hình Apache để cho phép .htaccess và set CORS headers
+# Cấu hình Apache để cho phép .htaccess
 RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 
-# 8.1 Thêm CORS headers vào Apache config
+# Thêm CORS headers vào Apache config
 RUN echo '<IfModule mod_headers.c>\n\
     Header always set Access-Control-Allow-Origin "*"\n\
     Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, PATCH, OPTIONS"\n\
@@ -39,18 +50,69 @@ RUN echo '<IfModule mod_headers.c>\n\
     Header always set Access-Control-Max-Age "86400"\n\
 </IfModule>' >> /etc/apache2/conf-available/cors.conf && a2enconf cors
 
-# 8.2 Fix Apache ServerName warning
+# Fix Apache ServerName warning
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
-# 9. Tạo thư mục logs và cấp quyền
-RUN mkdir -p /var/www/html/storage/logs && \
+# ============================================
+# 4. Copy entrypoint script
+# ============================================
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# ============================================
+# 5. Setup working directory
+# ============================================
+WORKDIR /var/www/html
+
+# ============================================
+# 6. Copy Composer files và cài đặt dependencies
+# (Tối ưu layer caching - chỉ rebuild khi composer files thay đổi)
+# ============================================
+COPY composer.json composer.lock* ./
+
+# Cài đặt dependencies (production only, no dev dependencies)
+RUN if [ -f composer.lock ]; then \
+        composer install --no-dev --optimize-autoloader --no-interaction --no-scripts; \
+    elif [ -f composer.json ]; then \
+        composer install --no-dev --optimize-autoloader --no-interaction --no-scripts; \
+    else \
+        echo "No composer files found"; \
+    fi
+
+# ============================================
+# 7. Copy toàn bộ source code
+# ============================================
+COPY . .
+
+# ============================================
+# 8. Chạy composer scripts (nếu có) sau khi copy code
+# ============================================
+RUN if [ -f composer.json ]; then \
+        composer dump-autoload --optimize --classmap-authoritative || true; \
+    fi
+
+# ============================================
+# 9. Tạo thư mục cần thiết và set permissions
+# ============================================
+RUN mkdir -p storage/logs uploads/products && \
     chown -R www-data:www-data /var/www/html && \
     chmod -R 755 /var/www/html && \
-    chmod -R 775 /var/www/html/storage
+    chmod -R 775 /var/www/html/storage /var/www/html/uploads
 
-# 10. Expose port (Railway uses PORT env variable, but this helps documentation)
+# ============================================
+# 10. Expose port (Railway sẽ override với PORT env var)
+# ============================================
 EXPOSE 8080
 
-# 11. Set entrypoint để fix MPM conflict và PORT mỗi khi container start
+# ============================================
+# 11. Health check (Railway sẽ tự động health check)
+# ============================================
+# Note: Railway có health check riêng, nhưng có thể dùng để debug
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8080}/ || exit 1
+
+# ============================================
+# 12. Entrypoint và CMD
+# ============================================
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
