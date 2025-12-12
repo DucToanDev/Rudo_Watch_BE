@@ -53,6 +53,10 @@ RUN echo '<IfModule mod_headers.c>\n\
 # Fix Apache ServerName warning
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
+# Giảm log level của Apache để ẩn các notice messages (không phải lỗi)
+RUN sed -i 's/LogLevel warn/LogLevel error/' /etc/apache2/apache2.conf || \
+    echo "LogLevel error" >> /etc/apache2/apache2.conf
+
 # ============================================
 # 4. Copy entrypoint script
 # ============================================

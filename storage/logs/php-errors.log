@@ -4291,3 +4291,23 @@
 [12-Dec-2025 06:00:56 UTC] MailService::initialize - starting
 [12-Dec-2025 06:00:56 UTC] MailService::initialize - SMTP config check: host=set, user=set, pass=set
 [12-Dec-2025 06:00:56 UTC] MailService::initialize - completed successfully
+[12-Dec-2025 07:08:31 UTC] Database connection failed: Database configuration missing
+[12-Dec-2025 07:08:31 UTC] Database connection failed: Database configuration missing
+[12-Dec-2025 07:08:32 UTC] Database connection failed: Database configuration missing
+[12-Dec-2025 07:08:32 UTC] Database connection failed: Database configuration missing
+[12-Dec-2025 07:08:36 UTC] Database connection failed: Database configuration missing
+[12-Dec-2025 07:08:36 UTC] Database connection failed: Database configuration missing
+[12-Dec-2025 07:09:23 UTC] Database connection failed: Database configuration missing
+[12-Dec-2025 07:09:23 UTC] Database connection failed: Database configuration missing
+[12-Dec-2025 07:09:37 UTC] Database connection failed: Database configuration missing
+[12-Dec-2025 07:09:37 UTC] Database connection failed: Database configuration missing
+[12-Dec-2025 07:09:48 UTC] Database connection failed: Database configuration missing
+[12-Dec-2025 07:09:48 UTC] UserModel constructor error: Database configuration missing
+[12-Dec-2025 07:09:48 UTC] Database connection failed: Database configuration missing
+[12-Dec-2025 07:09:48 UTC] UserModel constructor error: Database configuration missing
+[12-Dec-2025 07:10:15 UTC] Database connection failed: SQLSTATE[HY000] [1045] Access denied for user 'y9qva8l40gzk_rudowatch'@'localhost' (using password: YES)
+[12-Dec-2025 07:10:15 UTC] Database connection failed: SQLSTATE[HY000] [1045] Access denied for user 'y9qva8l40gzk_rudowatch'@'localhost' (using password: YES)
+[12-Dec-2025 07:10:28 UTC] Database connection failed: SQLSTATE[HY000] [1045] Access denied for user 'y9qva8l40gzk_rudowatch'@'localhost' (using password: YES)
+[12-Dec-2025 07:10:28 UTC] Database connection failed: SQLSTATE[HY000] [1045] Access denied for user 'y9qva8l40gzk_rudowatch'@'localhost' (using password: YES)
+[12-Dec-2025 07:11:44 UTC] Database connection failed: SQLSTATE[HY000] [1045] Access denied for user 'y9qva8l40gzk_rudowatch'@'171.235.43.78' (using password: YES)
+[12-Dec-2025 07:11:44 UTC] Database connection failed: SQLSTATE[HY000] [1045] Access denied for user 'y9qva8l40gzk_rudowatch'@'171.235.43.78' (using password: YES)
