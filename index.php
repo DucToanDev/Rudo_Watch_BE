@@ -77,82 +77,6 @@ if (empty($uri) || $uri === 'health' || $uri === 'status' || $uri === 'api/healt
     exit();
 }
 
-// Debug endpoint (có thể xóa sau khi debug xong)
-if ($uri === 'debug' || $uri === 'api/debug') {
-    header('Content-Type: application/json');
-    http_response_code(200);
-    echo json_encode([
-        'status' => 'success',
-        'data' => [
-            'parsed_uri' => $uri,
-            'uri_segments' => explode('/', $uri),
-            'request_uri' => $_SERVER['REQUEST_URI'] ?? 'N/A',
-            'query_url' => $_GET['url'] ?? 'N/A',
-            'path_info' => $_SERVER['PATH_INFO'] ?? 'N/A',
-            'script_name' => $_SERVER['SCRIPT_NAME'] ?? 'N/A',
-            'method' => $_SERVER['REQUEST_METHOD'] ?? 'N/A'
-        ]
-    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    exit();
-}
-
-// Endpoint để lấy IP của server
-if ($uri === 'get-ip' || $uri === 'api/get-ip') {
-    header('Content-Type: application/json');
-    
-    // Lấy IP từ các nguồn khác nhau
-    $ipSources = [];
-    
-    // Thử lấy IP từ external service
-    try {
-        $externalIP = @file_get_contents('https://api.ipify.org?format=json');
-        if ($externalIP) {
-            $ipData = json_decode($externalIP, true);
-            $ipSources['ipify'] = $ipData['ip'] ?? null;
-        }
-    } catch (Exception $e) {
-        $ipSources['ipify_error'] = $e->getMessage();
-    }
-    
-    // Thử lấy IP từ ip-api.com
-    try {
-        $ipApi = @file_get_contents('http://ip-api.com/json/');
-        if ($ipApi) {
-            $ipData = json_decode($ipApi, true);
-            $ipSources['ip-api'] = [
-                'ip' => $ipData['query'] ?? null,
-                'isp' => $ipData['isp'] ?? null,
-                'org' => $ipData['org'] ?? null,
-                'country' => $ipData['country'] ?? null,
-                'city' => $ipData['city'] ?? null
-            ];
-        }
-    } catch (Exception $e) {
-        $ipSources['ip-api_error'] = $e->getMessage();
-    }
-    
-    // Lấy thông tin từ $_SERVER
-    $serverInfo = [
-        'SERVER_ADDR' => $_SERVER['SERVER_ADDR'] ?? 'N/A',
-        'REMOTE_ADDR' => $_SERVER['REMOTE_ADDR'] ?? 'N/A',
-        'HTTP_X_FORWARDED_FOR' => $_SERVER['HTTP_X_FORWARDED_FOR'] ?? 'N/A',
-        'HTTP_X_REAL_IP' => $_SERVER['HTTP_X_REAL_IP'] ?? 'N/A',
-        'SERVER_NAME' => $_SERVER['SERVER_NAME'] ?? 'N/A',
-        'HOSTNAME' => gethostname() ?: 'N/A',
-    ];
-    
-    echo json_encode([
-        'status' => 'success',
-        'data' => [
-            'external_ips' => $ipSources,
-            'server_info' => $serverInfo,
-            'note' => 'Add these IPs to your database Remote Access whitelist',
-            'recommended' => $ipSources['ipify'] ?? $ipSources['ip-api']['ip'] ?? 'Check external_ips section'
-        ]
-    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    exit();
-}
-
 function setCorsHeaders() {
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
     header('Access-Control-Allow-Origin: ' . $origin);
@@ -251,17 +175,7 @@ try {
         exit();
     }
 
-    // Debug info nếu endpoint không tồn tại
-    $debugInfo = [
-        'error' => 'Endpoint không tồn tại',
-        'parsed_uri' => $uri,
-        'uri_segments' => $uriSegments,
-        'method' => $_SERVER['REQUEST_METHOD'] ?? 'N/A',
-        'request_uri' => $_SERVER['REQUEST_URI'] ?? 'N/A',
-        'router' => $router->getDebugInfo()
-    ];
-    
-    $response->json($debugInfo, 404);
+    $response->json(['error' => 'Endpoint không tồn tại'], 404);
     exit();
 } catch (Throwable $e) {
     header('Content-Type: application/json');
