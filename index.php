@@ -5,15 +5,15 @@ ini_set('log_errors', '1');
 
 $uri = '';
 
-// Thử lấy từ query parameter trước (nếu có .htaccess rewrite)
+// Strategy 1: Thử lấy từ query parameter (nếu có .htaccess rewrite)
 if (isset($_GET['url']) && !empty($_GET['url'])) {
     $uri = trim($_GET['url'], '/');
 }
 
-// Nếu không có, parse từ REQUEST_URI
+// Strategy 2: Parse từ REQUEST_URI
 if (empty($uri) && isset($_SERVER['REQUEST_URI'])) {
     $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-    if ($requestUri === false) {
+    if ($requestUri === false || empty($requestUri)) {
         $requestUri = $_SERVER['REQUEST_URI'];
     }
     
@@ -29,22 +29,34 @@ if (empty($uri) && isset($_SERVER['REQUEST_URI'])) {
     $requestUri = preg_replace('#^/index\.php#', '', $requestUri);
     $requestUri = preg_replace('#^/index\.php/#', '/', $requestUri);
     
+    // Nếu REQUEST_URI trỏ đến index.php, lấy phần sau
+    if (strpos($requestUri, '/index.php') !== false) {
+        $requestUri = substr($requestUri, strpos($requestUri, '/index.php') + strlen('/index.php'));
+    }
+    
     // Loại bỏ leading/trailing slashes
     $uri = trim($requestUri, '/');
 }
 
-// Fallback: nếu vẫn empty, kiểm tra SCRIPT_NAME và PATH_INFO
-if (empty($uri)) {
-    // Thử PATH_INFO trước (nếu có)
-    if (isset($_SERVER['PATH_INFO']) && !empty($_SERVER['PATH_INFO'])) {
-        $uri = trim($_SERVER['PATH_INFO'], '/');
-    }
-    // Nếu không có PATH_INFO, thử tính từ SCRIPT_NAME
-    elseif (isset($_SERVER['SCRIPT_NAME']) && isset($_SERVER['REQUEST_URI'])) {
-        $scriptPath = dirname($_SERVER['SCRIPT_NAME']);
-        $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        if ($requestUri !== false && $scriptPath !== '/' && strpos($requestUri, $scriptPath) === 0) {
-            $uri = trim(substr($requestUri, strlen($scriptPath)), '/');
+// Strategy 3: Thử PATH_INFO
+if (empty($uri) && isset($_SERVER['PATH_INFO']) && !empty($_SERVER['PATH_INFO'])) {
+    $uri = trim($_SERVER['PATH_INFO'], '/');
+}
+
+// Strategy 4: Tính từ SCRIPT_NAME và REQUEST_URI
+if (empty($uri) && isset($_SERVER['SCRIPT_NAME']) && isset($_SERVER['REQUEST_URI'])) {
+    $scriptName = $_SERVER['SCRIPT_NAME'];
+    $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    
+    if ($requestUri !== false && $requestUri !== $scriptName) {
+        // Nếu REQUEST_URI chứa SCRIPT_NAME, lấy phần còn lại
+        if (strpos($requestUri, $scriptName) === 0) {
+            $uri = trim(substr($requestUri, strlen($scriptName)), '/');
+        }
+        // Nếu không, thử lấy relative path
+        elseif (dirname($scriptName) !== '/' && strpos($requestUri, dirname($scriptName)) === 0) {
+            $basePath = dirname($scriptName);
+            $uri = trim(substr($requestUri, strlen($basePath)), '/');
         }
     }
 }
@@ -182,7 +194,16 @@ try {
         exit();
     }
 
-    $response->json(['error' => 'Endpoint không tồn tại'], 404);
+    // Debug info nếu endpoint không tồn tại
+    $debugInfo = [
+        'error' => 'Endpoint không tồn tại',
+        'parsed_uri' => $uri,
+        'uri_segments' => $uriSegments,
+        'method' => $_SERVER['REQUEST_METHOD'] ?? 'N/A',
+        'request_uri' => $_SERVER['REQUEST_URI'] ?? 'N/A'
+    ];
+    
+    $response->json($debugInfo, 404);
     exit();
 } catch (Throwable $e) {
     header('Content-Type: application/json');

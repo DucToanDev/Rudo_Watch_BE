@@ -42,6 +42,9 @@ RUN a2enmod rewrite headers
 # Cấu hình Apache để cho phép .htaccess
 RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 
+# Đảm bảo DocumentRoot được set đúng
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html|' /etc/apache2/sites-available/000-default.conf
+
 # Thêm CORS headers vào Apache config
 RUN echo '<IfModule mod_headers.c>\n\
     Header always set Access-Control-Allow-Origin "*"\n\
@@ -56,6 +59,10 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 # Giảm log level của Apache để ẩn các notice messages (không phải lỗi)
 RUN sed -i 's/LogLevel warn/LogLevel error/' /etc/apache2/apache2.conf || \
     echo "LogLevel error" >> /etc/apache2/apache2.conf
+
+# Thêm DirectoryIndex để đảm bảo index.php được load
+RUN sed -i 's/DirectoryIndex.*/DirectoryIndex index.php index.html/' /etc/apache2/apache2.conf || \
+    echo "DirectoryIndex index.php index.html" >> /etc/apache2/apache2.conf
 
 # ============================================
 # 4. Setup working directory
