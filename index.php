@@ -200,7 +200,8 @@ try {
         'parsed_uri' => $uri,
         'uri_segments' => $uriSegments,
         'method' => $_SERVER['REQUEST_METHOD'] ?? 'N/A',
-        'request_uri' => $_SERVER['REQUEST_URI'] ?? 'N/A'
+        'request_uri' => $_SERVER['REQUEST_URI'] ?? 'N/A',
+        'router' => $router->getDebugInfo()
     ];
     
     $response->json($debugInfo, 404);

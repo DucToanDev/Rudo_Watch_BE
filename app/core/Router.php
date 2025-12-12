@@ -347,4 +347,28 @@ class Router
         parse_str($rawInput, $data);
         return empty($data) ? null : (object)$data;
     }
+
+    // Debug method để lấy thông tin router
+    public function getDebugInfo()
+    {
+        $controllerName = $this->getControllerName();
+        $controllerPath = $this->version && $controllerName 
+            ? __DIR__ . "/../api/controllers/{$this->version}/{$controllerName}.php"
+            : null;
+        
+        $action = $this->getCrudAction();
+        $fileExists = $controllerPath && file_exists($controllerPath);
+        
+        return [
+            'version' => $this->version,
+            'resource' => $this->resource,
+            'id' => $this->id,
+            'method' => $this->method,
+            'controller_name' => $controllerName,
+            'controller_path' => $controllerPath,
+            'controller_file_exists' => $fileExists,
+            'expected_action' => $action,
+            'route_key' => $this->buildRouteKey()
+        ];
+    }
 }
