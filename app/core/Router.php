@@ -114,6 +114,10 @@ class Router
         'GET favorites/count' => ['FavoritesController', 'count'],
         'GET favorites/check/{id}' => ['FavoritesController', 'check'],
         'DELETE favorites/product/{id}' => ['FavoritesController', 'deleteByProduct'],
+
+        // Comments
+        'GET comments/post/{id}' => ['CommentsController', 'byPost'],
+        'GET comments/count/{id}' => ['CommentsController', 'count'],
     ];
 
     // Map resource name -> Controller name
@@ -145,6 +149,8 @@ class Router
         'post-categories' => 'PostCategories',
         'post' => 'Posts',
         'posts' => 'Posts',
+        'comment' => 'Comments',
+        'comments' => 'Comments',
     ];
 
 

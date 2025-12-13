@@ -44,6 +44,8 @@ tags:
     description: Upload file
   - name: Favorites
     description: Quản lý sản phẩm yêu thích
+  - name: Comments
+    description: Bình luận cho bài viết
 components:
   securitySchemes:
     bearerAuth:
@@ -251,6 +253,38 @@ components:
           format: date-time
           nullable: true
         expired_at:
+          type: string
+          format: date-time
+          nullable: true
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+          nullable: true
+        post_id:
+          type: integer
+          nullable: true
+        content:
+          type: string
+        user_name:
+          type: string
+          nullable: true
+        user_email:
+          type: string
+          nullable: true
+        post_name:
+          type: string
+          nullable: true
+        post_slug:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
           type: string
           format: date-time
           nullable: true
@@ -5058,3 +5092,351 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/comments:
+    get:
+      tags:
+        - Comments
+      summary: Lấy danh sách comments
+      parameters:
+        - name: post_id
+          in: query
+          schema:
+            type: integer
+          description: Lọc theo post_id
+        - name: user_id
+          in: query
+          schema:
+            type: integer
+          description: Lọc theo user_id
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Số trang
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Số lượng mỗi trang
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - created_at
+            default: created_at
+          description: Sắp xếp theo
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum:
+              - ASC
+              - DESC
+            default: DESC
+          description: Thứ tự sắp xếp
+      responses:
+        '200':
+          description: Danh sách comments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comment'
+                  pagination:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                      per_page:
+                        type: integer
+                      total:
+                        type: integer
+                      total_pages:
+                        type: integer
+
+    post:
+      tags:
+        - Comments
+      summary: Tạo comment mới
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - post_id
+                - content
+              properties:
+                post_id:
+                  type: integer
+                  example: 1
+                  description: ID bài viết
+                content:
+                  type: string
+                  example: 'Bình luận hay quá!'
+                  description: Nội dung comment
+      responses:
+        '201':
+          description: Tạo comment thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Tạo comment thành công
+                  data:
+                    $ref: '#/components/schemas/Comment'
+        '400':
+          description: Lỗi validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Chưa đăng nhập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Bài viết không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  '/api/v1/comments/{id}':
+    get:
+      tags:
+        - Comments
+      summary: Lấy chi tiết comment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chi tiết comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '404':
+          description: Comment không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Comments
+      summary: Cập nhật comment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  example: 'Nội dung comment đã được cập nhật'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Cập nhật comment thành công
+                  data:
+                    $ref: '#/components/schemas/Comment'
+        '400':
+          description: Lỗi validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Chưa đăng nhập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Không có quyền sửa comment này
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Comment không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Comments
+      summary: Xóa comment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Xóa comment thành công
+        '401':
+          description: Chưa đăng nhập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Không có quyền xóa comment này
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Comment không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  '/api/v1/comments/post/{id}':
+    get:
+      tags:
+        - Comments
+      summary: Lấy danh sách comments theo post_id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID bài viết
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Số trang
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Số lượng mỗi trang
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - created_at
+            default: created_at
+          description: Sắp xếp theo
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum:
+              - ASC
+              - DESC
+            default: DESC
+          description: Thứ tự sắp xếp
+      responses:
+        '200':
+          description: Danh sách comments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comment'
+                  pagination:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                      per_page:
+                        type: integer
+                      total:
+                        type: integer
+                      total_pages:
+                        type: integer
+
+  '/api/v1/comments/count/{id}':
+    get:
+      tags:
+        - Comments
+      summary: Đếm số lượng comments theo post_id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID bài viết
+      responses:
+        '200':
+          description: Số lượng comments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    example: 25
+        '400':
+          description: Post ID không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
