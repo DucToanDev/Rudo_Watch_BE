@@ -81,27 +81,6 @@ if (empty($uri) && isset($_SERVER['SCRIPT_NAME']) && isset($_SERVER['REQUEST_URI
 }
 
 // -----------------------------------------------------------
-// SWAGGER UI
-// -----------------------------------------------------------
-if ($uri === 'api-docs' || $uri === 'swagger' || $uri === 'docs') {
-    $swaggerHtmlPath = __DIR__ . '/swagger-ui.html';
-    if (file_exists($swaggerHtmlPath)) {
-        header('Content-Type: text/html; charset=UTF-8');
-        readfile($swaggerHtmlPath);
-        exit();
-    } else {
-        header('Content-Type: application/json');
-        http_response_code(404);
-        echo json_encode([
-            'status' => 'error',
-            'statusCode' => 404,
-            'data' => ['error' => 'Swagger UI file not found']
-        ], JSON_UNESCAPED_UNICODE);
-        exit();
-    }
-}
-
-// -----------------------------------------------------------
 // HYBRID HEALTH CHECK / HOME PAGE 
 // -----------------------------------------------------------
 if (empty($uri) || $uri === 'health' || $uri === 'status' || $uri === 'api/health') {

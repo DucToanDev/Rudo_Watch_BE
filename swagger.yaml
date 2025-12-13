@@ -5,17 +5,17 @@ info:
   version: 1.0.0
   contact:
     name: Phan Duc Toan
-    email: support@rudowatch.com
-
+    email: pductoandev@gmail.com
 servers:
-  - url: http://localhost/backend
+  - url: 'http://localhost/backend'
     description: Local Development Server
-  - url: hhttps://rudo-watch-be.onrender.com
+  - url: 'https://rudo-watch-be.onrender.com'
     description: Production Server
-
+  - url: 'https://api.rudowatch.store'
+    description: Deploy Production Server
 tags:
   - name: Authentication
-    description: Đăng ký, đăng nhập, xác thực
+    description: 'Đăng ký, đăng nhập, xác thực'
   - name: Users
     description: Quản lý người dùng
   - name: Products
@@ -42,7 +42,8 @@ tags:
     description: Bài viết/Blog
   - name: Upload
     description: Upload file
-
+  - name: Favorites
+    description: Quản lý sản phẩm yêu thích
 components:
   securitySchemes:
     bearerAuth:
@@ -50,7 +51,6 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: Token xác thực (Bearer Token)
-
   schemas:
     ErrorResponse:
       type: object
@@ -68,7 +68,6 @@ components:
               type: string
             errors:
               type: object
-
     User:
       type: object
       properties:
@@ -83,14 +82,13 @@ components:
           nullable: true
         role:
           type: integer
-          description: 0 = User, 1 = Admin
+          description: '0 = User, 1 = Admin'
         status:
           type: integer
-          description: 0 = Inactive, 1 = Active
+          description: '0 = Inactive, 1 = Active'
         created_at:
           type: string
           format: date-time
-
     Product:
       type: object
       properties:
@@ -118,7 +116,6 @@ components:
         created_at:
           type: string
           format: date-time
-
     Category:
       type: object
       properties:
@@ -130,7 +127,6 @@ components:
           type: string
         status:
           type: integer
-
     Brand:
       type: object
       properties:
@@ -145,7 +141,6 @@ components:
           nullable: true
         status:
           type: integer
-
     Address:
       type: object
       properties:
@@ -169,7 +164,6 @@ components:
           type: string
         is_default:
           type: integer
-
     Review:
       type: object
       properties:
@@ -188,7 +182,34 @@ components:
         created_at:
           type: string
           format: date-time
-
+    Favorite:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        product_id:
+          type: integer
+        product_name:
+          type: string
+        product_slug:
+          type: string
+        product_image:
+          type: string
+          nullable: true
+        min_price:
+          type: number
+          nullable: true
+        max_price:
+          type: number
+          nullable: true
+        brand_name:
+          type: string
+          nullable: true
+        category_name:
+          type: string
+          nullable: true
     Voucher:
       type: object
       properties:
@@ -198,7 +219,9 @@ components:
           type: string
         type:
           type: string
-          enum: [percent, money]
+          enum:
+            - percent
+            - money
         discount:
           type: number
           nullable: true
@@ -209,7 +232,6 @@ components:
           type: string
           format: date-time
           nullable: true
-
 paths:
   /health:
     get:
@@ -246,7 +268,6 @@ paths:
                       message:
                         type: string
                         example: System Operational
-
   /api/v1/register:
     post:
       tags:
@@ -265,11 +286,11 @@ paths:
               properties:
                 fullname:
                   type: string
-                  example: Nguyễn Văn A
+                  example: Phan Đức Toàn
                 email:
                   type: string
                   format: email
-                  example: user@example.com
+                  example: phanductoandev@gmail.com
                 password:
                   type: string
                   format: password
@@ -278,7 +299,7 @@ paths:
                 phone:
                   type: string
                   nullable: true
-                  example: "0123456789"
+                  example: '0916110243'
       responses:
         '201':
           description: Đăng ký thành công
@@ -308,7 +329,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
   /api/v1/login:
     post:
       tags:
@@ -361,7 +381,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
   /api/v1/user/profile:
     get:
       tags:
@@ -394,7 +413,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
   /api/v1/user/update:
     put:
       tags:
@@ -411,15 +429,11 @@ paths:
               properties:
                 fullname:
                   type: string
-                  example: Nguyễn Văn A
-                email:
-                  type: string
-                  format: email
-                  example: user@example.com
+                  example: Toàn đẹp trai
                 phone:
                   type: string
                   nullable: true
-                  example: "0123456789"
+                  example: '0916110241'
       responses:
         '200':
           description: Cập nhật thành công
@@ -447,7 +461,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
   /api/v1/user/change-password:
     put:
       tags:
@@ -468,7 +481,7 @@ paths:
                 old_password:
                   type: string
                   format: password
-                  example: oldpass123
+                  example: password123
                 new_password:
                   type: string
                   format: password
@@ -503,7 +516,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
   /api/v1/products:
     get:
       tags:
@@ -534,12 +546,14 @@ paths:
           in: query
           schema:
             type: string
-          description: Sắp xếp theo (name, price, created_at)
+          description: 'Sắp xếp theo (name, price, created_at)'
         - name: sort_order
           in: query
           schema:
             type: string
-            enum: [ASC, DESC]
+            enum:
+              - ASC
+              - DESC
             default: DESC
           description: Thứ tự sắp xếp
         - name: page
@@ -572,7 +586,6 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Product'
-
     post:
       tags:
         - Products
@@ -642,8 +655,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
-  /api/v1/products/{id}:
+  '/api/v1/products/{id}':
     get:
       tags:
         - Products
@@ -677,7 +689,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
     put:
       tags:
         - Products
@@ -742,7 +753,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
     delete:
       tags:
         - Products
@@ -781,7 +791,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
   /api/v1/products/featured:
     get:
       tags:
@@ -812,7 +821,6 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Product'
-
   /api/v1/products/latest:
     get:
       tags:
@@ -843,8 +851,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Product'
-
-  /api/v1/products/category/{id}:
+  '/api/v1/products/category/{id}':
     get:
       tags:
         - Products
@@ -879,8 +886,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Product'
-
-  /api/v1/products/brand/{id}:
+  '/api/v1/products/brand/{id}':
     get:
       tags:
         - Products
@@ -915,8 +921,6 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Product'
-
-
   /api/v1/categories:
     get:
       tags:
@@ -940,7 +944,6 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Category'
-
     post:
       tags:
         - Categories
@@ -986,8 +989,7 @@ paths:
                         type: string
                       data:
                         $ref: '#/components/schemas/Category'
-
-  /api/v1/categories/{id}:
+  '/api/v1/categories/{id}':
     get:
       tags:
         - Categories
@@ -1014,7 +1016,6 @@ paths:
                     example: 200
                   data:
                     $ref: '#/components/schemas/Category'
-
     put:
       tags:
         - Categories
@@ -1061,7 +1062,6 @@ paths:
                         type: string
                       data:
                         $ref: '#/components/schemas/Category'
-
     delete:
       tags:
         - Categories
@@ -1078,7 +1078,8 @@ paths:
           in: query
           schema:
             type: string
-            enum: ["true"]
+            enum:
+              - 'true'
           description: Xác nhận xóa (nếu có sản phẩm)
       responses:
         '200':
@@ -1099,7 +1100,6 @@ paths:
                     properties:
                       message:
                         type: string
-
   /api/v1/categories/active:
     get:
       tags:
@@ -1129,7 +1129,6 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/Category'
-
   /api/v1/brands:
     get:
       tags:
@@ -1153,7 +1152,6 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Brand'
-
     post:
       tags:
         - Brands
@@ -1202,8 +1200,7 @@ paths:
                         type: string
                       data:
                         $ref: '#/components/schemas/Brand'
-
-  /api/v1/brands/{id}:
+  '/api/v1/brands/{id}':
     get:
       tags:
         - Brands
@@ -1230,7 +1227,6 @@ paths:
                     example: 200
                   data:
                     $ref: '#/components/schemas/Brand'
-
     put:
       tags:
         - Brands
@@ -1280,7 +1276,6 @@ paths:
                         type: string
                       data:
                         $ref: '#/components/schemas/Brand'
-
     delete:
       tags:
         - Brands
@@ -1297,7 +1292,8 @@ paths:
           in: query
           schema:
             type: string
-            enum: ["true"]
+            enum:
+              - 'true'
           description: Xác nhận xóa (nếu có sản phẩm)
       responses:
         '200':
@@ -1318,7 +1314,6 @@ paths:
                     properties:
                       message:
                         type: string
-
   /api/v1/brands/active:
     get:
       tags:
@@ -1348,8 +1343,6 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/Brand'
-
-
   /api/v1/reviews:
     get:
       tags:
@@ -1396,7 +1389,6 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Review'
-
     post:
       tags:
         - Reviews
@@ -1446,8 +1438,7 @@ paths:
                         type: string
                       data:
                         $ref: '#/components/schemas/Review'
-
-  /api/v1/reviews/{id}:
+  '/api/v1/reviews/{id}':
     get:
       tags:
         - Reviews
@@ -1474,7 +1465,6 @@ paths:
                     example: 200
                   data:
                     $ref: '#/components/schemas/Review'
-
     put:
       tags:
         - Reviews
@@ -1521,7 +1511,6 @@ paths:
                         type: string
                       data:
                         $ref: '#/components/schemas/Review'
-
     delete:
       tags:
         - Reviews
@@ -1553,8 +1542,7 @@ paths:
                     properties:
                       message:
                         type: string
-
-  /api/v1/reviews/product/{id}:
+  '/api/v1/reviews/product/{id}':
     get:
       tags:
         - Reviews
@@ -1593,8 +1581,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Review'
-
-  /api/v1/reviews/stats/{id}:
+  '/api/v1/reviews/stats/{id}':
     get:
       tags:
         - Reviews
@@ -1628,8 +1615,7 @@ paths:
                         type: integer
                       rating_distribution:
                         type: object
-
-  /api/v1/reviews/my-review/{id}:
+  '/api/v1/reviews/my-review/{id}':
     get:
       tags:
         - Reviews
@@ -1664,7 +1650,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
   /api/v1/addresses:
     get:
       tags:
@@ -1696,7 +1681,6 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/Address'
-
     post:
       tags:
         - Addresses
@@ -1720,7 +1704,7 @@ paths:
                   example: Nguyễn Văn A
                 receiver_phone:
                   type: string
-                  example: "0123456789"
+                  example: '0123456789'
                 province:
                   type: string
                   example: Hà Nội
@@ -1734,7 +1718,7 @@ paths:
                   example: Phường Tràng Tiền
                 street:
                   type: string
-                  example: Số 1, Phố Tràng Tiền
+                  example: 'Số 1, Phố Tràng Tiền'
                 is_default:
                   type: integer
                   default: 0
@@ -1762,8 +1746,7 @@ paths:
                         type: string
                       data:
                         $ref: '#/components/schemas/Address'
-
-  /api/v1/addresses/{id}:
+  '/api/v1/addresses/{id}':
     get:
       tags:
         - Addresses
@@ -1798,7 +1781,6 @@ paths:
                         example: true
                       data:
                         $ref: '#/components/schemas/Address'
-
     put:
       tags:
         - Addresses
@@ -1858,7 +1840,6 @@ paths:
                         type: string
                       data:
                         $ref: '#/components/schemas/Address'
-
     delete:
       tags:
         - Addresses
@@ -1893,7 +1874,6 @@ paths:
                         example: true
                       message:
                         type: string
-
   /api/v1/addresses/default:
     get:
       tags:
@@ -1929,8 +1909,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
-  /api/v1/addresses/{id}/set-default:
+  '/api/v1/addresses/{id}/set-default':
     put:
       tags:
         - Addresses
@@ -1967,8 +1946,6 @@ paths:
                         type: string
                       data:
                         $ref: '#/components/schemas/Address'
-
-
   /api/v1/vouchers:
     get:
       tags:
@@ -1983,7 +1960,9 @@ paths:
           in: query
           schema:
             type: string
-            enum: [percent, money]
+            enum:
+              - percent
+              - money
         - name: valid
           in: query
           schema:
@@ -2014,7 +1993,6 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Voucher'
-
     post:
       tags:
         - Vouchers
@@ -2036,7 +2014,9 @@ paths:
                   example: SALE50
                 type:
                   type: string
-                  enum: [percent, money]
+                  enum:
+                    - percent
+                    - money
                   example: percent
                 discount:
                   type: number
@@ -2071,8 +2051,7 @@ paths:
                         type: string
                       data:
                         $ref: '#/components/schemas/Voucher'
-
-  /api/v1/vouchers/{id}:
+  '/api/v1/vouchers/{id}':
     get:
       tags:
         - Vouchers
@@ -2099,7 +2078,6 @@ paths:
                     example: 200
                   data:
                     $ref: '#/components/schemas/Voucher'
-
     put:
       tags:
         - Vouchers
@@ -2123,7 +2101,9 @@ paths:
                   type: string
                 type:
                   type: string
-                  enum: [percent, money]
+                  enum:
+                    - percent
+                    - money
                 discount:
                   type: number
                 amount:
@@ -2152,7 +2132,6 @@ paths:
                         type: string
                       data:
                         $ref: '#/components/schemas/Voucher'
-
     delete:
       tags:
         - Vouchers
@@ -2169,7 +2148,8 @@ paths:
           in: query
           schema:
             type: string
-            enum: ["true"]
+            enum:
+              - 'true'
       responses:
         '200':
           description: Xóa thành công
@@ -2189,7 +2169,6 @@ paths:
                     properties:
                       message:
                         type: string
-
   /api/v1/vouchers/validate:
     post:
       tags:
@@ -2238,7 +2217,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
   /api/v1/vouchers/apply:
     post:
       tags:
@@ -2286,8 +2264,7 @@ paths:
                             type: number
                           final_total:
                             type: number
-
-  /api/v1/vouchers/check/{code}:
+  '/api/v1/vouchers/check/{code}':
     get:
       tags:
         - Vouchers
@@ -2321,7 +2298,6 @@ paths:
                         type: string
                       voucher:
                         $ref: '#/components/schemas/Voucher'
-
   /api/v1/payments/create:
     post:
       tags:
@@ -2375,13 +2351,12 @@ paths:
                             type: string
                           transaction_id:
                             type: string
-
   /api/v1/payments/webhook:
     post:
       tags:
         - Payments
       summary: Webhook nhận thông báo từ SePay
-      description: Endpoint này được SePay gọi tự động, không cần authentication
+      description: 'Endpoint này được SePay gọi tự động, không cần authentication'
       requestBody:
         required: true
         content:
@@ -2401,8 +2376,7 @@ paths:
                     example: true
                   message:
                     type: string
-
-  /api/v1/payments/status/{id}:
+  '/api/v1/payments/status/{id}':
     get:
       tags:
         - Payments
@@ -2446,7 +2420,6 @@ paths:
                         type: boolean
                       has_transaction:
                         type: boolean
-
   /api/v1/shipping-methods:
     get:
       tags:
@@ -2481,7 +2454,6 @@ paths:
                           type: number
                         status:
                           type: integer
-
     post:
       tags:
         - Shipping
@@ -2531,8 +2503,7 @@ paths:
                         type: string
                       data:
                         type: object
-
-  /api/v1/shipping-methods/{id}:
+  '/api/v1/shipping-methods/{id}':
     get:
       tags:
         - Shipping
@@ -2559,7 +2530,6 @@ paths:
                     example: 200
                   data:
                     type: object
-
     put:
       tags:
         - Shipping
@@ -2608,7 +2578,6 @@ paths:
                         type: string
                       data:
                         type: object
-
     delete:
       tags:
         - Shipping
@@ -2640,7 +2609,6 @@ paths:
                     properties:
                       message:
                         type: string
-
   /api/v1/shipping-methods/calculate:
     post:
       tags:
@@ -2683,7 +2651,6 @@ paths:
                         type: number
                       total:
                         type: number
-
   /api/v1/shipping-methods/admin:
     get:
       tags:
@@ -2709,7 +2676,6 @@ paths:
                     type: array
                     items:
                       type: object
-
   /api/v1/upload/image:
     post:
       tags:
@@ -2760,7 +2726,6 @@ paths:
                             type: string
                           public_id:
                             type: string
-
   /api/v1/upload/images:
     post:
       tags:
@@ -2819,8 +2784,7 @@ paths:
                             type: integer
                           failed:
                             type: integer
-
-  /api/v1/upload/{key}:
+  '/api/v1/upload/{key}':
     delete:
       tags:
         - Upload
@@ -2853,7 +2817,6 @@ paths:
                     properties:
                       message:
                         type: string
-
   /api/v1/forgot-password/send-code:
     post:
       tags:
@@ -2925,7 +2888,6 @@ paths:
               schema:
                 type: string
                 example: Gateway Timeout
-
   /api/v1/forgot-password/reset:
     post:
       tags:
@@ -2950,7 +2912,7 @@ paths:
                   description: Email của tài khoản cần đặt lại mật khẩu
                 code:
                   type: string
-                  example: "123456"
+                  example: '123456'
                   description: Mã xác thực 6 chữ số đã nhận qua email
                   minLength: 6
                   maxLength: 6
@@ -2981,7 +2943,7 @@ paths:
                         type: string
                         example: Đặt lại mật khẩu thành công
         '400':
-          description: Mã xác thực không đúng, đã hết hạn hoặc mật khẩu không hợp lệ
+          description: 'Mã xác thực không đúng, đã hết hạn hoặc mật khẩu không hợp lệ'
           content:
             application/json:
               schema:
@@ -2992,110 +2954,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Lỗi server khi đặt lại mật khẩu
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '504':
-          description: Gateway Timeout - Server mất quá nhiều thời gian để xử lý
-          content:
-            text/html:
-              schema:
-                type: string
-                example: Gateway Timeout
-
-  /api/v1/facebook:
-    get:
-      tags:
-        - Authentication
-      summary: Bắt đầu đăng nhập Facebook
-      responses:
-        '200':
-          description: URL đăng nhập Facebook
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: success
-                  statusCode:
-                    type: integer
-                    example: 200
-                  data:
-                    type: object
-                    properties:
-                      success:
-                        type: boolean
-                        example: true
-                      needsRedirect:
-                        type: boolean
-                        example: true
-                      login_url:
-                        type: string
-
-  /api/v1/facebook-callback:
-    get:
-      tags:
-        - Authentication
-      summary: Callback đăng nhập Facebook
-      parameters:
-        - name: code
-          in: query
-          schema:
-            type: string
-      responses:
-        '302':
-          description: Redirect về frontend với token
-
-  /api/v1/google:
-    get:
-      tags:
-        - Authentication
-      summary: Bắt đầu đăng nhập Google
-      responses:
-        '200':
-          description: URL đăng nhập Google
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: success
-                  statusCode:
-                    type: integer
-                    example: 200
-                  data:
-                    type: object
-                    properties:
-                      success:
-                        type: boolean
-                        example: true
-                      needsRedirect:
-                        type: boolean
-                        example: true
-                      login_url:
-                        type: string
-
-  /api/v1/google-callback:
-    get:
-      tags:
-        - Authentication
-      summary: Callback đăng nhập Google
-      parameters:
-        - name: code
-          in: query
-          schema:
-            type: string
-      responses:
-        '302':
-          description: Redirect về frontend với token
-
   /api/v1/home:
     get:
       tags:
@@ -3172,8 +3030,6 @@ paths:
                             created_at:
                               type: string
                               format: date-time
-
-
   /api/v1/posts:
     get:
       tags:
@@ -3219,7 +3075,6 @@ paths:
                         created_at:
                           type: string
                           format: date-time
-
     post:
       tags:
         - Posts
@@ -3273,8 +3128,7 @@ paths:
                         type: string
                       data:
                         type: object
-
-  /api/v1/posts/{id}:
+  '/api/v1/posts/{id}':
     get:
       tags:
         - Posts
@@ -3302,7 +3156,6 @@ paths:
                     example: 200
                   data:
                     type: object
-
     put:
       tags:
         - Posts
@@ -3354,7 +3207,6 @@ paths:
                         type: string
                       data:
                         type: object
-
     delete:
       tags:
         - Posts
@@ -3386,7 +3238,6 @@ paths:
                     properties:
                       message:
                         type: string
-
   /api/v1/post-categories:
     get:
       tags:
@@ -3419,7 +3270,6 @@ paths:
                           type: string
                         post_count:
                           type: integer
-
     post:
       tags:
         - Posts
@@ -3462,8 +3312,7 @@ paths:
                         type: string
                       data:
                         type: object
-
-  /api/v1/post-categories/{id}:
+  '/api/v1/post-categories/{id}':
     get:
       tags:
         - Posts
@@ -3499,7 +3348,6 @@ paths:
                         type: string
                       post_count:
                         type: integer
-
     put:
       tags:
         - Posts
@@ -3544,7 +3392,6 @@ paths:
                         type: string
                       data:
                         type: object
-
     delete:
       tags:
         - Posts
@@ -3576,7 +3423,6 @@ paths:
                     properties:
                       message:
                         type: string
-
   /api/v1/post-categories/active:
     get:
       tags:
@@ -3606,7 +3452,6 @@ paths:
                         type: array
                         items:
                           type: object
-
   /api/v1/product-variants:
     get:
       tags:
@@ -3648,7 +3493,6 @@ paths:
                             image:
                               type: string
                               nullable: true
-
     post:
       tags:
         - Products
@@ -3701,8 +3545,7 @@ paths:
                         type: string
                       data:
                         type: object
-
-  /api/v1/product-variants/{id}:
+  '/api/v1/product-variants/{id}':
     get:
       tags:
         - Products
@@ -3735,7 +3578,6 @@ paths:
                         example: true
                       data:
                         type: object
-
     put:
       tags:
         - Products
@@ -3788,7 +3630,6 @@ paths:
                         type: string
                       data:
                         type: object
-
     delete:
       tags:
         - Products
@@ -3823,8 +3664,7 @@ paths:
                         example: true
                       message:
                         type: string
-
-  /api/v1/product-variants/product/{id}:
+  '/api/v1/product-variants/product/{id}':
     get:
       tags:
         - Products
@@ -3859,7 +3699,6 @@ paths:
                         type: array
                         items:
                           type: object
-
   /api/v1/users:
     get:
       tags:
@@ -3914,8 +3753,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
-  /api/v1/users/{id}:
+  '/api/v1/users/{id}':
     get:
       tags:
         - Users
@@ -3956,8 +3794,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
-  /api/v1/users/{id}/status:
+  '/api/v1/users/{id}/status':
     put:
       tags:
         - Users
@@ -3981,7 +3818,9 @@ paths:
               properties:
                 status:
                   type: integer
-                  enum: [0, 1]
+                  enum:
+                    - 0
+                    - 1
                   example: 1
       responses:
         '200':
@@ -4010,7 +3849,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
   /api/v1/user/update-role:
     put:
       tags:
@@ -4033,9 +3871,11 @@ paths:
                   example: 1
                 role:
                   type: integer
-                  enum: [0, 1]
+                  enum:
+                    - 0
+                    - 1
                   example: 1
-                  description: 0 = User, 1 = Admin
+                  description: '0 = User, 1 = Admin'
       responses:
         '200':
           description: Cập nhật thành công
@@ -4063,8 +3903,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
-  /api/v1/orders/{id}/status:
+  '/api/v1/orders/{id}/status':
     put:
       tags:
         - Orders
@@ -4114,8 +3953,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
-  /api/v1/orders/{id}/payment-status:
+  '/api/v1/orders/{id}/payment-status':
     put:
       tags:
         - Orders
@@ -4139,7 +3977,10 @@ paths:
               properties:
                 payment_status:
                   type: string
-                  enum: [unpaid, paid, failed]
+                  enum:
+                    - unpaid
+                    - paid
+                    - failed
                   example: paid
       responses:
         '200':
@@ -4167,3 +4008,354 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/favorites:
+    get:
+      tags:
+        - Favorites
+      summary: Lấy danh sách sản phẩm yêu thích
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Số trang
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Số lượng mỗi trang
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum:
+              - id
+              - product_name
+            default: id
+          description: Sắp xếp theo
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum:
+              - ASC
+              - DESC
+            default: DESC
+          description: Thứ tự sắp xếp
+      responses:
+        '200':
+          description: Danh sách sản phẩm yêu thích
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Favorite'
+                      pagination:
+                        type: object
+                        properties:
+                          current_page:
+                            type: integer
+                          per_page:
+                            type: integer
+                          total:
+                            type: integer
+                          total_pages:
+                            type: integer
+        '401':
+          description: Chưa đăng nhập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Favorites
+      summary: Thêm sản phẩm vào danh sách yêu thích
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - product_id
+              properties:
+                product_id:
+                  type: integer
+                  example: 1
+                  description: ID sản phẩm
+      responses:
+        '201':
+          description: Thêm vào danh sách yêu thích thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 201
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Đã thêm vào danh sách yêu thích
+                      data:
+                        $ref: '#/components/schemas/Favorite'
+        '400':
+          description: Sản phẩm đã có trong danh sách yêu thích hoặc không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Sản phẩm không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Chưa đăng nhập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  '/api/v1/favorites/{id}':
+    get:
+      tags:
+        - Favorites
+      summary: Lấy chi tiết favorite
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID favorite
+      responses:
+        '200':
+          description: Chi tiết favorite
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/Favorite'
+        '404':
+          description: Favorite không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Favorites
+      summary: Xóa khỏi danh sách yêu thích
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID favorite
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Đã xóa khỏi danh sách yêu thích
+        '404':
+          description: Favorite không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  '/api/v1/favorites/check/{id}':
+    get:
+      tags:
+        - Favorites
+      summary: Kiểm tra sản phẩm đã được yêu thích chưa
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID sản phẩm
+      responses:
+        '200':
+          description: Kết quả kiểm tra
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      is_favorite:
+                        type: boolean
+                        example: true
+                      favorite_id:
+                        type: integer
+                        nullable: true
+                        example: 1
+        '401':
+          description: Chưa đăng nhập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/favorites/count:
+    get:
+      tags:
+        - Favorites
+      summary: Đếm số lượng sản phẩm yêu thích
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Số lượng sản phẩm yêu thích
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 5
+        '401':
+          description: Chưa đăng nhập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  '/api/v1/favorites/product/{id}':
+    delete:
+      tags:
+        - Favorites
+      summary: Xóa sản phẩm khỏi danh sách yêu thích theo product_id
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID sản phẩm
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Đã xóa khỏi danh sách yêu thích
+        '404':
+          description: Sản phẩm không có trong danh sách yêu thích
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Chưa đăng nhập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

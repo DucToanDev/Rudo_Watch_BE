@@ -108,6 +108,11 @@ class Router
         'POST upload/image' => ['UploadController', 'image'],
         'POST upload/images' => ['UploadController', 'images'],
         'DELETE upload/{key}' => ['UploadController', 'delete'],
+
+        // Favorites
+        'GET favorites/count' => ['FavoritesController', 'count'],
+        'GET favorites/check/{id}' => ['FavoritesController', 'check'],
+        'DELETE favorites/product/{id}' => ['FavoritesController', 'deleteByProduct'],
     ];
 
     // Map resource name -> Controller name
@@ -131,6 +136,8 @@ class Router
         'shipping-methods' => 'ShippingMethods',
         'review' => 'Reviews',
         'reviews' => 'Reviews',
+        'favorite' => 'Favorites',
+        'favorites' => 'Favorites',
         'payment' => 'Payment',
         'payments' => 'Payment',
         'post-category' => 'PostCategories',
