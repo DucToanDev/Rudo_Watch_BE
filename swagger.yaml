@@ -4226,6 +4226,15 @@ paths:
                             image:
                               type: string
                               nullable: true
+                            colors:
+                              type: array
+                              items:
+                                type: string
+                              nullable: true
+                              description: Danh sách màu sắc (JSON array)
+                            sku:
+                              type: string
+                              nullable: true
     post:
       tags:
         - Products
@@ -4251,6 +4260,14 @@ paths:
                 quantity:
                   type: integer
                   example: 10
+                colors:
+                  type: string
+                  example: '["Đen", "Trắng", "Vàng"]'
+                  description: Danh sách màu sắc (JSON array hoặc chuỗi phân cách bằng dấu phẩy)
+                sku:
+                  type: string
+                  example: 'PROD-001-BLK'
+                  description: Mã SKU của variant
                 image:
                   type: string
                   format: binary
@@ -4336,6 +4353,12 @@ paths:
                   type: number
                 quantity:
                   type: integer
+                colors:
+                  type: string
+                  description: Danh sách màu sắc (JSON array hoặc chuỗi phân cách bằng dấu phẩy)
+                sku:
+                  type: string
+                  description: Mã SKU của variant
                 image:
                   type: string
                   format: binary

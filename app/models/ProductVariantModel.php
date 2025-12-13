@@ -16,7 +16,6 @@ class ProductVariants
     public $price;
     public $colors;
     public $image;
-    public $size;
     public $sku;
     public $quantity;
 
@@ -193,7 +192,6 @@ class ProductVariants
                 'price' => $data->price,
                 'colors' => $colors,
                 'image' => $image,
-                'size' => $data->size ?? null,
                 'sku' => $data->sku ?? null,
                 'quantity' => $data->quantity ?? 0
             ];
@@ -262,9 +260,6 @@ class ProductVariants
             }
             if (isset($data->price)) {
                 $updateData['price'] = $data->price;
-            }
-            if (isset($data->size)) {
-                $updateData['size'] = $data->size;
             }
             if (isset($data->colors)) {
                 $updateData['colors'] = $this->normalizeColors($data->colors);

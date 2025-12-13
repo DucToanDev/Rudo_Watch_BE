@@ -280,22 +280,35 @@ class PaymentController
             }
 
             if ($status === 'paid' && $amount > 0) {
-                $updateResult = $this->orderModel->updatePaymentStatus($orderId, 'paid');
+                // Cập nhật payment_status
+                $updatePaymentResult = $this->orderModel->updatePaymentStatus($orderId, 'paid');
                 
-                if (!$updateResult['success']) {
+                if (!$updatePaymentResult['success']) {
                     $this->response->json([
                         'success' => false,
-                        'message' => 'Không thể cập nhật trạng thái đơn hàng'
+                        'message' => 'Không thể cập nhật trạng thái thanh toán'
                     ], 500);
                     return;
                 }
 
+                // Tự động chuyển order status sang "confirmed" khi thanh toán thành công
+                $currentOrderStatus = strtolower($orderData['status'] ?? 'pending');
+                if ($currentOrderStatus === 'pending') {
+                    $updateStatusResult = $this->orderModel->updateStatus($orderId, 'confirmed');
+                    if ($updateStatusResult['success']) {
+                        $logToFile("Webhook [{$requestId}]: Order #{$orderId} status updated from 'pending' to 'confirmed'");
+                    } else {
+                        $logToFile("Webhook [{$requestId}]: Warning - Failed to update order status: " . $updateStatusResult['message']);
+                    }
+                }
+
+                // Cập nhật payment record
                 $payment = $this->paymentModel->getPaymentByOrderId($orderId);
                 if ($payment) {
                     $this->paymentModel->updatePaymentStatus($payment['id'], 'paid');
                 }
 
-                $logToFile("Webhook [{$requestId}]: Order #{$orderId} updated to 'paid'");
+                $logToFile("Webhook [{$requestId}]: Order #{$orderId} payment_status updated to 'paid'");
             }
             
             $this->response->json([

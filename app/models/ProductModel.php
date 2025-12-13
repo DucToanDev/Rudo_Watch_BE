@@ -237,19 +237,29 @@ class Products
             $specifications = null;
             if (isset($data->specifications)) {
                 if (is_string($data->specifications)) {
-                    $decoded = json_decode($data->specifications);
-                    $specifications = (json_last_error() === JSON_ERROR_NONE) ? $data->specifications : json_encode($data->specifications);
+                    $decoded = json_decode($data->specifications, true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                        // Loại bỏ "color" khỏi specifications (màu sắc chỉ ở variant)
+                        unset($decoded['color']);
+                        $specifications = json_encode($decoded);
+                    } else {
+                        $specifications = $data->specifications;
+                    }
                 } else {
+                    // Nếu là array/object, loại bỏ "color"
+                    if (is_array($data->specifications)) {
+                        unset($data->specifications['color']);
+                    } elseif (is_object($data->specifications)) {
+                        unset($data->specifications->color);
+                    }
                     $specifications = json_encode($data->specifications);
                 }
             } else {
-                // Giá trị mặc định cho specifications
+                // Giá trị mặc định cho specifications (không bao gồm color - màu sắc chỉ ở variant)
                 $defaultSpecs = [
                     "brand" => "",
                     "model" => "",
-                    "color" => "",
                     "material" => "",
-                    "size" => "",
                     "weight" => "",
                     "warranty" => "12 tháng"
                 ];
@@ -338,14 +348,25 @@ class Products
             $specifications = $existingData['specifications'] ?? null;
             if (isset($data->specifications)) {
                 if (is_string($data->specifications)) {
-                    $decoded = json_decode($data->specifications);
-                    $specifications = (json_last_error() === JSON_ERROR_NONE) ? $data->specifications : json_encode($data->specifications);
+                    $decoded = json_decode($data->specifications, true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                        // Loại bỏ "color" khỏi specifications (màu sắc chỉ ở variant)
+                        unset($decoded['color']);
+                        $specifications = json_encode($decoded);
+                    } else {
+                        $specifications = $data->specifications;
+                    }
                 } else {
-                    // Nếu là Array, encode thành JSON
+                    // Nếu là Array/Object, loại bỏ "color" và encode thành JSON
+                    if (is_array($data->specifications)) {
+                        unset($data->specifications['color']);
+                    } elseif (is_object($data->specifications)) {
+                        unset($data->specifications->color);
+                    }
                     $specifications = json_encode($data->specifications);
                 }
             } else if (empty($existingData['specifications']) || $existingData['specifications'] === 'null') {
-                // Nếu không có specifications cũ, thêm mặc định
+                // Nếu không có specifications cũ, thêm mặc định (không có color)
                 $defaultSpecs = [
                     "Kích thước: 45mm",
                     "Chống nước: 100m",
@@ -353,6 +374,15 @@ class Products
                     "Máy: Quartz"
                 ];
                 $specifications = json_encode($defaultSpecs);
+            } else {
+                // Nếu có specifications cũ, đảm bảo loại bỏ "color" nếu có
+                $existingSpecs = is_string($existingData['specifications']) 
+                    ? json_decode($existingData['specifications'], true) 
+                    : $existingData['specifications'];
+                if (is_array($existingSpecs)) {
+                    unset($existingSpecs['color']);
+                    $specifications = json_encode($existingSpecs);
+                }
             }
 
             // Xử lý image - ưu tiên từ upload, sau đó từ data, cuối cùng giữ nguyên cũ

@@ -433,7 +433,6 @@ CREATE TABLE `product_variants` (
   `id` int NOT NULL AUTO_INCREMENT,
   `product_id` int NOT NULL,
   `price` decimal(12,2) NOT NULL,
-  `size` varchar(50) DEFAULT NULL,
   `sku` varchar(100) DEFAULT NULL,
   `quantity` int DEFAULT '0',
   `image` varchar(255) DEFAULT NULL,
@@ -452,7 +451,7 @@ CREATE TABLE `product_variants` (
 
 LOCK TABLES `product_variants` WRITE;
 /*!40000 ALTER TABLE `product_variants` DISABLE KEYS */;
-INSERT INTO `product_variants` VALUES (24,29,41240000.00,'39 mm','TIS-001-39',10,'https://image.donghohaitrieu.com/wp-content/uploads/2024/05/83743-S-6823.jpg','[\"Bạc\", \"Vàng\"]','2025-12-05 03:35:26'),(25,30,109800000.00,'Size mặt: 41.5mm,  Độ dầy: 14.5mm','OME-001-41',98,NULL,'[\"bạc\", \"xanh navy\"]','2025-12-05 03:49:21'),(26,31,10000000.00,'40mm, 42mm, 44mm','CAR-RUDO-40',1,'ok','[\"gold\", \"xanh navy\"]','2025-12-05 07:19:54'),(27,32,12300000.00,'36mm','CAR-FAC000-36',36,'null','[\"trắng\"]','2025-12-05 08:23:37'),(28,33,120000.00,'41mm','APP-ASDASD-41',9,'helo','[\"đen\"]','2025-12-05 08:47:23'),(29,34,12000000.00,'45mm','BRE-S-45',12,'hallo','[\"vàng\"]','2025-12-05 08:55:25'),(30,35,8990000.00,'41mm','BRE-IW3282-41',17,'https://example.com/dong-ho-apple-series-9/aw-s9-41mm-midnight.jpg','[\"Midnight\"]','2025-12-09 12:16:07'),(31,35,9990000.00,'45mm','BRE-IW3282-45',12,'https://example.com/dong-ho-apple-series-9/aw-s9-45mm-starlight.jpg','[\"Starlight\"]','2025-12-09 12:16:09'),(32,36,1250000.00,'40mm','HUB-AAAAAA-40',14,'https://example.com/watch_silver_40mm.jpg','[\"Silver\"]','2025-12-09 17:33:23'),(33,37,1000.00,'40mm','CAR-IW3282-40',7,'https://example.com/citizen-bi5124-50l-black.jpg','[\"Black Dial\", \"Silver Band\"]','2025-12-09 19:14:57'),(35,39,10000000.00,'41mm, 42mm','OME-33-41',100,NULL,'[\"Xanh navy\", \"yellow\"]','2025-12-10 07:53:04'),(36,39,10000.00,'42mm, 43mm','OME-33-42',100,NULL,'[\"Bạc\"]','2025-12-10 07:54:12');
+INSERT INTO `product_variants` VALUES (24,29,41240000.00,'TIS-001-39',10,'https://image.donghohaitrieu.com/wp-content/uploads/2024/05/83743-S-6823.jpg','[\"Bạc\", \"Vàng\"]','2025-12-05 03:35:26'),(25,30,109800000.00,'OME-001-41',98,NULL,'[\"bạc\", \"xanh navy\"]','2025-12-05 03:49:21'),(26,31,10000000.00,'CAR-RUDO-40',1,'ok','[\"gold\", \"xanh navy\"]','2025-12-05 07:19:54'),(27,32,12300000.00,'CAR-FAC000-36',36,'null','[\"trắng\"]','2025-12-05 08:23:37'),(28,33,120000.00,'APP-ASDASD-41',9,'helo','[\"đen\"]','2025-12-05 08:47:23'),(29,34,12000000.00,'BRE-S-45',12,'hallo','[\"vàng\"]','2025-12-05 08:55:25'),(30,35,8990000.00,'BRE-IW3282-41',17,'https://example.com/dong-ho-apple-series-9/aw-s9-41mm-midnight.jpg','[\"Midnight\"]','2025-12-09 12:16:07'),(31,35,9990000.00,'BRE-IW3282-45',12,'https://example.com/dong-ho-apple-series-9/aw-s9-45mm-starlight.jpg','[\"Starlight\"]','2025-12-09 12:16:09'),(32,36,1250000.00,'HUB-AAAAAA-40',14,'https://example.com/watch_silver_40mm.jpg','[\"Silver\"]','2025-12-09 17:33:23'),(33,37,1000.00,'CAR-IW3282-40',7,'https://example.com/citizen-bi5124-50l-black.jpg','[\"Black Dial\", \"Silver Band\"]','2025-12-09 19:14:57'),(35,39,10000000.00,'OME-33-41',100,NULL,'[\"Xanh navy\", \"yellow\"]','2025-12-10 07:53:04'),(36,39,10000.00,'OME-33-42',100,NULL,'[\"Bạc\"]','2025-12-10 07:54:12');
 /*!40000 ALTER TABLE `product_variants` ENABLE KEYS */;
 UNLOCK TABLES;
 
