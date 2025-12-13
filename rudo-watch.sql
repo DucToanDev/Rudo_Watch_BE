@@ -649,6 +649,7 @@ CREATE TABLE `vouchers` (
   `discount` int DEFAULT NULL,
   `amount` decimal(12,2) DEFAULT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `start_at` datetime DEFAULT NULL,
   `expired_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
   `api_token` varchar(255) DEFAULT NULL,

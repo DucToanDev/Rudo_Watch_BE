@@ -246,6 +246,10 @@ components:
         amount:
           type: number
           nullable: true
+        start_at:
+          type: string
+          format: date-time
+          nullable: true
         expired_at:
           type: string
           format: date-time
@@ -2116,10 +2120,18 @@ paths:
                   type: number
                   nullable: true
                   example: 100000
+                start_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  example: '2025-12-15T00:00:00Z'
+                  description: Ngày bắt đầu áp dụng voucher
                 expired_at:
                   type: string
                   format: date-time
                   nullable: true
+                  example: '2025-12-31T23:59:59Z'
+                  description: Ngày hết hạn voucher
       responses:
         '201':
           description: Tạo voucher thành công
@@ -2198,9 +2210,16 @@ paths:
                   type: number
                 amount:
                   type: number
+                start_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                  description: Ngày bắt đầu áp dụng voucher
                 expired_at:
                   type: string
                   format: date-time
+                  nullable: true
+                  description: Ngày hết hạn voucher
       responses:
         '200':
           description: Cập nhật thành công

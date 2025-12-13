@@ -39,7 +39,7 @@ class Vouchers
 
             // Lọc voucher còn hạn
             if (isset($params['valid']) && $params['valid'] === 'true') {
-                $conditions[] = "(expired_at IS NULL OR expired_at > NOW())";
+                $conditions[] = "(start_at IS NULL OR start_at <= NOW()) AND (expired_at IS NULL OR expired_at > NOW())";
             }
 
             if (!empty($conditions)) {
@@ -73,6 +73,7 @@ class Vouchers
             // Thêm thông tin trạng thái
             foreach ($vouchers as &$voucher) {
                 $voucher['is_expired'] = $voucher['expired_at'] && strtotime($voucher['expired_at']) < time();
+                $voucher['is_not_started'] = $voucher['start_at'] && strtotime($voucher['start_at']) > time();
             }
 
             if (isset($params['page']) || isset($params['limit'])) {
@@ -118,6 +119,7 @@ class Vouchers
 
             if ($voucher) {
                 $voucher['is_expired'] = $voucher['expired_at'] && strtotime($voucher['expired_at']) < time();
+                $voucher['is_not_started'] = $voucher['start_at'] && strtotime($voucher['start_at']) > time();
             }
 
             return $voucher ?: null;
@@ -140,6 +142,7 @@ class Vouchers
 
             if ($voucher) {
                 $voucher['is_expired'] = $voucher['expired_at'] && strtotime($voucher['expired_at']) < time();
+                $voucher['is_not_started'] = $voucher['start_at'] && strtotime($voucher['start_at']) > time();
             }
 
             return $voucher ?: null;
@@ -181,6 +184,7 @@ class Vouchers
                 'type' => $data->type,
                 'discount' => $data->type === 'percent' ? (int)$data->discount : null,
                 'amount' => $data->type === 'money' ? (float)$data->discount : null,
+                'start_at' => $data->start_at ?? null,
                 'expired_at' => $data->expired_at ?? null,
                 'usage_limit' => isset($data->usage_limit) ? (int)$data->usage_limit : null
             ];
@@ -216,6 +220,10 @@ class Vouchers
                 $updateData['discount'] = isset($data->discount) ? (int)$data->discount : $existing['discount'];
             } else {
                 $updateData['amount'] = isset($data->discount) ? (float)$data->discount : $existing['amount'];
+            }
+
+            if (isset($data->start_at)) {
+                $updateData['start_at'] = $data->start_at;
             }
 
             if (isset($data->expired_at)) {
@@ -259,6 +267,11 @@ class Vouchers
 
             if (!$voucher) {
                 return ['success' => false, 'message' => 'Mã giảm giá không tồn tại'];
+            }
+
+            // Kiểm tra ngày bắt đầu
+            if ($voucher['start_at'] && strtotime($voucher['start_at']) > time()) {
+                return ['success' => false, 'message' => 'Mã giảm giá chưa đến thời gian sử dụng'];
             }
 
             if ($voucher['is_expired']) {

@@ -31,10 +31,15 @@ class UploadController
             return;
         }
 
+        // Kiểm tra quyền admin
+        if (!$this->authMiddleware->requireAdmin($user)) {
+            return;
+        }
+
         // Kiểm tra Cloudinary đã được cấu hình chưa
         if (!$this->storageService) {
             $this->response->json([
-                'error' => 'Cloudinary chưa được cấu hình. Vui lòng thêm CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET vào file .env'
+                'error' => 'Cloudinary chưa được cấu hình'
             ], 500);
             return;
         }
@@ -87,10 +92,15 @@ class UploadController
             return;
         }
 
+        // Kiểm tra quyền admin
+        if (!$this->authMiddleware->requireAdmin($user)) {
+            return;
+        }
+
         // Kiểm tra Cloudinary đã được cấu hình chưa
         if (!$this->storageService) {
             $this->response->json([
-                'error' => 'Cloudinary chưa được cấu hình. Vui lòng thêm CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET vào file .env'
+                'error' => 'Cloudinary chưa được cấu hình'
             ], 500);
             return;
         }
@@ -167,10 +177,7 @@ class UploadController
         ], 200);
     }
 
-    /**
-     * DELETE /api/v1/upload/{publicId}
-     * Xóa file từ Cloudinary (có thể truyền public_id hoặc URL)
-     */
+    // DELETE /api/v1/upload/{publicId}
     public function delete($publicId)
     {
         $user = $this->authMiddleware->authenticate();
@@ -178,10 +185,15 @@ class UploadController
             return;
         }
 
+        // Kiểm tra quyền admin
+        if (!$this->authMiddleware->requireAdmin($user)) {
+            return;
+        }
+
         // Kiểm tra Cloudinary đã được cấu hình chưa
         if (!$this->storageService) {
             $this->response->json([
-                'error' => 'Cloudinary chưa được cấu hình. Vui lòng thêm CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET vào file .env'
+                'error' => 'Cloudinary chưa được cấu hình'
             ], 500);
             return;
         }

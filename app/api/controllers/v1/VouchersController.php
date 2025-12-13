@@ -382,11 +382,28 @@ class VouchersController
             }
         }
 
+        // Validate start_at
+        if (isset($data->start_at) && !empty($data->start_at)) {
+            $startAt = strtotime($data->start_at);
+            if ($startAt === false) {
+                $errors['start_at'] = 'Ngày bắt đầu không hợp lệ';
+            }
+        }
+
         // Validate expired_at
         if (isset($data->expired_at) && !empty($data->expired_at)) {
             $expiredAt = strtotime($data->expired_at);
             if ($expiredAt === false) {
                 $errors['expired_at'] = 'Ngày hết hạn không hợp lệ';
+            }
+        }
+
+        // Validate start_at < expired_at
+        if (isset($data->start_at) && !empty($data->start_at) && isset($data->expired_at) && !empty($data->expired_at)) {
+            $startAt = strtotime($data->start_at);
+            $expiredAt = strtotime($data->expired_at);
+            if ($startAt !== false && $expiredAt !== false && $startAt >= $expiredAt) {
+                $errors['start_at'] = 'Ngày bắt đầu phải nhỏ hơn ngày hết hạn';
             }
         }
 
