@@ -2302,7 +2302,8 @@ paths:
     post:
       tags:
         - Payments
-      summary: Tạo thanh toán SePay
+      summary: Tạo mã QR Code thanh toán SePay
+      description: 'Tạo mã QR Code thanh toán với Tài khoản ảo (VA). Bắt buộc phải cấu hình SEPAY_VIRTUAL_ACCOUNT và SEPAY_BANK trong file .env. Nội dung chuyển khoản sẽ có format: DH{order_id}'
       security:
         - bearerAuth: []
       requestBody:
@@ -2316,10 +2317,11 @@ paths:
               properties:
                 order_id:
                   type: integer
-                  example: 1
+                  example: 123
+                  description: ID đơn hàng cần thanh toán
       responses:
         '200':
-          description: Tạo thanh toán thành công
+          description: Tạo mã QR Code thành công
           content:
             application/json:
               schema:
@@ -2334,38 +2336,98 @@ paths:
                   data:
                     type: object
                     properties:
-                      message:
+                      order_id:
+                        type: integer
+                        example: 123
+                      amount:
+                        type: number
+                        example: 1000000
+                      account_number:
                         type: string
-                      data:
-                        type: object
-                        properties:
-                          payment_id:
-                            type: integer
-                          order_id:
-                            type: integer
-                          amount:
-                            type: number
-                          qr_code_url:
-                            type: string
-                          payment_url:
-                            type: string
-                          transaction_id:
-                            type: string
+                        example: '1234567890'
+                        description: Số tài khoản ảo (VA)
+                      bank_name:
+                        type: string
+                        example: BIDV
+                        description: Tên ngân hàng
+                      payment_content:
+                        type: string
+                        example: DH123
+                        description: 'Nội dung chuyển khoản (format: DH{order_id})'
+                      qr_code_url:
+                        type: string
+                        example: 'https://qr.sepay.vn/img?acc=1234567890&bank=BIDV&amount=1000000&des=DH123&template=compact'
+                        description: URL mã QR Code để hiển thị
+        '400':
+          description: Lỗi validation hoặc đơn hàng đã thanh toán
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Đơn hàng không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Lỗi hệ thống hoặc chưa cấu hình SEPAY_VIRTUAL_ACCOUNT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/v1/payments/webhook:
     post:
       tags:
         - Payments
       summary: Webhook nhận thông báo từ SePay
-      description: 'Endpoint này được SePay gọi tự động, không cần authentication'
+      description: 'Endpoint này được SePay gọi tự động khi có giao dịch chuyển khoản. Không cần authentication. Hệ thống sẽ tự động tách mã đơn hàng từ nội dung chuyển khoản (format: DH{order_id}) và cập nhật trạng thái đơn hàng.'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              properties:
+                gateway:
+                  type: string
+                  example: BIDV
+                  description: Tên ngân hàng
+                transactionDate:
+                  type: string
+                  format: date-time
+                  example: '2025-12-10T10:00:00Z'
+                  description: Thời gian giao dịch
+                accountNumber:
+                  type: string
+                  example: '1234567890'
+                  description: Số tài khoản
+                transferType:
+                  type: string
+                  enum:
+                    - in
+                    - out
+                  example: in
+                  description: Loại giao dịch (in = nhận tiền, out = chuyển tiền)
+                transferAmount:
+                  type: number
+                  example: 1000000
+                  description: Số tiền giao dịch
+                content:
+                  type: string
+                  example: DH123
+                  description: 'Nội dung chuyển khoản (phải có format DH{order_id})'
+                referenceCode:
+                  type: string
+                  example: REF123456
+                  description: Mã tham chiếu
+                accumulated:
+                  type: number
+                  example: 5000000
+                  description: Số dư tài khoản
       responses:
         '200':
-          description: Xử lý thành công
+          description: Xử lý thành công (luôn trả về 200 để SePay không retry)
           content:
             application/json:
               schema:
@@ -2376,11 +2438,26 @@ paths:
                     example: true
                   message:
                     type: string
+                    example: Xử lý webhook thành công
+        '400':
+          description: Lỗi xử lý webhook (dữ liệu không đúng format, không tìm thấy mã đơn hàng, số tiền không khớp)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không tìm thấy mã đơn hàng trong nội dung chuyển khoản
   '/api/v1/payments/status/{id}':
     get:
       tags:
         - Payments
       summary: Kiểm tra trạng thái thanh toán
+      description: 'Kiểm tra trạng thái thanh toán của đơn hàng. Frontend có thể polling endpoint này để biết khi nào thanh toán thành công.'
       security:
         - bearerAuth: []
       parameters:
@@ -2407,19 +2484,532 @@ paths:
                   data:
                     type: object
                     properties:
+                      order_id:
+                        type: integer
+                        example: 123
                       payment_status:
                         type: string
+                        enum:
+                          - unpaid
+                          - paid
+                          - failed
                         example: paid
+                        description: Trạng thái thanh toán
                       order_status:
                         type: string
+                        example: processing
+                        description: Trạng thái đơn hàng
                       payment_method:
                         type: string
+                        example: sepay
+                        description: Phương thức thanh toán
                       amount:
                         type: number
+                        example: 1000000
+                        description: Số tiền đơn hàng
                       is_paid:
                         type: boolean
+                        example: true
+                        description: Đã thanh toán chưa
                       has_transaction:
                         type: boolean
+                        example: true
+                        description: Có giao dịch trong hệ thống chưa
+                      transaction_id:
+                        type: string
+                        nullable: true
+                        example: REF123456
+                        description: Mã giao dịch
+                      created_at:
+                        type: string
+                        format: date-time
+                        example: '2025-12-10T09:00:00Z'
+                      updated_at:
+                        type: string
+                        format: date-time
+                        example: '2025-12-10T10:00:00Z'
+        '400':
+          description: Order ID không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Đơn hàng không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/cart:
+    get:
+      tags:
+        - Cart
+      summary: Lấy giỏ hàng
+      description: 'Lấy giỏ hàng của user đã đăng nhập. Nếu chưa đăng nhập, trả về hướng dẫn lấy từ localStorage.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Giỏ hàng
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source:
+                    type: string
+                    enum:
+                      - database
+                      - local
+                    example: database
+                    description: Nguồn dữ liệu (database nếu đã đăng nhập, local nếu chưa đăng nhập)
+                  cart:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      user_id:
+                        type: integer
+                        example: 1
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            variant_id:
+                              type: integer
+                              example: 1
+                            quantity:
+                              type: integer
+                              example: 2
+                            price:
+                              type: number
+                              example: 5000000
+                            price_at_add:
+                              type: number
+                              example: 5000000
+                            subtotal:
+                              type: number
+                              example: 10000000
+                            product_id:
+                              type: integer
+                              example: 1
+                            variant_price:
+                              type: number
+                              example: 5000000
+                            size:
+                              type: string
+                              nullable: true
+                              example: '40mm'
+                            sku:
+                              type: string
+                              nullable: true
+                              example: 'SKU001'
+                            stock:
+                              type: integer
+                              example: 10
+                            variant_image:
+                              type: string
+                              nullable: true
+                            colors:
+                              type: array
+                              nullable: true
+                              items:
+                                type: string
+                            product_name:
+                              type: string
+                              example: Đồng hồ Rolex
+                            product_slug:
+                              type: string
+                              example: dong-ho-rolex
+                            product_image:
+                              type: string
+                              nullable: true
+                      total_items:
+                        type: integer
+                        example: 2
+                      total_amount:
+                        type: number
+                        example: 10000000
+                  message:
+                    type: string
+                    example: Vui lòng lấy giỏ hàng từ localStorage
+                    description: Chỉ có khi chưa đăng nhập
+                  instruction:
+                    type: string
+                    example: 'Giỏ hàng được lưu tại localStorage với key "cart"'
+                    description: Chỉ có khi chưa đăng nhập
+        '500':
+          description: Lỗi server
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    post:
+      tags:
+        - Cart
+      summary: Thêm sản phẩm vào giỏ hàng
+      description: 'Thêm sản phẩm vào giỏ hàng. Nếu chưa đăng nhập, trả về hướng dẫn lưu vào localStorage.'
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - variant_id
+              properties:
+                variant_id:
+                  type: integer
+                  example: 1
+                  description: ID variant sản phẩm
+                quantity:
+                  type: integer
+                  default: 1
+                  example: 2
+                  description: Số lượng
+      responses:
+        '200':
+          description: Thêm thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source:
+                    type: string
+                    enum:
+                      - database
+                      - local
+                    example: database
+                  message:
+                    type: string
+                    example: Đã thêm sản phẩm vào giỏ hàng
+                  cart:
+                    type: object
+                    description: Giỏ hàng sau khi thêm (chỉ có khi đã đăng nhập)
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      user_id:
+                        type: integer
+                        example: 1
+                      items:
+                        type: array
+                        items:
+                          type: object
+                      total_items:
+                        type: integer
+                        example: 2
+                      total_amount:
+                        type: number
+                        example: 10000000
+                  action:
+                    type: string
+                    example: add
+                    description: Chỉ có khi chưa đăng nhập
+                  data:
+                    type: object
+                    description: Chỉ có khi chưa đăng nhập
+                    properties:
+                      variant_id:
+                        type: integer
+                      quantity:
+                        type: integer
+                  instruction:
+                    type: string
+                    description: Chỉ có khi chưa đăng nhập
+        '400':
+          description: Lỗi validation hoặc sản phẩm không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    put:
+      tags:
+        - Cart
+      summary: Cập nhật số lượng sản phẩm trong giỏ hàng
+      description: 'Cập nhật số lượng sản phẩm. Nếu chưa đăng nhập, trả về hướng dẫn cập nhật localStorage.'
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - variant_id
+                - quantity
+              properties:
+                variant_id:
+                  type: integer
+                  example: 1
+                  description: ID variant sản phẩm
+                quantity:
+                  type: integer
+                  minimum: 1
+                  example: 3
+                  description: Số lượng mới
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source:
+                    type: string
+                    enum:
+                      - database
+                      - local
+                    example: database
+                  message:
+                    type: string
+                    example: Đã cập nhật số lượng
+                  cart:
+                    type: object
+                    description: Giỏ hàng sau khi cập nhật (chỉ có khi đã đăng nhập)
+                    additionalProperties: true
+                  action:
+                    type: string
+                    example: update
+                    description: Chỉ có khi chưa đăng nhập
+                  data:
+                    type: object
+                    description: Chỉ có khi chưa đăng nhập
+                    additionalProperties: true
+                  instruction:
+                    type: string
+                    description: Chỉ có khi chưa đăng nhập
+        '400':
+          description: Lỗi validation hoặc sản phẩm không tồn tại trong giỏ hàng
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    delete:
+      tags:
+        - Cart
+      summary: Xóa sản phẩm khỏi giỏ hàng
+      description: 'Xóa sản phẩm khỏi giỏ hàng. Nếu chưa đăng nhập, trả về hướng dẫn xóa từ localStorage.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: item_id
+          in: query
+          schema:
+            type: integer
+          description: ID item trong giỏ hàng (ưu tiên)
+        - name: variant_id
+          in: query
+          schema:
+            type: integer
+          description: ID variant sản phẩm
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source:
+                    type: string
+                    enum:
+                      - database
+                      - local
+                    example: database
+                  message:
+                    type: string
+                    example: Đã xóa sản phẩm khỏi giỏ hàng
+                  cart:
+                    type: object
+                    description: Giỏ hàng sau khi xóa (chỉ có khi đã đăng nhập)
+                    additionalProperties: true
+                  action:
+                    type: string
+                    example: remove
+                    description: Chỉ có khi chưa đăng nhập
+                  data:
+                    type: object
+                    description: Chỉ có khi chưa đăng nhập
+                    additionalProperties: true
+                  instruction:
+                    type: string
+                    description: Chỉ có khi chưa đăng nhập
+        '400':
+          description: Lỗi validation hoặc sản phẩm không tồn tại trong giỏ hàng
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /api/v1/cart/clear:
+    delete:
+      tags:
+        - Cart
+      summary: Xóa toàn bộ giỏ hàng
+      description: 'Xóa tất cả sản phẩm trong giỏ hàng. Nếu chưa đăng nhập, trả về hướng dẫn xóa localStorage.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source:
+                    type: string
+                    enum:
+                      - database
+                      - local
+                    example: database
+                  message:
+                    type: string
+                    example: Đã xóa toàn bộ giỏ hàng
+                  action:
+                    type: string
+                    example: clear
+                    description: Chỉ có khi chưa đăng nhập
+                  instruction:
+                    type: string
+                    example: 'Xóa key "cart" khỏi localStorage'
+                    description: Chỉ có khi chưa đăng nhập
+        '500':
+          description: Lỗi server
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /api/v1/cart/sync:
+    post:
+      tags:
+        - Cart
+      summary: Đồng bộ giỏ hàng từ localStorage
+      description: 'Đồng bộ giỏ hàng từ localStorage vào database khi user đăng nhập. Sau khi đồng bộ, nên xóa localStorage.'
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+              properties:
+                items:
+                  type: array
+                  description: Danh sách items từ localStorage
+                  items:
+                    type: object
+                    properties:
+                      variant_id:
+                        type: integer
+                        example: 1
+                      quantity:
+                        type: integer
+                        example: 2
+      responses:
+        '200':
+          description: Đồng bộ thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source:
+                    type: string
+                    example: database
+                  message:
+                    type: string
+                    example: Đồng bộ thành công
+                  cart:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      user_id:
+                        type: integer
+                      items:
+                        type: array
+                        items:
+                          type: object
+                      total_items:
+                        type: integer
+                      total_amount:
+                        type: number
+                  instruction:
+                    type: string
+                    example: Vui lòng xóa localStorage sau khi đồng bộ
+        '500':
+          description: Lỗi server
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /api/v1/cart/count:
+    get:
+      tags:
+        - Cart
+      summary: Lấy số lượng sản phẩm trong giỏ hàng
+      description: 'Lấy tổng số lượng sản phẩm trong giỏ hàng. Nếu chưa đăng nhập, trả về hướng dẫn tính từ localStorage.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Số lượng sản phẩm
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source:
+                    type: string
+                    enum:
+                      - database
+                      - local
+                    example: database
+                  count:
+                    type: integer
+                    example: 5
+                    description: Tổng số lượng sản phẩm (chỉ có khi đã đăng nhập)
+                  message:
+                    type: string
+                    example: Vui lòng tính số lượng từ localStorage
+                    description: Chỉ có khi chưa đăng nhập
+                  instruction:
+                    type: string
+                    example: Lấy cart từ localStorage và tính tổng quantity
+                    description: Chỉ có khi chưa đăng nhập
   /api/v1/shipping-methods:
     get:
       tags:

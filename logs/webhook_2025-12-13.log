@@ -1,0 +1,96 @@
+[2025-12-13 05:12:17] === WEBHOOK REQUEST [webhook_693cf5b11b8cd2.00426457] ===
+Time: 2025-12-13 05:12:17
+Method: POST
+Remote IP: ::1
+User Agent: unknown
+Content-Type: application/json
+Request URI: /backend/api/v1/payments/webhook
+Headers: {"Connection":"close","Content-Length":"13","Content-Type":"application\/json","Accept":"*\/*","Host":"localhost"}
+
+[2025-12-13 05:12:17] Raw data length: 13
+Raw data: {"test":true}
+
+[2025-12-13 05:12:17] === WEBHOOK REQUEST [webhook_693cf5b1409011.50871521] ===
+Time: 2025-12-13 05:12:17
+Method: POST
+Remote IP: ::1
+User Agent: SePay-Webhook-Test/1.0
+Content-Type: application/json
+Request URI: /backend/api/v1/payments/webhook
+Headers: {"Connection":"close","Content-Length":"212","User-Agent":"SePay-Webhook-Test\/1.0","Content-Type":"application\/json","Accept":"*\/*","Host":"localhost"}
+
+[2025-12-13 05:12:17] Raw data length: 212
+Raw data: {"gateway":"BIDV","transactionDate":"2025-12-13T05:12:17+00:00","accountNumber":"1234567890","transferType":"in","transferAmount":1000000,"content":"DH123","referenceCode":"TEST_1765602737","accumulated":5000000}
+
+[2025-12-13 05:12:39] === WEBHOOK REQUEST [webhook_693cf5c7dadec9.38130979] ===
+Time: 2025-12-13 05:12:39
+Method: POST
+Remote IP: ::1
+User Agent: unknown
+Content-Type: application/json
+Request URI: /backend/api/v1/payments/webhook
+Headers: {"Connection":"close","Content-Length":"13","Content-Type":"application\/json","Accept":"*\/*","Host":"localhost"}
+
+[2025-12-13 05:12:39] Raw data length: 13
+Raw data: {"test":true}
+
+[2025-12-13 05:12:39] Webhook [webhook_693cf5c7dadec9.38130979]: Parsed data: {"test":true}
+
+[2025-12-13 05:12:39] Webhook [webhook_693cf5c7dadec9.38130979]: Signature received: None
+
+[2025-12-13 05:12:39] Webhook [webhook_693cf5c7dadec9.38130979]: Webhook verified successfully
+
+[2025-12-13 05:12:40] === WEBHOOK REQUEST [webhook_693cf5c80a6001.08287663] ===
+Time: 2025-12-13 05:12:40
+Method: POST
+Remote IP: ::1
+User Agent: SePay-Webhook-Test/1.0
+Content-Type: application/json
+Request URI: /backend/api/v1/payments/webhook
+Headers: {"Connection":"close","Content-Length":"212","User-Agent":"SePay-Webhook-Test\/1.0","Content-Type":"application\/json","Accept":"*\/*","Host":"localhost"}
+
+[2025-12-13 05:12:40] Raw data length: 212
+Raw data: {"gateway":"BIDV","transactionDate":"2025-12-13T05:12:39+00:00","accountNumber":"1234567890","transferType":"in","transferAmount":1000000,"content":"DH123","referenceCode":"TEST_1765602759","accumulated":5000000}
+
+[2025-12-13 05:12:40] Webhook [webhook_693cf5c80a6001.08287663]: Parsed data: {"gateway":"BIDV","transactionDate":"2025-12-13T05:12:39+00:00","accountNumber":"1234567890","transferType":"in","transferAmount":1000000,"content":"DH123","referenceCode":"TEST_1765602759","accumulated":5000000}
+
+[2025-12-13 05:12:40] Webhook [webhook_693cf5c80a6001.08287663]: Signature received: None
+
+[2025-12-13 05:12:40] Webhook [webhook_693cf5c80a6001.08287663]: Webhook verified successfully
+
+[2025-12-13 05:14:38] === WEBHOOK REQUEST [webhook_693cf63e3b84b4.13172221] ===
+Time: 2025-12-13 05:14:38
+Method: POST
+Remote IP: ::1
+User Agent: unknown
+Content-Type: application/json
+Request URI: /backend/api/v1/payments/webhook
+Headers: {"Connection":"close","Content-Length":"13","Content-Type":"application\/json","Accept":"*\/*","Host":"localhost"}
+
+[2025-12-13 05:14:38] Raw data length: 13
+Raw data: {"test":true}
+
+[2025-12-13 05:14:38] Webhook [webhook_693cf63e3b84b4.13172221]: Parsed data: {"test":true}
+
+[2025-12-13 05:14:38] Webhook [webhook_693cf63e3b84b4.13172221]: Signature received: None
+
+[2025-12-13 05:14:38] Webhook [webhook_693cf63e3b84b4.13172221]: Webhook verified successfully
+
+[2025-12-13 05:14:38] === WEBHOOK REQUEST [webhook_693cf63e5dd8e9.28153230] ===
+Time: 2025-12-13 05:14:38
+Method: POST
+Remote IP: ::1
+User Agent: SePay-Webhook-Test/1.0
+Content-Type: application/json
+Request URI: /backend/api/v1/payments/webhook
+Headers: {"Connection":"close","Content-Length":"212","User-Agent":"SePay-Webhook-Test\/1.0","Content-Type":"application\/json","Accept":"*\/*","Host":"localhost"}
+
+[2025-12-13 05:14:38] Raw data length: 212
+Raw data: {"gateway":"BIDV","transactionDate":"2025-12-13T05:14:38+00:00","accountNumber":"1234567890","transferType":"in","transferAmount":1000000,"content":"DH123","referenceCode":"TEST_1765602878","accumulated":5000000}
+
+[2025-12-13 05:14:38] Webhook [webhook_693cf63e5dd8e9.28153230]: Parsed data: {"gateway":"BIDV","transactionDate":"2025-12-13T05:14:38+00:00","accountNumber":"1234567890","transferType":"in","transferAmount":1000000,"content":"DH123","referenceCode":"TEST_1765602878","accumulated":5000000}
+
+[2025-12-13 05:14:38] Webhook [webhook_693cf63e5dd8e9.28153230]: Signature received: None
+
+[2025-12-13 05:14:38] Webhook [webhook_693cf63e5dd8e9.28153230]: Webhook verified successfully
+
