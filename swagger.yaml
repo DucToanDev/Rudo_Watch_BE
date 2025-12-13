@@ -2859,6 +2859,7 @@ paths:
       tags:
         - Authentication
       summary: Gửi mã xác thực đặt lại mật khẩu
+      description: Gửi mã xác thực 6 chữ số đến email của người dùng để đặt lại mật khẩu. Mã có thời hạn sử dụng và giới hạn số lần gửi.
       requestBody:
         required: true
         content:
@@ -2872,6 +2873,7 @@ paths:
                   type: string
                   format: email
                   example: user@example.com
+                  description: Email của tài khoản cần đặt lại mật khẩu
       responses:
         '200':
           description: Gửi mã thành công
@@ -2891,18 +2893,45 @@ paths:
                     properties:
                       message:
                         type: string
-        '429':
-          description: Quá nhiều yêu cầu
+                        example: Mã xác thực đã được gửi đến email của bạn
+        '400':
+          description: Email không hợp lệ hoặc không tồn tại
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Email không tồn tại trong hệ thống
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Quá nhiều yêu cầu. Vui lòng thử lại sau
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Lỗi server khi gửi email hoặc tạo mã xác thực
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '504':
+          description: Gateway Timeout - Server mất quá nhiều thời gian để xử lý (thường do SMTP timeout)
+          content:
+            text/html:
+              schema:
+                type: string
+                example: Gateway Timeout
 
   /api/v1/forgot-password/reset:
     post:
       tags:
         - Authentication
       summary: Đặt lại mật khẩu
+      description: Đặt lại mật khẩu mới bằng mã xác thực đã nhận qua email. Mã xác thực chỉ có hiệu lực trong thời gian nhất định.
       requestBody:
         required: true
         content:
@@ -2918,14 +2947,19 @@ paths:
                   type: string
                   format: email
                   example: user@example.com
+                  description: Email của tài khoản cần đặt lại mật khẩu
                 code:
                   type: string
                   example: "123456"
+                  description: Mã xác thực 6 chữ số đã nhận qua email
+                  minLength: 6
+                  maxLength: 6
                 new_password:
                   type: string
                   format: password
                   minLength: 6
                   example: newpass123
+                  description: Mật khẩu mới (tối thiểu 6 ký tự)
       responses:
         '200':
           description: Đặt lại mật khẩu thành công
@@ -2945,12 +2979,32 @@ paths:
                     properties:
                       message:
                         type: string
+                        example: Đặt lại mật khẩu thành công
         '400':
-          description: Mã xác thực không đúng
+          description: Mã xác thực không đúng, đã hết hạn hoặc mật khẩu không hợp lệ
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Email không tồn tại trong hệ thống
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Lỗi server khi đặt lại mật khẩu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '504':
+          description: Gateway Timeout - Server mất quá nhiều thời gian để xử lý
+          content:
+            text/html:
+              schema:
+                type: string
+                example: Gateway Timeout
 
   /api/v1/facebook:
     get:

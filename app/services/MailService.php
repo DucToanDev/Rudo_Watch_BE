@@ -59,6 +59,17 @@ class MailService
             $this->mailer->CharSet = 'UTF-8';
             $this->mailer->setFrom($from, $fromName);
             $this->mailer->SMTPDebug = 0;
+            
+            // Cấu hình timeout để tránh Gateway Timeout
+            $this->mailer->Timeout = 10; // 10 giây timeout cho SMTP connection
+            $this->mailer->SMTPKeepAlive = false; // Không giữ kết nối
+            $this->mailer->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                ]
+            ];
 
             $this->initialized = true;
         } catch (\Exception $e) {
