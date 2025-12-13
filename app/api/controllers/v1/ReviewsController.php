@@ -353,6 +353,88 @@ class ReviewsController
         }
     }
 
+    // Trả lời review (Admin)
+    // Endpoint: POST /api/v1/reviews/reply/{id}
+    public function reply($id)
+    {
+        try {
+            // Xác thực user (phải là admin)
+            $user = $this->authMiddleware->authenticate();
+            if (!$user) {
+                return;
+            }
+
+            // Kiểm tra quyền admin
+            if ($user['role'] != 1) {
+                $this->response->json(['error' => 'Chỉ admin mới có quyền trả lời review'], 403);
+                return;
+            }
+
+            if (!is_numeric($id)) {
+                $this->response->json(['error' => 'Review ID không hợp lệ'], 400);
+                return;
+            }
+
+            // Kiểm tra review tồn tại
+            $existingReview = $this->reviewModel->getById($id);
+            if (!$existingReview) {
+                $this->response->json(['error' => 'Review không tồn tại'], 404);
+                return;
+            }
+
+            // Lấy dữ liệu từ request
+            $rawInput = file_get_contents("php://input");
+            if (!empty($rawInput)) {
+                $data = json_decode($rawInput);
+                if (is_array($data)) {
+                    $data = (object)$data;
+                }
+            } elseif (!empty($_POST)) {
+                $data = (object) $_POST;
+            } else {
+                $this->response->json(['error' => 'Dữ liệu không hợp lệ'], 400);
+                return;
+            }
+
+            // Validate dữ liệu
+            if (empty($data->reply_content) || empty(trim($data->reply_content))) {
+                $this->response->json(['error' => 'Nội dung trả lời là bắt buộc'], 400);
+                return;
+            }
+
+            if (!isset($data->admin_id) || !is_numeric($data->admin_id)) {
+                $this->response->json(['error' => 'Admin ID không hợp lệ'], 400);
+                return;
+            }
+
+            // Validate status nếu có
+            $status = isset($data->status) ? (int)$data->status : 1;
+            if ($status !== 0 && $status !== 1) {
+                $this->response->json(['error' => 'Status phải là 0 hoặc 1'], 400);
+                return;
+            }
+
+            // Cập nhật reply
+            $review = $this->reviewModel->reply(
+                $id,
+                $data->admin_id,
+                trim($data->reply_content),
+                $status
+            );
+
+            if ($review) {
+                $this->response->json([
+                    'message' => 'Trả lời review thành công',
+                    'data' => $review
+                ], 200);
+            } else {
+                $this->response->json(['error' => 'Không thể trả lời review'], 500);
+            }
+        } catch (Exception $e) {
+            $this->response->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     // Validate dữ liệu review
     private function validateReviewData($data)
     {

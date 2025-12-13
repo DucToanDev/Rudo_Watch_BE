@@ -179,9 +179,27 @@ components:
           maximum: 5
         content:
           type: string
+        reply:
+          type: string
+          nullable: true
+          description: Nội dung trả lời từ admin
+        status:
+          type: integer
+          enum:
+            - 0
+            - 1
+          description: 'Trạng thái review (0 = ẩn, 1 = hiển thị)'
+        admin_id:
+          type: integer
+          nullable: true
+          description: ID admin trả lời review
         created_at:
           type: string
           format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
     Favorite:
       type: object
       properties:
@@ -1646,6 +1664,78 @@ paths:
                     $ref: '#/components/schemas/Review'
         '404':
           description: Chưa có đánh giá
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/api/v1/reviews/reply/{id}':
+    post:
+      tags:
+        - Reviews
+      summary: Trả lời review (Admin)
+      description: 'Admin trả lời review của khách hàng. Cập nhật reply, admin_id và status của review.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID review cần trả lời
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - admin_id
+                - reply_content
+              properties:
+                admin_id:
+                  type: integer
+                  example: 1
+                  description: ID admin trả lời
+                reply_content:
+                  type: string
+                  example: Cảm ơn bạn đã đánh giá!
+                  description: Nội dung trả lời
+                status:
+                  type: integer
+                  enum:
+                    - 0
+                    - 1
+                  default: 1
+                  example: 1
+                  description: 'Trạng thái review (0 = ẩn, 1 = hiển thị)'
+      responses:
+        '200':
+          description: Trả lời review thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Trả lời review thành công
+                  data:
+                    $ref: '#/components/schemas/Review'
+        '400':
+          description: Lỗi validation (thiếu dữ liệu, admin_id không hợp lệ, status không hợp lệ)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Không có quyền truy cập (chỉ admin mới có quyền)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Review không tồn tại
           content:
             application/json:
               schema:

@@ -95,6 +95,7 @@ class Router
         'GET reviews/product/{id}' => ['ReviewsController', 'byProduct'],
         'GET reviews/stats/{id}' => ['ReviewsController', 'stats'],
         'GET reviews/my-review/{id}' => ['ReviewsController', 'myReview'],
+        'POST reviews/reply/{id}' => ['ReviewsController', 'reply'],
 
         // Post Categories
         'GET post-categories/active' => ['PostCategoriesController', 'active'],

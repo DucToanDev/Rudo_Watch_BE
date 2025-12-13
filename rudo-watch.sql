@@ -507,9 +507,12 @@ CREATE TABLE `reviews` (
   `user_id` int DEFAULT NULL,
   `product_id` int DEFAULT NULL,
   `content` text,
+  `reply` text,
   `rating` int DEFAULT '5',
+  `status` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT NULL,
+  `admin_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   KEY `product_id` (`product_id`),
@@ -524,7 +527,7 @@ CREATE TABLE `reviews` (
 
 LOCK TABLES `reviews` WRITE;
 /*!40000 ALTER TABLE `reviews` DISABLE KEYS */;
-INSERT INTO `reviews` VALUES (12,11,30,'Ok nha',5,'2025-12-10 04:06:15',NULL),(16,11,36,'OK',5,'2025-12-10 05:50:27',NULL),(17,11,35,'OK',5,'2025-12-10 05:53:38',NULL),(18,11,32,'OKe nha',5,'2025-12-10 06:07:42',NULL),(19,11,29,'Oke nha bro',5,'2025-12-10 06:11:06',NULL),(20,11,37,'OKE nha',5,'2025-12-10 07:28:43',NULL),(21,234,36,'OKe',5,'2025-12-10 08:09:33',NULL),(22,234,35,'Oke nha',4,'2025-12-10 08:12:34',NULL);
+INSERT INTO `reviews` VALUES (12,11,30,'Ok nha','Cảm ơn bạn đã đánh giá!',5,1,'2025-12-10 04:06:15',NULL,7),(16,11,36,'OK','Shop ghi nhận góp ý của bạn!',5,1,'2025-12-10 05:50:27',NULL,8),(17,11,35,'OK','Rất vui vì bạn hài lòng!',5,1,'2025-12-10 05:53:38',NULL,232),(18,11,32,'OKe nha',NULL,5,1,'2025-12-10 06:07:42',NULL,NULL),(19,11,29,'Oke nha bro',NULL,5,1,'2025-12-10 06:11:06',NULL,NULL),(20,11,37,'OKE nha','Cảm ơn bạn nha!',5,1,'2025-12-10 07:28:43',NULL,232),(21,234,36,'OKe',NULL,5,1,'2025-12-10 08:09:33',NULL,NULL),(22,234,35,'Oke nha','Shop xin lỗi nếu có thiếu sót!',4,1,'2025-12-10 08:12:34',NULL,8);
 /*!40000 ALTER TABLE `reviews` ENABLE KEYS */;
 UNLOCK TABLES;
 

@@ -298,4 +298,31 @@ class Reviews
             throw $e;
         }
     }
+
+    // Trả lời review (Admin)
+    public function reply($id, $adminId, $replyContent, $status = 1)
+    {
+        try {
+            $query = "UPDATE " . $this->table_name . " 
+                      SET reply = :reply, 
+                          admin_id = :admin_id, 
+                          status = :status, 
+                          updated_at = NOW() 
+                      WHERE id = :id";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->bindParam(':reply', $replyContent);
+            $stmt->bindParam(':admin_id', $adminId, PDO::PARAM_INT);
+            $stmt->bindParam(':status', $status, PDO::PARAM_INT);
+
+            if ($stmt->execute()) {
+                return $this->getById($id);
+            }
+
+            return false;
+        } catch (PDOException $e) {
+            throw $e;
+        }
+    }
 }
