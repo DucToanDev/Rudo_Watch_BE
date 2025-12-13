@@ -15,9 +15,7 @@ class Addresses
         $this->response = new Response();
     }
 
-    /**
-     * Lấy tất cả địa chỉ của user
-     */
+    // Lấy tất cả địa chỉ của user
     public function getAllByUserId($userId)
     {
         try {
@@ -31,13 +29,11 @@ class Addresses
 
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            throw new Exception("Lỗi lấy danh sách địa chỉ: " . $e->getMessage());
+            throw new Exception(sanitize_sql_error($e));
         }
     }
 
-    /**
-     * Lấy địa chỉ theo ID
-     */
+    // Lấy địa chỉ theo ID
     public function getById($id)
     {
         try {
@@ -48,13 +44,11 @@ class Addresses
 
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            throw new Exception("Lỗi lấy địa chỉ: " . $e->getMessage());
+            throw new Exception(sanitize_sql_error($e));
         }
     }
 
-    /**
-     * Lấy địa chỉ mặc định của user
-     */
+    // Lấy địa chỉ mặc định của user
     public function getDefaultByUserId($userId)
     {
         try {
@@ -68,22 +62,18 @@ class Addresses
 
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
-            throw new Exception("Lỗi lấy địa chỉ mặc định: " . $e->getMessage());
+            throw new Exception(sanitize_sql_error($e));
         }
     }
 
-    /**
-     * Tạo địa chỉ mới
-     */
+    // Tạo địa chỉ mới
     public function create($data)
     {
         try {
-            // Nếu là địa chỉ mặc định, bỏ mặc định của các địa chỉ khác
             if (isset($data['is_default']) && $data['is_default'] == 1) {
                 $this->removeDefaultAddress($data['user_id']);
             }
 
-            // Nếu đây là địa chỉ đầu tiên, tự động đặt làm mặc định
             $existingAddresses = $this->getAllByUserId($data['user_id']);
             if (empty($existingAddresses)) {
                 $data['is_default'] = 1;
@@ -116,14 +106,12 @@ class Addresses
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Lỗi: ' . $e->getMessage()
+                'message' => sanitize_sql_error($e)
             ];
         }
     }
 
-    /**
-     * Cập nhật địa chỉ
-     */
+    // Cập nhật địa chỉ
     public function update($id, $data)
     {
         try {
@@ -135,7 +123,6 @@ class Addresses
                 ];
             }
 
-            // Nếu cập nhật thành địa chỉ mặc định
             if (isset($data['is_default']) && $data['is_default'] == 1) {
                 $this->removeDefaultAddress($address['user_id']);
             }
@@ -173,14 +160,12 @@ class Addresses
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Lỗi: ' . $e->getMessage()
+                'message' => sanitize_sql_error($e)
             ];
         }
     }
 
-    /**
-     * Xóa địa chỉ
-     */
+    // Xóa địa chỉ
     public function delete($id)
     {
         try {
@@ -215,14 +200,12 @@ class Addresses
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Lỗi: ' . $e->getMessage()
+                'message' => sanitize_sql_error($e)
             ];
         }
     }
 
-    /**
-     * Đặt địa chỉ làm mặc định
-     */
+    // Đặt địa chỉ làm mặc định
     public function setDefault($id, $userId)
     {
         try {
@@ -234,7 +217,6 @@ class Addresses
                 ];
             }
 
-            // Kiểm tra địa chỉ thuộc về user
             if ($address['user_id'] != $userId) {
                 return [
                     'success' => false,
@@ -242,10 +224,8 @@ class Addresses
                 ];
             }
 
-            // Bỏ mặc định của các địa chỉ khác
             $this->removeDefaultAddress($userId);
 
-            // Đặt địa chỉ này làm mặc định
             $result = update($this->conn, $this->table_name, ['is_default' => 1], $id);
 
             if ($result) {
@@ -263,14 +243,12 @@ class Addresses
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Lỗi: ' . $e->getMessage()
+                'message' => sanitize_sql_error($e)
             ];
         }
     }
 
-    /**
-     * Bỏ mặc định tất cả địa chỉ của user
-     */
+    // Bỏ mặc định tất cả địa chỉ của user
     private function removeDefaultAddress($userId)
     {
         try {
@@ -288,9 +266,7 @@ class Addresses
         }
     }
 
-    /**
-     * Đặt địa chỉ đầu tiên làm mặc định
-     */
+    // Đặt địa chỉ đầu tiên làm mặc định
     private function setFirstAddressAsDefault($userId)
     {
         try {
@@ -308,12 +284,11 @@ class Addresses
                 update($this->conn, $this->table_name, ['is_default' => 1], $address['id']);
             }
         } catch (Exception $e) {
+            throw new Exception(sanitize_sql_error($e));
         }
     }
 
-    /**
-     * Kiểm tra địa chỉ thuộc về user
-     */
+    // Kiểm tra địa chỉ thuộc về user
     public function belongsToUser($addressId, $userId)
     {
         try {
@@ -332,9 +307,7 @@ class Addresses
         }
     }
 
-    /**
-     * Đếm số địa chỉ của user
-     */
+    // Đếm số địa chỉ của user
     public function countByUserId($userId)
     {
         try {

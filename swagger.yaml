@@ -1,0 +1,4115 @@
+openapi: 3.0.3
+info:
+  title: RUDO WATCH API
+  description: Backend API for Rudo Watch E-commerce Platform
+  version: 1.0.0
+  contact:
+    name: Phan Duc Toan
+    email: support@rudowatch.com
+
+servers:
+  - url: http://localhost/backend
+    description: Local Development Server
+  - url: hhttps://rudo-watch-be.onrender.com
+    description: Production Server
+
+tags:
+  - name: Authentication
+    description: Đăng ký, đăng nhập, xác thực
+  - name: Users
+    description: Quản lý người dùng
+  - name: Products
+    description: Quản lý sản phẩm
+  - name: Categories
+    description: Quản lý danh mục
+  - name: Brands
+    description: Quản lý thương hiệu
+  - name: Cart
+    description: Quản lý giỏ hàng
+  - name: Orders
+    description: Quản lý đơn hàng
+  - name: Payments
+    description: Thanh toán
+  - name: Reviews
+    description: Đánh giá sản phẩm
+  - name: Addresses
+    description: Địa chỉ giao hàng
+  - name: Vouchers
+    description: Mã giảm giá
+  - name: Shipping
+    description: Phương thức vận chuyển
+  - name: Posts
+    description: Bài viết/Blog
+  - name: Upload
+    description: Upload file
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token xác thực (Bearer Token)
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        statusCode:
+          type: integer
+          example: 400
+        data:
+          type: object
+          properties:
+            error:
+              type: string
+            errors:
+              type: object
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        fullname:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        role:
+          type: integer
+          description: 0 = User, 1 = Admin
+        status:
+          type: integer
+          description: 0 = Inactive, 1 = Active
+        created_at:
+          type: string
+          format: date-time
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        price:
+          type: number
+        image:
+          type: string
+          nullable: true
+        thumbnail:
+          type: string
+          nullable: true
+        category_id:
+          type: integer
+        brand_id:
+          type: integer
+        status:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        status:
+          type: integer
+
+    Brand:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        logo:
+          type: string
+          nullable: true
+        status:
+          type: integer
+
+    Address:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        receiver_name:
+          type: string
+        receiver_phone:
+          type: string
+        province:
+          type: string
+        district:
+          type: string
+          nullable: true
+        ward:
+          type: string
+          nullable: true
+        street:
+          type: string
+        is_default:
+          type: integer
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        product_id:
+          type: integer
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Voucher:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        type:
+          type: string
+          enum: [percent, money]
+        discount:
+          type: number
+          nullable: true
+        amount:
+          type: number
+          nullable: true
+        expired_at:
+          type: string
+          format: date-time
+          nullable: true
+
+paths:
+  /health:
+    get:
+      tags:
+        - Authentication
+      summary: Health check
+      description: Kiểm tra trạng thái server
+      responses:
+        '200':
+          description: Server đang hoạt động
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      project:
+                        type: string
+                        example: RUDO WATCH API
+                      author:
+                        type: string
+                        example: Phan Duc Toan
+                      status:
+                        type: string
+                        example: success
+                      message:
+                        type: string
+                        example: System Operational
+
+  /api/v1/register:
+    post:
+      tags:
+        - Authentication
+      summary: Đăng ký tài khoản
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fullname
+                - email
+                - password
+              properties:
+                fullname:
+                  type: string
+                  example: Nguyễn Văn A
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: password123
+                phone:
+                  type: string
+                  nullable: true
+                  example: "0123456789"
+      responses:
+        '201':
+          description: Đăng ký thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 201
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      user:
+                        $ref: '#/components/schemas/User'
+                      token:
+                        type: string
+        '400':
+          description: Lỗi validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/login:
+    post:
+      tags:
+        - Authentication
+      summary: Đăng nhập
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+      responses:
+        '200':
+          description: Đăng nhập thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      user:
+                        $ref: '#/components/schemas/User'
+                      token:
+                        type: string
+        '401':
+          description: Email hoặc mật khẩu không đúng
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/user/profile:
+    get:
+      tags:
+        - Users
+      summary: Lấy thông tin user hiện tại
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+        '401':
+          description: Chưa đăng nhập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/user/update:
+    put:
+      tags:
+        - Users
+      summary: Cập nhật thông tin user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullname:
+                  type: string
+                  example: Nguyễn Văn A
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                phone:
+                  type: string
+                  nullable: true
+                  example: "0123456789"
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      user:
+                        $ref: '#/components/schemas/User'
+        '400':
+          description: Lỗi validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/user/change-password:
+    put:
+      tags:
+        - Users
+      summary: Đổi mật khẩu
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - old_password
+                - new_password
+              properties:
+                old_password:
+                  type: string
+                  format: password
+                  example: oldpass123
+                new_password:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: newpass123
+                confirm_password:
+                  type: string
+                  format: password
+                  example: newpass123
+      responses:
+        '200':
+          description: Đổi mật khẩu thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+        '400':
+          description: Mật khẩu cũ không đúng hoặc validation lỗi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/products:
+    get:
+      tags:
+        - Products
+      summary: Lấy danh sách sản phẩm
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Tìm kiếm theo tên
+        - name: category_id
+          in: query
+          schema:
+            type: integer
+          description: Lọc theo danh mục
+        - name: brand_id
+          in: query
+          schema:
+            type: integer
+          description: Lọc theo thương hiệu
+        - name: status
+          in: query
+          schema:
+            type: integer
+          description: Lọc theo trạng thái (0 hoặc 1)
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+          description: Sắp xếp theo (name, price, created_at)
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: DESC
+          description: Thứ tự sắp xếp
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Số trang
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Số lượng mỗi trang
+      responses:
+        '200':
+          description: Danh sách sản phẩm
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+
+    post:
+      tags:
+        - Products
+      summary: Tạo sản phẩm mới
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - name
+                - category_id
+                - brand_id
+              properties:
+                name:
+                  type: string
+                  example: Đồng hồ Rolex
+                description:
+                  type: string
+                  nullable: true
+                  example: Mô tả sản phẩm
+                category_id:
+                  type: integer
+                  example: 1
+                brand_id:
+                  type: integer
+                  example: 1
+                status:
+                  type: integer
+                  default: 1
+                  example: 1
+                image:
+                  type: string
+                  format: binary
+                  description: Ảnh sản phẩm
+                thumbnail:
+                  type: string
+                  format: binary
+                  description: Ảnh thumbnail
+      responses:
+        '201':
+          description: Tạo sản phẩm thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 201
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        $ref: '#/components/schemas/Product'
+        '400':
+          description: Lỗi validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/products/{id}:
+    get:
+      tags:
+        - Products
+      summary: Lấy chi tiết sản phẩm
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID sản phẩm
+      responses:
+        '200':
+          description: Chi tiết sản phẩm
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '404':
+          description: Sản phẩm không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Products
+      summary: Cập nhật sản phẩm
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID sản phẩm
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                  nullable: true
+                category_id:
+                  type: integer
+                brand_id:
+                  type: integer
+                status:
+                  type: integer
+                image:
+                  type: string
+                  format: binary
+                thumbnail:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        $ref: '#/components/schemas/Product'
+        '404':
+          description: Sản phẩm không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Products
+      summary: Xóa sản phẩm
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID sản phẩm
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+        '404':
+          description: Sản phẩm không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/products/featured:
+    get:
+      tags:
+        - Products
+      summary: Lấy sản phẩm nổi bật
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Số lượng sản phẩm
+      responses:
+        '200':
+          description: Danh sách sản phẩm nổi bật
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+
+  /api/v1/products/latest:
+    get:
+      tags:
+        - Products
+      summary: Lấy sản phẩm mới nhất
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Số lượng sản phẩm
+      responses:
+        '200':
+          description: Danh sách sản phẩm mới nhất
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+
+  /api/v1/products/category/{id}:
+    get:
+      tags:
+        - Products
+      summary: Lấy sản phẩm theo danh mục
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID danh mục
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          description: Số lượng sản phẩm
+      responses:
+        '200':
+          description: Danh sách sản phẩm
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+
+  /api/v1/products/brand/{id}:
+    get:
+      tags:
+        - Products
+      summary: Lấy sản phẩm theo thương hiệu
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID thương hiệu
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          description: Số lượng sản phẩm
+      responses:
+        '200':
+          description: Danh sách sản phẩm
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+
+
+  /api/v1/categories:
+    get:
+      tags:
+        - Categories
+      summary: Lấy danh sách danh mục
+      responses:
+        '200':
+          description: Danh sách danh mục
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+
+    post:
+      tags:
+        - Categories
+      summary: Tạo danh mục mới
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: Đồng hồ nam
+                slug:
+                  type: string
+                  nullable: true
+                status:
+                  type: integer
+                  default: 1
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 201
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        $ref: '#/components/schemas/Category'
+
+  /api/v1/categories/{id}:
+    get:
+      tags:
+        - Categories
+      summary: Lấy chi tiết danh mục
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chi tiết danh mục
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/Category'
+
+    put:
+      tags:
+        - Categories
+      summary: Cập nhật danh mục
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                slug:
+                  type: string
+                status:
+                  type: integer
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        $ref: '#/components/schemas/Category'
+
+    delete:
+      tags:
+        - Categories
+      summary: Xóa danh mục
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: confirm
+          in: query
+          schema:
+            type: string
+            enum: ["true"]
+          description: Xác nhận xóa (nếu có sản phẩm)
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+
+  /api/v1/categories/active:
+    get:
+      tags:
+        - Categories
+      summary: Lấy danh sách danh mục đang hoạt động
+      responses:
+        '200':
+          description: Danh sách danh mục
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Category'
+
+  /api/v1/brands:
+    get:
+      tags:
+        - Brands
+      summary: Lấy danh sách thương hiệu
+      responses:
+        '200':
+          description: Danh sách thương hiệu
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Brand'
+
+    post:
+      tags:
+        - Brands
+      summary: Tạo thương hiệu mới
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: Rolex
+                slug:
+                  type: string
+                  nullable: true
+                logo:
+                  type: string
+                  format: binary
+                status:
+                  type: integer
+                  default: 1
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 201
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        $ref: '#/components/schemas/Brand'
+
+  /api/v1/brands/{id}:
+    get:
+      tags:
+        - Brands
+      summary: Lấy chi tiết thương hiệu
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chi tiết thương hiệu
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/Brand'
+
+    put:
+      tags:
+        - Brands
+      summary: Cập nhật thương hiệu
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                slug:
+                  type: string
+                logo:
+                  type: string
+                  format: binary
+                status:
+                  type: integer
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        $ref: '#/components/schemas/Brand'
+
+    delete:
+      tags:
+        - Brands
+      summary: Xóa thương hiệu
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: confirm
+          in: query
+          schema:
+            type: string
+            enum: ["true"]
+          description: Xác nhận xóa (nếu có sản phẩm)
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+
+  /api/v1/brands/active:
+    get:
+      tags:
+        - Brands
+      summary: Lấy danh sách thương hiệu đang hoạt động
+      responses:
+        '200':
+          description: Danh sách thương hiệu
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Brand'
+
+
+  /api/v1/reviews:
+    get:
+      tags:
+        - Reviews
+      summary: Lấy danh sách đánh giá
+      parameters:
+        - name: product_id
+          in: query
+          schema:
+            type: integer
+        - name: user_id
+          in: query
+          schema:
+            type: integer
+        - name: rating
+          in: query
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Danh sách đánh giá
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Review'
+
+    post:
+      tags:
+        - Reviews
+      summary: Tạo đánh giá mới
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - product_id
+                - rating
+                - content
+              properties:
+                product_id:
+                  type: integer
+                  example: 1
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  example: 5
+                content:
+                  type: string
+                  example: Sản phẩm rất tốt
+      responses:
+        '201':
+          description: Tạo đánh giá thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 201
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        $ref: '#/components/schemas/Review'
+
+  /api/v1/reviews/{id}:
+    get:
+      tags:
+        - Reviews
+      summary: Lấy chi tiết đánh giá
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chi tiết đánh giá
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/Review'
+
+    put:
+      tags:
+        - Reviews
+      summary: Cập nhật đánh giá
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                content:
+                  type: string
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        $ref: '#/components/schemas/Review'
+
+    delete:
+      tags:
+        - Reviews
+      summary: Xóa đánh giá
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+
+  /api/v1/reviews/product/{id}:
+    get:
+      tags:
+        - Reviews
+      summary: Lấy đánh giá theo sản phẩm
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Danh sách đánh giá
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Review'
+
+  /api/v1/reviews/stats/{id}:
+    get:
+      tags:
+        - Reviews
+      summary: Lấy thống kê đánh giá của sản phẩm
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Thống kê đánh giá
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      average_rating:
+                        type: number
+                      total_reviews:
+                        type: integer
+                      rating_distribution:
+                        type: object
+
+  /api/v1/reviews/my-review/{id}:
+    get:
+      tags:
+        - Reviews
+      summary: Lấy đánh giá của user hiện tại cho sản phẩm
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Đánh giá của user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/Review'
+        '404':
+          description: Chưa có đánh giá
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/addresses:
+    get:
+      tags:
+        - Addresses
+      summary: Lấy danh sách địa chỉ
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách địa chỉ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Address'
+
+    post:
+      tags:
+        - Addresses
+      summary: Tạo địa chỉ mới
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - receiver_name
+                - receiver_phone
+                - province
+                - street
+              properties:
+                receiver_name:
+                  type: string
+                  example: Nguyễn Văn A
+                receiver_phone:
+                  type: string
+                  example: "0123456789"
+                province:
+                  type: string
+                  example: Hà Nội
+                district:
+                  type: string
+                  nullable: true
+                  example: Quận Hoàn Kiếm
+                ward:
+                  type: string
+                  nullable: true
+                  example: Phường Tràng Tiền
+                street:
+                  type: string
+                  example: Số 1, Phố Tràng Tiền
+                is_default:
+                  type: integer
+                  default: 0
+      responses:
+        '201':
+          description: Tạo địa chỉ thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 201
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      message:
+                        type: string
+                      data:
+                        $ref: '#/components/schemas/Address'
+
+  /api/v1/addresses/{id}:
+    get:
+      tags:
+        - Addresses
+      summary: Lấy chi tiết địa chỉ
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chi tiết địa chỉ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      data:
+                        $ref: '#/components/schemas/Address'
+
+    put:
+      tags:
+        - Addresses
+      summary: Cập nhật địa chỉ
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                receiver_name:
+                  type: string
+                receiver_phone:
+                  type: string
+                province:
+                  type: string
+                district:
+                  type: string
+                  nullable: true
+                ward:
+                  type: string
+                  nullable: true
+                street:
+                  type: string
+                is_default:
+                  type: integer
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      message:
+                        type: string
+                      data:
+                        $ref: '#/components/schemas/Address'
+
+    delete:
+      tags:
+        - Addresses
+      summary: Xóa địa chỉ
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      message:
+                        type: string
+
+  /api/v1/addresses/default:
+    get:
+      tags:
+        - Addresses
+      summary: Lấy địa chỉ mặc định
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Địa chỉ mặc định
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      data:
+                        $ref: '#/components/schemas/Address'
+        '404':
+          description: Chưa có địa chỉ mặc định
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/addresses/{id}/set-default:
+    put:
+      tags:
+        - Addresses
+      summary: Đặt địa chỉ làm mặc định
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Đặt mặc định thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      message:
+                        type: string
+                      data:
+                        $ref: '#/components/schemas/Address'
+
+
+  /api/v1/vouchers:
+    get:
+      tags:
+        - Vouchers
+      summary: Lấy danh sách voucher
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [percent, money]
+        - name: valid
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Danh sách voucher
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Voucher'
+
+    post:
+      tags:
+        - Vouchers
+      summary: Tạo voucher mới
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+                - type
+              properties:
+                code:
+                  type: string
+                  example: SALE50
+                type:
+                  type: string
+                  enum: [percent, money]
+                  example: percent
+                discount:
+                  type: number
+                  nullable: true
+                  example: 50
+                amount:
+                  type: number
+                  nullable: true
+                  example: 100000
+                expired_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+      responses:
+        '201':
+          description: Tạo voucher thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 201
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        $ref: '#/components/schemas/Voucher'
+
+  /api/v1/vouchers/{id}:
+    get:
+      tags:
+        - Vouchers
+      summary: Lấy chi tiết voucher
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chi tiết voucher
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/Voucher'
+
+    put:
+      tags:
+        - Vouchers
+      summary: Cập nhật voucher
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                type:
+                  type: string
+                  enum: [percent, money]
+                discount:
+                  type: number
+                amount:
+                  type: number
+                expired_at:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        $ref: '#/components/schemas/Voucher'
+
+    delete:
+      tags:
+        - Vouchers
+      summary: Xóa voucher
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: confirm
+          in: query
+          schema:
+            type: string
+            enum: ["true"]
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+
+  /api/v1/vouchers/validate:
+    post:
+      tags:
+        - Vouchers
+      summary: Kiểm tra mã giảm giá
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+                - total
+              properties:
+                code:
+                  type: string
+                  example: SALE50
+                total:
+                  type: number
+                  example: 1000000
+      responses:
+        '200':
+          description: Mã giảm giá hợp lệ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        $ref: '#/components/schemas/Voucher'
+        '400':
+          description: Mã giảm giá không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/vouchers/apply:
+    post:
+      tags:
+        - Vouchers
+      summary: Áp dụng mã giảm giá
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+                - total
+              properties:
+                code:
+                  type: string
+                  example: SALE50
+                total:
+                  type: number
+                  example: 1000000
+      responses:
+        '200':
+          description: Áp dụng thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          discount_amount:
+                            type: number
+                          final_total:
+                            type: number
+
+  /api/v1/vouchers/check/{code}:
+    get:
+      tags:
+        - Vouchers
+      summary: Kiểm tra mã giảm giá
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Kết quả kiểm tra
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      valid:
+                        type: boolean
+                      message:
+                        type: string
+                      voucher:
+                        $ref: '#/components/schemas/Voucher'
+
+  /api/v1/payments/create:
+    post:
+      tags:
+        - Payments
+      summary: Tạo thanh toán SePay
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - order_id
+              properties:
+                order_id:
+                  type: integer
+                  example: 1
+      responses:
+        '200':
+          description: Tạo thanh toán thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          payment_id:
+                            type: integer
+                          order_id:
+                            type: integer
+                          amount:
+                            type: number
+                          qr_code_url:
+                            type: string
+                          payment_url:
+                            type: string
+                          transaction_id:
+                            type: string
+
+  /api/v1/payments/webhook:
+    post:
+      tags:
+        - Payments
+      summary: Webhook nhận thông báo từ SePay
+      description: Endpoint này được SePay gọi tự động, không cần authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Xử lý thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+
+  /api/v1/payments/status/{id}:
+    get:
+      tags:
+        - Payments
+      summary: Kiểm tra trạng thái thanh toán
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Order ID
+      responses:
+        '200':
+          description: Trạng thái thanh toán
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      payment_status:
+                        type: string
+                        example: paid
+                      order_status:
+                        type: string
+                      payment_method:
+                        type: string
+                      amount:
+                        type: number
+                      is_paid:
+                        type: boolean
+                      has_transaction:
+                        type: boolean
+
+  /api/v1/shipping-methods:
+    get:
+      tags:
+        - Shipping
+      summary: Lấy danh sách phương thức vận chuyển
+      responses:
+        '200':
+          description: Danh sách phương thức vận chuyển
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        price:
+                          type: number
+                        status:
+                          type: integer
+
+    post:
+      tags:
+        - Shipping
+      summary: Tạo phương thức vận chuyển (Admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - price
+              properties:
+                name:
+                  type: string
+                  example: Giao hàng nhanh
+                description:
+                  type: string
+                  nullable: true
+                price:
+                  type: number
+                  example: 30000
+                status:
+                  type: integer
+                  default: 1
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 201
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        type: object
+
+  /api/v1/shipping-methods/{id}:
+    get:
+      tags:
+        - Shipping
+      summary: Lấy chi tiết phương thức vận chuyển
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chi tiết phương thức vận chuyển
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+
+    put:
+      tags:
+        - Shipping
+      summary: Cập nhật phương thức vận chuyển (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+                status:
+                  type: integer
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        type: object
+
+    delete:
+      tags:
+        - Shipping
+      summary: Xóa phương thức vận chuyển (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+
+  /api/v1/shipping-methods/calculate:
+    post:
+      tags:
+        - Shipping
+      summary: Tính phí vận chuyển
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - method_id
+                - order_total
+              properties:
+                method_id:
+                  type: integer
+                  example: 1
+                order_total:
+                  type: number
+                  example: 1000000
+      responses:
+        '200':
+          description: Tính phí thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      shipping_fee:
+                        type: number
+                      total:
+                        type: number
+
+  /api/v1/shipping-methods/admin:
+    get:
+      tags:
+        - Shipping
+      summary: Lấy tất cả phương thức vận chuyển (Admin)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách phương thức vận chuyển
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      type: object
+
+  /api/v1/upload/image:
+    post:
+      tags:
+        - Upload
+      summary: Upload một ảnh
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  format: binary
+                folder:
+                  type: string
+                  default: uploads
+      responses:
+        '200':
+          description: Upload thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          url:
+                            type: string
+                          secure_url:
+                            type: string
+                          public_id:
+                            type: string
+
+  /api/v1/upload/images:
+    post:
+      tags:
+        - Upload
+      summary: Upload nhiều ảnh
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - images
+              properties:
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                folder:
+                  type: string
+                  default: uploads
+      responses:
+        '200':
+          description: Upload thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        type: object
+                        properties:
+                          uploaded:
+                            type: array
+                            items:
+                              type: object
+                          errors:
+                            type: array
+                            items:
+                              type: string
+                          total:
+                            type: integer
+                          failed:
+                            type: integer
+
+  /api/v1/upload/{key}:
+    delete:
+      tags:
+        - Upload
+      summary: Xóa file
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Public ID hoặc URL của file
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+
+  /api/v1/forgot-password/send-code:
+    post:
+      tags:
+        - Authentication
+      summary: Gửi mã xác thực đặt lại mật khẩu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+      responses:
+        '200':
+          description: Gửi mã thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+        '429':
+          description: Quá nhiều yêu cầu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/forgot-password/reset:
+    post:
+      tags:
+        - Authentication
+      summary: Đặt lại mật khẩu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - code
+                - new_password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                code:
+                  type: string
+                  example: "123456"
+                new_password:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: newpass123
+      responses:
+        '200':
+          description: Đặt lại mật khẩu thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+        '400':
+          description: Mã xác thực không đúng
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/facebook:
+    get:
+      tags:
+        - Authentication
+      summary: Bắt đầu đăng nhập Facebook
+      responses:
+        '200':
+          description: URL đăng nhập Facebook
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      needsRedirect:
+                        type: boolean
+                        example: true
+                      login_url:
+                        type: string
+
+  /api/v1/facebook-callback:
+    get:
+      tags:
+        - Authentication
+      summary: Callback đăng nhập Facebook
+      parameters:
+        - name: code
+          in: query
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect về frontend với token
+
+  /api/v1/google:
+    get:
+      tags:
+        - Authentication
+      summary: Bắt đầu đăng nhập Google
+      responses:
+        '200':
+          description: URL đăng nhập Google
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      needsRedirect:
+                        type: boolean
+                        example: true
+                      login_url:
+                        type: string
+
+  /api/v1/google-callback:
+    get:
+      tags:
+        - Authentication
+      summary: Callback đăng nhập Google
+      parameters:
+        - name: code
+          in: query
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect về frontend với token
+
+  /api/v1/home:
+    get:
+      tags:
+        - Products
+      summary: Lấy dữ liệu trang chủ
+      parameters:
+        - name: latest_limit
+          in: query
+          schema:
+            type: integer
+            default: 8
+        - name: male_limit
+          in: query
+          schema:
+            type: integer
+            default: 4
+        - name: female_limit
+          in: query
+          schema:
+            type: integer
+            default: 4
+        - name: posts_limit
+          in: query
+          schema:
+            type: integer
+            default: 4
+      responses:
+        '200':
+          description: Dữ liệu trang chủ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      latest_products:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+                      male_products:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+                      female_products:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+                      posts:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
+                            slug:
+                              type: string
+                            content:
+                              type: string
+                            image:
+                              type: string
+                              nullable: true
+                            post_category_id:
+                              type: integer
+                            created_at:
+                              type: string
+                              format: date-time
+
+
+  /api/v1/posts:
+    get:
+      tags:
+        - Posts
+      summary: Lấy danh sách bài viết
+      parameters:
+        - name: category_id
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Danh sách bài viết
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        slug:
+                          type: string
+                        content:
+                          type: string
+                        image:
+                          type: string
+                          nullable: true
+                        post_category_id:
+                          type: integer
+                        created_at:
+                          type: string
+                          format: date-time
+
+    post:
+      tags:
+        - Posts
+      summary: Tạo bài viết mới
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - name
+                - content
+                - post_category_id
+              properties:
+                name:
+                  type: string
+                  example: Bài viết mới
+                slug:
+                  type: string
+                  nullable: true
+                content:
+                  type: string
+                  example: Nội dung bài viết
+                post_category_id:
+                  type: integer
+                  example: 1
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Tạo bài viết thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 201
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        type: object
+
+  /api/v1/posts/{id}:
+    get:
+      tags:
+        - Posts
+      summary: Lấy chi tiết bài viết
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID hoặc slug của bài viết
+      responses:
+        '200':
+          description: Chi tiết bài viết
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+
+    put:
+      tags:
+        - Posts
+      summary: Cập nhật bài viết
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                slug:
+                  type: string
+                content:
+                  type: string
+                post_category_id:
+                  type: integer
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        type: object
+
+    delete:
+      tags:
+        - Posts
+      summary: Xóa bài viết
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+
+  /api/v1/post-categories:
+    get:
+      tags:
+        - Posts
+      summary: Lấy danh sách danh mục bài viết
+      responses:
+        '200':
+          description: Danh sách danh mục
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        slug:
+                          type: string
+                        post_count:
+                          type: integer
+
+    post:
+      tags:
+        - Posts
+      summary: Tạo danh mục bài viết mới
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: Tin tức
+                slug:
+                  type: string
+                  nullable: true
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 201
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        type: object
+
+  /api/v1/post-categories/{id}:
+    get:
+      tags:
+        - Posts
+      summary: Lấy chi tiết danh mục bài viết
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chi tiết danh mục
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      slug:
+                        type: string
+                      post_count:
+                        type: integer
+
+    put:
+      tags:
+        - Posts
+      summary: Cập nhật danh mục bài viết
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                slug:
+                  type: string
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      data:
+                        type: object
+
+    delete:
+      tags:
+        - Posts
+      summary: Xóa danh mục bài viết
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+
+  /api/v1/post-categories/active:
+    get:
+      tags:
+        - Posts
+      summary: Lấy danh sách danh mục bài viết đang hoạt động
+      responses:
+        '200':
+          description: Danh sách danh mục
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      data:
+                        type: array
+                        items:
+                          type: object
+
+  /api/v1/product-variants:
+    get:
+      tags:
+        - Products
+      summary: Lấy danh sách variants
+      responses:
+        '200':
+          description: Danh sách variants
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            product_id:
+                              type: integer
+                            price:
+                              type: number
+                            quantity:
+                              type: integer
+                            image:
+                              type: string
+                              nullable: true
+
+    post:
+      tags:
+        - Products
+      summary: Tạo variant mới
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - product_id
+                - price
+              properties:
+                product_id:
+                  type: integer
+                  example: 1
+                price:
+                  type: number
+                  example: 5000000
+                quantity:
+                  type: integer
+                  example: 10
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Tạo variant thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 201
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      message:
+                        type: string
+                      data:
+                        type: object
+
+  /api/v1/product-variants/{id}:
+    get:
+      tags:
+        - Products
+      summary: Lấy chi tiết variant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chi tiết variant
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      data:
+                        type: object
+
+    put:
+      tags:
+        - Products
+      summary: Cập nhật variant
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                product_id:
+                  type: integer
+                price:
+                  type: number
+                quantity:
+                  type: integer
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      message:
+                        type: string
+                      data:
+                        type: object
+
+    delete:
+      tags:
+        - Products
+      summary: Xóa variant
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      message:
+                        type: string
+
+  /api/v1/product-variants/product/{id}:
+    get:
+      tags:
+        - Products
+      summary: Lấy variants theo product_id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Danh sách variants
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      data:
+                        type: array
+                        items:
+                          type: object
+
+  /api/v1/users:
+    get:
+      tags:
+        - Users
+      summary: Lấy danh sách users (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Danh sách users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '403':
+          description: Không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Lấy chi tiết user (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Chi tiết user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/User'
+        '403':
+          description: Không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User không tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/users/{id}/status:
+    put:
+      tags:
+        - Users
+      summary: Cập nhật trạng thái user (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: integer
+                  enum: [0, 1]
+                  example: 1
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      user:
+                        $ref: '#/components/schemas/User'
+        '403':
+          description: Không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/user/update-role:
+    put:
+      tags:
+        - Users
+      summary: Cập nhật role của user (Admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+                - role
+              properties:
+                user_id:
+                  type: integer
+                  example: 1
+                role:
+                  type: integer
+                  enum: [0, 1]
+                  example: 1
+                  description: 0 = User, 1 = Admin
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      user:
+                        $ref: '#/components/schemas/User'
+        '403':
+          description: Không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/orders/{id}/status:
+    put:
+      tags:
+        - Orders
+      summary: Cập nhật trạng thái đơn hàng (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  example: processing
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+        '403':
+          description: Không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/orders/{id}/payment-status:
+    put:
+      tags:
+        - Orders
+      summary: Cập nhật trạng thái thanh toán (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - payment_status
+              properties:
+                payment_status:
+                  type: string
+                  enum: [unpaid, paid, failed]
+                  example: paid
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+        '403':
+          description: Không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
