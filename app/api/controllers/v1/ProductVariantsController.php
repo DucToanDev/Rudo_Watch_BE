@@ -2,18 +2,21 @@
 require_once __DIR__ . '/../../../models/ProductVariantModel.php';
 require_once __DIR__ . '/../../../services/CloudinaryService.php';
 require_once __DIR__ . '/../../../core/Response.php';
+require_once __DIR__ . '/../../../middleware/AuthMiddleware.php';
 
 class ProductVariantsController
 {
     private $variantModel;
     private $storageService;
     private $response;
+    private $authMiddleware;
     private $uploadDir = __DIR__ . '/../../../../uploads/products/';
 
     public function __construct()
     {
         $this->variantModel = new ProductVariants();
         $this->response = new Response();
+        $this->authMiddleware = new AuthMiddleware();
         
         // Khởi tạo Cloudinary Service
         try {
@@ -109,6 +112,16 @@ class ProductVariantsController
     public function store($data)
     {
         try {
+            // Xác thực và kiểm tra quyền admin
+            $user = $this->authMiddleware->authenticate();
+            if (!$user) {
+                return;
+            }
+            
+            if (!$this->authMiddleware->requireAdmin($user)) {
+                return;
+            }
+
             // Kiểm tra nếu có file upload (multipart/form-data)
             if (!empty($_FILES['image']) || !empty($_POST)) {
                 $data = (object) $_POST;
@@ -206,6 +219,16 @@ class ProductVariantsController
     public function update($id)
     {
         try {
+            // Xác thực và kiểm tra quyền admin
+            $user = $this->authMiddleware->authenticate();
+            if (!$user) {
+                return;
+            }
+            
+            if (!$this->authMiddleware->requireAdmin($user)) {
+                return;
+            }
+
             if (!is_numeric($id)) {
                 $this->response->json([
                     'success' => false,
@@ -336,6 +359,16 @@ class ProductVariantsController
     public function destroy($id)
     {
         try {
+            // Xác thực và kiểm tra quyền admin
+            $user = $this->authMiddleware->authenticate();
+            if (!$user) {
+                return;
+            }
+            
+            if (!$this->authMiddleware->requireAdmin($user)) {
+                return;
+            }
+
             if (!is_numeric($id)) {
                 $this->response->json([
                     'success' => false,

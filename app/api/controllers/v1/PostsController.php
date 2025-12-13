@@ -87,6 +87,10 @@ class PostsController
             return;
         }
 
+        if (!$this->authMiddleware->requireAdmin($user)) {
+            return;
+        }
+
         try {
             // Kiểm tra nếu có file upload (multipart/form-data)
             if (!empty($_FILES['featured_image']) || !empty($_POST)) {
@@ -170,6 +174,10 @@ class PostsController
     {
         $user = $this->authMiddleware->authenticate();
         if (!$user) {
+            return;
+        }
+
+        if (!$this->authMiddleware->requireAdmin($user)) {
             return;
         }
 
@@ -275,6 +283,10 @@ class PostsController
     {
         $user = $this->authMiddleware->authenticate();
         if (!$user) {
+            return;
+        }
+
+        if (!$this->authMiddleware->requireAdmin($user)) {
             return;
         }
 

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../../models/CategoryModel.php';
 require_once __DIR__ . '/../../../models/ProductModel.php';
 require_once __DIR__ . '/../../../core/Response.php';
+require_once __DIR__ . '/../../../middleware/AuthMiddleware.php';
 
 
 class CategoriesController
@@ -10,6 +11,7 @@ class CategoriesController
     private $categoriesModel;
     private $productsModel;
     private $response;
+    private $authMiddleware;
 
 
     public function __construct()
@@ -17,6 +19,7 @@ class CategoriesController
         $this->categoriesModel = new Categories();
         $this->productsModel = new Products();
         $this->response = new Response();
+        $this->authMiddleware = new AuthMiddleware();
     }
 
 
@@ -56,6 +59,16 @@ class CategoriesController
     public function store($data)
     {
         try {
+            // Xác thực và kiểm tra quyền admin
+            $user = $this->authMiddleware->authenticate();
+            if (!$user) {
+                return;
+            }
+            
+            if (!$this->authMiddleware->requireAdmin($user)) {
+                return;
+            }
+
             // Chuyển đổi data thành object nếu là array
             if (is_array($data)) {
                 $data = (object)$data;
@@ -96,6 +109,16 @@ class CategoriesController
     public function update($id)
     {
         try {
+            // Xác thực và kiểm tra quyền admin
+            $user = $this->authMiddleware->authenticate();
+            if (!$user) {
+                return;
+            }
+            
+            if (!$this->authMiddleware->requireAdmin($user)) {
+                return;
+            }
+
             if (!is_numeric($id)) {
                 $this->response->json(['error' => 'ID không hợp lệ'], 400);
                 return;
@@ -149,6 +172,16 @@ class CategoriesController
     public function destroy($id)
     {
         try {
+            // Xác thực và kiểm tra quyền admin
+            $user = $this->authMiddleware->authenticate();
+            if (!$user) {
+                return;
+            }
+            
+            if (!$this->authMiddleware->requireAdmin($user)) {
+                return;
+            }
+
             if (!is_numeric($id)) {
                 $this->response->json(['error' => 'ID không hợp lệ'], 400);
                 return;

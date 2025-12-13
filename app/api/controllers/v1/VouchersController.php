@@ -1,16 +1,19 @@
 <?php
 require_once __DIR__ . '/../../../models/VoucherModel.php';
 require_once __DIR__ . '/../../../core/Response.php';
+require_once __DIR__ . '/../../../middleware/AuthMiddleware.php';
 
 class VouchersController
 {
     private $vouchersModel;
     private $response;
+    private $authMiddleware;
 
     public function __construct()
     {
         $this->vouchersModel = new Vouchers();
         $this->response = new Response();
+        $this->authMiddleware = new AuthMiddleware();
     }
 
     /**
@@ -66,6 +69,16 @@ class VouchersController
     public function store($data)
     {
         try {
+            // Xác thực và kiểm tra quyền admin
+            $user = $this->authMiddleware->authenticate();
+            if (!$user) {
+                return;
+            }
+            
+            if (!$this->authMiddleware->requireAdmin($user)) {
+                return;
+            }
+
             // Xử lý dữ liệu từ form-data hoặc JSON
             if (empty($data)) {
                 $data = (object)$_POST;
@@ -110,6 +123,16 @@ class VouchersController
     public function update($id)
     {
         try {
+            // Xác thực và kiểm tra quyền admin
+            $user = $this->authMiddleware->authenticate();
+            if (!$user) {
+                return;
+            }
+            
+            if (!$this->authMiddleware->requireAdmin($user)) {
+                return;
+            }
+
             if (!is_numeric($id)) {
                 $this->response->json(['error' => 'ID không hợp lệ'], 400);
                 return;
@@ -169,6 +192,16 @@ class VouchersController
     public function destroy($id)
     {
         try {
+            // Xác thực và kiểm tra quyền admin
+            $user = $this->authMiddleware->authenticate();
+            if (!$user) {
+                return;
+            }
+            
+            if (!$this->authMiddleware->requireAdmin($user)) {
+                return;
+            }
+
             if (!is_numeric($id)) {
                 $this->response->json(['error' => 'ID không hợp lệ'], 400);
                 return;
