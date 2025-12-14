@@ -27,7 +27,7 @@ class CartModel
 
             // Lấy danh sách items trong cart (JOIN với product_variants và products)
             $query = "SELECT ci.id, ci.variant_id, ci.quantity, ci.price_at_add,
-                             pv.product_id, pv.price as variant_price, pv.size, pv.sku, pv.quantity as stock, pv.image as variant_image, pv.colors,
+                             pv.product_id, pv.price as variant_price, pv.sku, pv.quantity as stock, pv.image as variant_image, pv.colors,
                              p.name as product_name, p.slug as product_slug, p.image as product_image
                       FROM " . $this->cart_items_table . " ci
                       LEFT JOIN product_variants pv ON ci.variant_id = pv.id

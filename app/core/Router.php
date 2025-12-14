@@ -42,8 +42,11 @@ class Router
         'PUT addresses/{id}/set-default' => ['AddressesController', 'setDefault'],
 
         // Orders
+        'GET orders' => ['OrdersController', 'index'],
         'GET orders/admin' => ['OrdersController', 'admin'],
         'GET orders/statistics' => ['OrdersController', 'statistics'],
+        'GET orders/{id}' => ['OrdersController', 'show'],
+        'POST orders' => ['OrdersController', 'store'],
         'PUT orders/{id}/cancel' => ['OrdersController', 'cancel'],
         'PUT orders/{id}/status' => ['OrdersController', 'updateStatus'],
         'PUT orders/{id}/payment-status' => ['OrdersController', 'updatePaymentStatus'],

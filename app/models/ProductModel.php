@@ -125,7 +125,7 @@ class Products
                 }
             }
 
-            $countQuery = "SELECT COUNT(*) as total FROM " . $this->table_name . " WHERE 1=1";
+            $countQuery = "SELECT COUNT(*) as total FROM " . $this->table_name . " p WHERE 1=1";
             if (!empty($conditions)) {
                 $countQuery .= " AND " . implode(" AND ", $conditions);
             }

@@ -122,7 +122,7 @@ class OrderModel
 
             // Lấy chi tiết sản phẩm trong đơn hàng
             $detailQuery = "SELECT od.*, 
-                                   pv.product_id, pv.size, pv.sku, pv.image as variant_image, pv.colors,
+                                   pv.product_id, pv.sku, pv.image as variant_image, pv.colors,
                                    p.name as product_name, p.slug as product_slug, p.image as product_image
                             FROM " . $this->order_detail_table . " od
                             LEFT JOIN product_variants pv ON od.variant_id = pv.id
@@ -604,7 +604,7 @@ class OrderModel
      */
     private function getVariant($variantId)
     {
-        $query = "SELECT pv.*, p.name as product_name 
+        $query = "SELECT pv.id, pv.product_id, pv.price, pv.sku, pv.quantity, pv.image, pv.colors, pv.created_at, p.name as product_name 
                   FROM product_variants pv 
                   LEFT JOIN products p ON pv.product_id = p.id 
                   WHERE pv.id = :id";

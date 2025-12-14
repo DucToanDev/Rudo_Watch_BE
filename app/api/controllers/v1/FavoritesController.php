@@ -38,7 +38,12 @@ class FavoritesController
             ];
 
             $result = $this->favoriteModel->getAllByUserId($user['id'], $params);
-            $this->response->json($result, 200);
+            // Đảm bảo response có format đúng với data là array
+            $this->response->json([
+                'status' => 'success',
+                'data' => $result['data'] ?? [],
+                'pagination' => $result['pagination'] ?? null
+            ], 200);
         } catch (Exception $e) {
             $this->response->json(['error' => $e->getMessage()], 500);
         }
