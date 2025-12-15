@@ -115,6 +115,17 @@ components:
           type: integer
         status:
           type: integer
+        sold:
+          type: integer
+          description: Số lượng đã bán
+          example: 0
+        is_featured:
+          type: integer
+          enum:
+            - 0
+            - 1
+          description: 'Sản phẩm nổi bật (0 = không, 1 = có)'
+          example: 0
         created_at:
           type: string
           format: date-time
@@ -598,11 +609,25 @@ paths:
           schema:
             type: integer
           description: Lọc theo trạng thái (0 hoặc 1)
+        - name: is_featured
+          in: query
+          schema:
+            type: integer
+            enum:
+              - 0
+              - 1
+          description: Lọc theo sản phẩm nổi bật (0 hoặc 1)
         - name: sort_by
           in: query
           schema:
             type: string
-          description: 'Sắp xếp theo (name, price, created_at)'
+            enum:
+              - name
+              - created_at
+              - status
+              - sold
+              - is_featured
+          description: 'Sắp xếp theo (name, created_at, status, sold, is_featured)'
         - name: sort_order
           in: query
           schema:
@@ -676,6 +701,19 @@ paths:
                   type: integer
                   default: 1
                   example: 1
+                sold:
+                  type: integer
+                  default: 0
+                  description: Số lượng đã bán
+                  example: 0
+                is_featured:
+                  type: integer
+                  default: 0
+                  enum:
+                    - 0
+                    - 1
+                  description: 'Sản phẩm nổi bật (0 = không, 1 = có)'
+                  example: 0
                 image:
                   type: string
                   format: binary
@@ -776,6 +814,17 @@ paths:
                   type: integer
                 status:
                   type: integer
+                sold:
+                  type: integer
+                  description: Số lượng đã bán
+                  example: 0
+                is_featured:
+                  type: integer
+                  enum:
+                    - 0
+                    - 1
+                  description: 'Sản phẩm nổi bật (0 = không, 1 = có)'
+                  example: 0
                 image:
                   type: string
                   format: binary
@@ -852,6 +901,7 @@ paths:
       tags:
         - Products
       summary: Lấy sản phẩm nổi bật
+      description: Lấy danh sách sản phẩm có is_featured = 1, sắp xếp theo số lượng đã bán (sold) giảm dần
       parameters:
         - name: limit
           in: query
@@ -862,6 +912,37 @@ paths:
       responses:
         '200':
           description: Danh sách sản phẩm nổi bật
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+  /api/v1/products/top:
+    get:
+      tags:
+        - Products
+      summary: Lấy sản phẩm bán chạy
+      description: Lấy danh sách sản phẩm sắp xếp theo số lượng đã bán (sold) giảm dần
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Số lượng sản phẩm
+      responses:
+        '200':
+          description: Danh sách sản phẩm bán chạy
           content:
             application/json:
               schema:
@@ -3621,12 +3702,15 @@ paths:
               schema:
                 type: string
                 example: Gateway Timeout
-  /api/v1/forgot-password/reset:
+  /api/v1/forgot-password/verify-code:
     post:
       tags:
         - Authentication
-      summary: Đặt lại mật khẩu
-      description: Đặt lại mật khẩu mới bằng mã xác thực đã nhận qua email. Mã xác thực chỉ có hiệu lực trong thời gian nhất định.
+      summary: Xác thực mã đặt lại mật khẩu
+      description: |
+        Xác thực mã xác thực 6 chữ số đã nhận qua email. 
+        Trả về token - client cần lưu token này (localStorage/sessionStorage) để sử dụng cho bước đặt lại mật khẩu.
+        Token sẽ được gửi kèm tự động khi user nhập password mới.
       requestBody:
         required: true
         content:
@@ -3636,7 +3720,6 @@ paths:
               required:
                 - email
                 - code
-                - new_password
               properties:
                 email:
                   type: string
@@ -3649,6 +3732,69 @@ paths:
                   description: Mã xác thực 6 chữ số đã nhận qua email
                   minLength: 6
                   maxLength: 6
+      responses:
+        '200':
+          description: Mã xác thực hợp lệ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Mã xác thực hợp lệ
+                      token:
+                        type: string
+                        description: Token để sử dụng cho bước đặt lại mật khẩu
+                        example: abc123def456...
+                      expires_at:
+                        type: string
+                        format: date-time
+                        description: Thời gian hết hạn của mã xác thực
+        '400':
+          description: Mã xác thực không đúng hoặc đã hết hạn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/forgot-password/reset:
+    post:
+      tags:
+        - Authentication
+      summary: Đặt lại mật khẩu
+      description: |
+        Đặt lại mật khẩu mới sau khi đã xác thực mã thành công. 
+        Token sẽ được lấy tự động từ localStorage/sessionStorage (đã lưu ở bước verify-code).
+        User chỉ cần nhập password mới.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - token
+                - new_password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                  description: Email của tài khoản cần đặt lại mật khẩu
+                token:
+                  type: string
+                  example: abc123def456...
+                  description: Token nhận được từ bước xác thực mã (verify-code)
                 new_password:
                   type: string
                   format: password
@@ -3692,27 +3838,32 @@ paths:
       tags:
         - Products
       summary: Lấy dữ liệu trang chủ
+      description: Lấy sản phẩm mới nhất, sản phẩm nổi bật, sản phẩm bán chạy và bài viết
       parameters:
         - name: latest_limit
           in: query
           schema:
             type: integer
             default: 8
-        - name: male_limit
+          description: Số lượng sản phẩm mới nhất
+        - name: featured_limit
           in: query
           schema:
             type: integer
-            default: 4
-        - name: female_limit
+            default: 8
+          description: Số lượng sản phẩm nổi bật
+        - name: top_limit
           in: query
           schema:
             type: integer
-            default: 4
+            default: 8
+          description: Số lượng sản phẩm bán chạy
         - name: posts_limit
           in: query
           schema:
             type: integer
             default: 4
+          description: Số lượng bài viết
       responses:
         '200':
           description: Dữ liệu trang chủ
@@ -3732,18 +3883,22 @@ paths:
                     properties:
                       latest_products:
                         type: array
+                        description: Sản phẩm mới nhất
                         items:
                           $ref: '#/components/schemas/Product'
-                      male_products:
+                      featured_products:
                         type: array
+                        description: Sản phẩm nổi bật (is_featured = 1)
                         items:
                           $ref: '#/components/schemas/Product'
-                      female_products:
+                      top_products:
                         type: array
+                        description: Sản phẩm bán chạy (sắp xếp theo sold DESC)
                         items:
                           $ref: '#/components/schemas/Product'
                       posts:
                         type: array
+                        description: Danh sách bài viết
                         items:
                           type: object
                           properties:

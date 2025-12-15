@@ -43,6 +43,7 @@ class ProductsController
                 'category_id' => $_GET['category_id'] ?? '',
                 'brand_id' => $_GET['brand_id'] ?? '',
                 'status' => $_GET['status'] ?? '',
+                'is_featured' => $_GET['is_featured'] ?? '',
                 'sort_by' => $_GET['sort_by'] ?? '',
                 'sort_order' => $_GET['sort_order'] ?? 'DESC',
                 'page' => $_GET['page'] ?? 1,
@@ -354,6 +355,19 @@ class ProductsController
         try {
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
             $products = $this->productModel->getLatest($limit);
+            $this->response->json($products, 200);
+        } catch (Exception $e) {
+            $this->response->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    // Lấy sản phẩm bán chạy
+    // Endpoint: GET /api/v1/products/top
+    public function top($data = null)
+    {
+        try {
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+            $products = $this->productModel->getTopProducts($limit);
             $this->response->json($products, 200);
         } catch (Exception $e) {
             $this->response->json(['error' => $e->getMessage()], 500);

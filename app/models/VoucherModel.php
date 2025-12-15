@@ -179,11 +179,17 @@ class Vouchers
     public function create($data)
     {
         try {
+            // Xử lý discount/amount: ưu tiên amount nếu có, nếu không thì dùng discount
+            $moneyValue = null;
+            if ($data->type === 'money') {
+                $moneyValue = isset($data->amount) && $data->amount !== '' ? (float)$data->amount : (isset($data->discount) && $data->discount !== '' ? (float)$data->discount : null);
+            }
+            
             $insertData = [
                 'code' => strtoupper($data->code),
                 'type' => $data->type,
                 'discount' => $data->type === 'percent' ? (int)$data->discount : null,
-                'amount' => $data->type === 'money' ? (float)$data->discount : null,
+                'amount' => $moneyValue,
                 'start_at' => $data->start_at ?? null,
                 'expired_at' => $data->expired_at ?? null,
                 'usage_limit' => isset($data->usage_limit) ? (int)$data->usage_limit : null
@@ -219,7 +225,9 @@ class Vouchers
             if ($type === 'percent') {
                 $updateData['discount'] = isset($data->discount) ? (int)$data->discount : $existing['discount'];
             } else {
-                $updateData['amount'] = isset($data->discount) ? (float)$data->discount : $existing['amount'];
+                // Ưu tiên amount nếu có, nếu không thì dùng discount
+                $moneyValue = isset($data->amount) && $data->amount !== '' ? (float)$data->amount : (isset($data->discount) && $data->discount !== '' ? (float)$data->discount : null);
+                $updateData['amount'] = $moneyValue !== null ? $moneyValue : $existing['amount'];
             }
 
             if (isset($data->start_at)) {

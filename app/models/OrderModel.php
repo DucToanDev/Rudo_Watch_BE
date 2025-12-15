@@ -97,7 +97,10 @@ class OrderModel
     public function getOrderById($orderId, $userId = null)
     {
         try {
-            $query = "SELECT o.* FROM " . $this->table_name . " o WHERE o.id = :order_id";
+            $query = "SELECT o.*, u.fullname as user_name, u.phone as user_phone, u.email as user_email 
+                     FROM " . $this->table_name . " o 
+                     LEFT JOIN users u ON o.user_id = u.id 
+                     WHERE o.id = :order_id";
 
             // Nếu có userId, chỉ lấy đơn hàng của user đó
             if ($userId) {
@@ -144,18 +147,85 @@ class OrderModel
 
             // Format data
             $order['total'] = (float)$order['total'];
-            $order['address'] = json_decode($order['address'], true);
+            
+            // Decode address JSON và đảm bảo là array
+            $addressJson = $order['address'] ?? null;
+            if ($addressJson) {
+                $decodedAddress = json_decode($addressJson, true);
+                $order['address'] = is_array($decodedAddress) ? $decodedAddress : [];
+            } else {
+                $order['address'] = [];
+            }
 
+            // Tính subtotal từ items
+            $subtotal = 0;
             foreach ($items as &$item) {
                 $item['price'] = (float)$item['price'];
                 $item['subtotal'] = $item['price'] * $item['quantity'];
-                if ($item['colors']) {
-                    $item['colors'] = json_decode($item['colors'], true);
+                $subtotal += $item['subtotal'];
+                if (isset($item['colors']) && $item['colors']) {
+                    $decodedColors = json_decode($item['colors'], true);
+                    $item['colors'] = is_array($decodedColors) ? $decodedColors : null;
                 }
+            }
+
+            // Tính shipping_cost và discount
+            $shippingCost = 0;
+            $discount = 0;
+            
+            // Nếu có voucher_id, lấy thông tin voucher để tính discount
+            if (!empty($order['voucher_id'])) {
+                $voucher = $this->getVoucher($order['voucher_id']);
+                if ($voucher) {
+                    // Tính discount dựa trên subtotal (trước khi cộng shipping)
+                    $tempTotal = $subtotal;
+                    if ($voucher['type'] === 'percent') {
+                        $discount = $tempTotal * ($voucher['discount'] / 100);
+                        // Giới hạn max_discount nếu có
+                        if (isset($voucher['max_discount']) && $voucher['max_discount'] > 0 && $discount > $voucher['max_discount']) {
+                            $discount = (float)$voucher['max_discount'];
+                        }
+                    } else {
+                        $discount = (float)$voucher['amount'];
+                    }
+                    // Không cho discount vượt quá subtotal
+                    if ($discount > $subtotal) {
+                        $discount = $subtotal;
+                    }
+                }
+            }
+            
+            // Tính shipping_cost: total = subtotal + shipping_cost - discount
+            // => shipping_cost = total - subtotal + discount
+            $shippingCost = $order['total'] - $subtotal + $discount;
+            // Đảm bảo shipping_cost không âm
+            if ($shippingCost < 0) {
+                $shippingCost = 0;
+            }
+
+            // Bổ sung thông tin user vào address nếu thiếu
+            if (is_array($order['address'])) {
+                if (empty($order['address']['receiver_name']) && !empty($order['user_name'])) {
+                    $order['address']['receiver_name'] = $order['user_name'];
+                }
+                if (empty($order['address']['receiver_phone']) && empty($order['address']['phone']) && !empty($order['user_phone'])) {
+                    $order['address']['receiver_phone'] = $order['user_phone'];
+                    $order['address']['phone'] = $order['user_phone'];
+                }
+            } else {
+                // Nếu không có address hoặc không phải array, tạo từ user info
+                $order['address'] = [
+                    'receiver_name' => $order['user_name'] ?? '',
+                    'receiver_phone' => $order['user_phone'] ?? '',
+                    'phone' => $order['user_phone'] ?? ''
+                ];
             }
 
             $order['items'] = $items;
             $order['payment'] = $payment;
+            $order['subtotal'] = $subtotal;
+            $order['shipping_cost'] = $shippingCost;
+            $order['discount'] = $discount;
 
             return [
                 'success' => true,
@@ -335,22 +405,46 @@ class OrderModel
                 ];
             }
 
-            $query = "UPDATE " . $this->table_name . " SET status = :status, updated_at = NOW() WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':status', $status, PDO::PARAM_STR);
-            $stmt->bindParam(':id', $orderId, PDO::PARAM_INT);
-            $stmt->execute();
+            // Lấy trạng thái cũ trước khi update
+            $oldStatusQuery = "SELECT status FROM " . $this->table_name . " WHERE id = :id";
+            $oldStatusStmt = $this->conn->prepare($oldStatusQuery);
+            $oldStatusStmt->bindParam(':id', $orderId, PDO::PARAM_INT);
+            $oldStatusStmt->execute();
+            $oldOrder = $oldStatusStmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($stmt->rowCount() === 0) {
+            if (!$oldOrder) {
                 return [
                     'success' => false,
                     'message' => 'Không tìm thấy đơn hàng'
                 ];
             }
 
-            // Nếu hủy đơn hàng, hoàn lại tồn kho
+            $oldStatus = $oldOrder['status'];
+
+            // Update status
+            $query = "UPDATE " . $this->table_name . " SET status = :status, updated_at = NOW() WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':status', $status, PDO::PARAM_STR);
+            $stmt->bindParam(':id', $orderId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            // Nếu hủy đơn hàng, hoàn lại tồn kho và trừ lại sold (nếu đã từng delivered)
             if ($status === 'cancelled') {
                 $this->restoreStock($orderId);
+                // Chỉ trừ lại sold nếu đơn hàng đã từng được delivered
+                if ($oldStatus === 'delivered') {
+                    $this->decreaseProductSold($orderId);
+                }
+            }
+            
+            // Nếu đơn hàng được giao thành công (chuyển từ trạng thái khác sang delivered), tăng sold
+            if ($status === 'delivered' && $oldStatus !== 'delivered') {
+                $this->increaseProductSold($orderId);
+            }
+            
+            // Nếu đơn hàng chuyển từ delivered sang trạng thái khác, trừ lại sold
+            if ($oldStatus === 'delivered' && $status !== 'delivered' && $status !== 'cancelled') {
+                $this->decreaseProductSold($orderId);
             }
 
             return [
@@ -709,6 +803,72 @@ class OrderModel
             $deleteStmt = $this->conn->prepare($deleteQuery);
             $deleteStmt->bindParam(':cart_id', $cart['id'], PDO::PARAM_INT);
             $deleteStmt->execute();
+        }
+    }
+
+    /**
+     * Tăng số lượng đã bán (sold) của sản phẩm khi đơn hàng được giao thành công
+     */
+    private function increaseProductSold($orderId)
+    {
+        try {
+            // Lấy danh sách sản phẩm trong đơn hàng với product_id
+            $query = "SELECT od.quantity, pv.product_id 
+                     FROM " . $this->order_detail_table . " od
+                     LEFT JOIN product_variants pv ON od.variant_id = pv.id
+                     WHERE od.order_id = :order_id AND pv.product_id IS NOT NULL";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':order_id', $orderId, PDO::PARAM_INT);
+            $stmt->execute();
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Tăng sold cho từng sản phẩm
+            foreach ($items as $item) {
+                if ($item['product_id'] && $item['quantity']) {
+                    $updateQuery = "UPDATE products SET sold = sold + :quantity WHERE id = :product_id";
+                    $updateStmt = $this->conn->prepare($updateQuery);
+                    $updateStmt->bindParam(':quantity', $item['quantity'], PDO::PARAM_INT);
+                    $updateStmt->bindParam(':product_id', $item['product_id'], PDO::PARAM_INT);
+                    $updateStmt->execute();
+                }
+            }
+        } catch (PDOException $e) {
+            // Log error nhưng không throw để không ảnh hưởng đến flow chính
+            error_log("Error increasing product sold for order {$orderId}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Giảm số lượng đã bán (sold) của sản phẩm khi đơn hàng bị hủy hoặc chuyển từ delivered sang trạng thái khác
+     */
+    private function decreaseProductSold($orderId)
+    {
+        try {
+            // Lấy danh sách sản phẩm trong đơn hàng với product_id
+            $query = "SELECT od.quantity, pv.product_id 
+                     FROM " . $this->order_detail_table . " od
+                     LEFT JOIN product_variants pv ON od.variant_id = pv.id
+                     WHERE od.order_id = :order_id AND pv.product_id IS NOT NULL";
+            
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':order_id', $orderId, PDO::PARAM_INT);
+            $stmt->execute();
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Giảm sold cho từng sản phẩm (không cho âm)
+            foreach ($items as $item) {
+                if ($item['product_id'] && $item['quantity']) {
+                    $updateQuery = "UPDATE products SET sold = GREATEST(0, sold - :quantity) WHERE id = :product_id";
+                    $updateStmt = $this->conn->prepare($updateQuery);
+                    $updateStmt->bindParam(':quantity', $item['quantity'], PDO::PARAM_INT);
+                    $updateStmt->bindParam(':product_id', $item['product_id'], PDO::PARAM_INT);
+                    $updateStmt->execute();
+                }
+            }
+        } catch (PDOException $e) {
+            // Log error nhưng không throw để không ảnh hưởng đến flow chính
+            error_log("Error decreasing product sold for order {$orderId}: " . $e->getMessage());
         }
     }
 }

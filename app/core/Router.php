@@ -21,6 +21,7 @@ class Router
         'GET google' => ['SocialAuthController', 'googleStart'],
         'GET google-callback' => ['SocialAuthController', 'googleCallback'],
         'POST forgot-password/send-code' => ['ForgotPasswordController', 'sendCode'],
+        'POST forgot-password/verify-code' => ['ForgotPasswordController', 'verifyCode'],
         'POST forgot-password/reset' => ['ForgotPasswordController', 'resetPassword'],
     ];
 
@@ -77,6 +78,7 @@ class Router
         // Products
         'GET products/featured' => ['ProductsController', 'featured'],
         'GET products/latest' => ['ProductsController', 'latest'],
+        'GET products/top' => ['ProductsController', 'top'],
         'GET products/category/{id}' => ['ProductsController', 'category'],
         'GET products/brand/{id}' => ['ProductsController', 'brand'],
 

@@ -350,9 +350,11 @@ class VouchersController
                         $errors['discount'] = 'Phần trăm giảm giá phải từ 1 đến 100';
                     }
                 } else if ($data->type === 'money') {
-                    if (!isset($data->amount) || $data->amount === '') {
+                    // Kiểm tra cả amount và discount để tương thích với cả hai cách gửi
+                    $moneyValue = isset($data->amount) && $data->amount !== '' ? $data->amount : (isset($data->discount) && $data->discount !== '' ? $data->discount : null);
+                    if ($moneyValue === null) {
                         $errors['amount'] = 'Số tiền giảm là bắt buộc';
-                    } elseif ($data->amount <= 0) {
+                    } elseif ($moneyValue <= 0) {
                         $errors['amount'] = 'Số tiền giảm phải lớn hơn 0';
                     }
                 }
@@ -373,12 +375,33 @@ class VouchersController
                 $errors['type'] = 'Loại voucher không hợp lệ (percent hoặc money)';
             }
 
-            if (isset($data->discount) && ($data->discount < 1 || $data->discount > 100)) {
-                $errors['discount'] = 'Phần trăm giảm giá phải từ 1 đến 100';
-            }
-
-            if (isset($data->amount) && $data->amount <= 0) {
-                $errors['amount'] = 'Số tiền giảm phải lớn hơn 0';
+            // Validate discount/amount theo type khi update
+            if (isset($data->type)) {
+                if ($data->type === 'percent') {
+                    // Chỉ validate discount khi type là percent
+                    if (isset($data->discount) && ($data->discount < 1 || $data->discount > 100)) {
+                        $errors['discount'] = 'Phần trăm giảm giá phải từ 1 đến 100';
+                    }
+                } else if ($data->type === 'money') {
+                    // Kiểm tra cả amount và discount để tương thích với cả hai cách gửi
+                    $moneyValue = isset($data->amount) && $data->amount !== '' ? $data->amount : (isset($data->discount) && $data->discount !== '' ? $data->discount : null);
+                    if ($moneyValue !== null && $moneyValue <= 0) {
+                        $errors['amount'] = 'Số tiền giảm phải lớn hơn 0';
+                    }
+                }
+            } else {
+                // Nếu không có type trong request, validate theo dữ liệu hiện có
+                // Nhưng vì không biết type hiện tại, chỉ validate nếu có cả hai trường
+                if (isset($data->discount) && ($data->discount < 1 || $data->discount > 100)) {
+                    // Chỉ validate nếu có thể là percent (giá trị <= 100)
+                    // Nếu > 100 thì có thể là amount, không validate
+                    if ($data->discount <= 100) {
+                        $errors['discount'] = 'Phần trăm giảm giá phải từ 1 đến 100';
+                    }
+                }
+                if (isset($data->amount) && $data->amount <= 0) {
+                    $errors['amount'] = 'Số tiền giảm phải lớn hơn 0';
+                }
             }
         }
 

@@ -64,11 +64,17 @@ class Products
                 $bindings[':status'] = $params['status'];
             }
 
+            // Lọc theo is_featured
+            if (isset($params['is_featured']) && $params['is_featured'] !== '') {
+                $conditions[] = "p.is_featured = :is_featured";
+                $bindings[':is_featured'] = $params['is_featured'];
+            }
+
             // Sắp xếp
             $orderBy = "ORDER BY p.created_at DESC";
             if (isset($params['sort_by'])) {
                 $sortOrder = isset($params['sort_order']) && strtoupper($params['sort_order']) === 'ASC' ? 'ASC' : 'DESC';
-                $allowedSorts = ['name', 'created_at', 'status'];
+                $allowedSorts = ['name', 'created_at', 'status', 'sold', 'is_featured'];
                 if (in_array($params['sort_by'], $allowedSorts)) {
                     $orderBy = "ORDER BY p." . $params['sort_by'] . " " . $sortOrder;
                 }
@@ -292,9 +298,9 @@ class Products
             }
 
             $query = "INSERT INTO " . $this->table_name . " 
-                      (model_code, category_id, brand_id, name, slug, specifications, description, image, thumbnail, status, created_at) 
+                      (model_code, category_id, brand_id, name, slug, specifications, description, image, thumbnail, status, sold, is_featured, created_at) 
                       VALUES 
-                      (:model_code, :category_id, :brand_id, :name, :slug, :specifications, :description, :image, :thumbnail, :status, NOW())";
+                      (:model_code, :category_id, :brand_id, :name, :slug, :specifications, :description, :image, :thumbnail, :status, :sold, :is_featured, NOW())";
 
             $stmt = $this->conn->prepare($query);
 
@@ -309,6 +315,13 @@ class Products
             $stmt->bindParam(':thumbnail', $thumbnail);
             $status = isset($data->status) ? $data->status : 1;
             $stmt->bindParam(':status', $status, PDO::PARAM_INT);
+            $sold = isset($data->sold) ? (int)$data->sold : 0;
+            $stmt->bindParam(':sold', $sold, PDO::PARAM_INT);
+            // is_featured là enum('0','1') nên phải là string
+            $is_featured = isset($data->is_featured) 
+                ? (($data->is_featured == '1' || $data->is_featured === 1 || $data->is_featured === true) ? '1' : '0')
+                : '0';
+            $stmt->bindParam(':is_featured', $is_featured, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
                 $lastId = $this->conn->lastInsertId();
@@ -423,7 +436,9 @@ class Products
                       description = :description,
                       image = :image,
                       thumbnail = :thumbnail,
-                      status = :status
+                      status = :status,
+                      sold = :sold,
+                      is_featured = :is_featured
                       WHERE id = :id";
 
             $stmt = $this->conn->prepare($query);
@@ -435,6 +450,15 @@ class Products
             $name = $data->name ?? $existingData['name'];
             $description = $data->description ?? $existingData['description'] ?? null;
             $status = $data->status ?? $existingData['status'] ?? 1;
+            $sold = isset($data->sold) ? (int)$data->sold : ($existingData['sold'] ?? 0);
+            // Xử lý is_featured - enum('0','1') nên phải là string
+            $is_featured = '0';
+            if (isset($data->is_featured)) {
+                // Chuyển đổi thành string '0' hoặc '1'
+                $is_featured = ($data->is_featured == '1' || $data->is_featured === 1 || $data->is_featured === true) ? '1' : '0';
+            } elseif (isset($existingData['is_featured'])) {
+                $is_featured = ($existingData['is_featured'] == '1' || $existingData['is_featured'] === 1) ? '1' : '0';
+            }
 
             $stmt->bindParam(':model_code', $modelCode);
             $stmt->bindParam(':category_id', $categoryId, PDO::PARAM_INT);
@@ -446,6 +470,9 @@ class Products
             $stmt->bindParam(':image', $image);
             $stmt->bindParam(':thumbnail', $thumbnail);
             $stmt->bindParam(':status', $status, PDO::PARAM_INT);
+            $stmt->bindParam(':sold', $sold, PDO::PARAM_INT);
+            // is_featured là enum('0','1') nên phải bind là string
+            $stmt->bindParam(':is_featured', $is_featured, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
                 return $this->getById($id);
@@ -502,8 +529,8 @@ class Products
                 . "FROM " . $this->table_name . " p "
                 . "LEFT JOIN brands b ON p.brand_id = b.id "
                 . "LEFT JOIN categories c ON p.category_id = c.id "
-                . "WHERE p.status = 1 "
-                . "ORDER BY p.created_at DESC "
+                . "WHERE p.status = 1 AND p.is_featured = 1 "
+                . "ORDER BY p.sold DESC, p.created_at DESC "
                 . "LIMIT :limit";
 
             $stmt = $this->conn->prepare($query);
@@ -511,9 +538,31 @@ class Products
             $stmt->execute();
 
             $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            foreach ($products as &$product) {
-                $product = $this->decodeSpecification($product);
+            
+            // Lấy variants cho các products
+            if (!empty($products)) {
+                require_once __DIR__ . '/ProductVariantModel.php';
+                $variantsModel = new ProductVariants();
+                $productIds = array_column($products, 'id');
+                $allVariants = $variantsModel->getByProductIds($productIds);
+                
+                $variantsByProduct = [];
+                foreach ($allVariants as $variant) {
+                    $variantsByProduct[$variant['product_id']][] = $variant;
+                }
+                
+                foreach ($products as &$product) {
+                    $product = $this->decodeSpecification($product);
+                    $product['variants'] = isset($variantsByProduct[$product['id']])
+                        ? $variantsByProduct[$product['id']]
+                        : [];
+                }
+            } else {
+                foreach ($products as &$product) {
+                    $product = $this->decodeSpecification($product);
+                }
             }
+            
             return $products;
         } catch (PDOException $e) {
             throw $e;
@@ -537,9 +586,79 @@ class Products
             $stmt->execute();
 
             $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            foreach ($products as &$product) {
-                $product = $this->decodeSpecification($product);
+            
+            // Lấy variants cho các products
+            if (!empty($products)) {
+                require_once __DIR__ . '/ProductVariantModel.php';
+                $variantsModel = new ProductVariants();
+                $productIds = array_column($products, 'id');
+                $allVariants = $variantsModel->getByProductIds($productIds);
+                
+                $variantsByProduct = [];
+                foreach ($allVariants as $variant) {
+                    $variantsByProduct[$variant['product_id']][] = $variant;
+                }
+                
+                foreach ($products as &$product) {
+                    $product = $this->decodeSpecification($product);
+                    $product['variants'] = isset($variantsByProduct[$product['id']])
+                        ? $variantsByProduct[$product['id']]
+                        : [];
+                }
+            } else {
+                foreach ($products as &$product) {
+                    $product = $this->decodeSpecification($product);
+                }
             }
+            
+            return $products;
+        } catch (PDOException $e) {
+            throw $e;
+        }
+    }
+
+    // Lấy sản phẩm bán chạy (top products)
+    public function getTopProducts($limit = 10)
+    {
+        try {
+            $query = "SELECT p.*, b.name as brand_name, b.slug as brand_slug, c.name as category_name, c.slug as category_slug "
+                . "FROM " . $this->table_name . " p "
+                . "LEFT JOIN brands b ON p.brand_id = b.id "
+                . "LEFT JOIN categories c ON p.category_id = c.id "
+                . "WHERE p.status = 1 "
+                . "ORDER BY p.sold DESC, p.created_at DESC "
+                . "LIMIT :limit";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Lấy variants cho các products
+            if (!empty($products)) {
+                require_once __DIR__ . '/ProductVariantModel.php';
+                $variantsModel = new ProductVariants();
+                $productIds = array_column($products, 'id');
+                $allVariants = $variantsModel->getByProductIds($productIds);
+                
+                $variantsByProduct = [];
+                foreach ($allVariants as $variant) {
+                    $variantsByProduct[$variant['product_id']][] = $variant;
+                }
+                
+                foreach ($products as &$product) {
+                    $product = $this->decodeSpecification($product);
+                    $product['variants'] = isset($variantsByProduct[$product['id']])
+                        ? $variantsByProduct[$product['id']]
+                        : [];
+                }
+            } else {
+                foreach ($products as &$product) {
+                    $product = $this->decodeSpecification($product);
+                }
+            }
+            
             return $products;
         } catch (PDOException $e) {
             throw $e;

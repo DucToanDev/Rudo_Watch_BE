@@ -51,7 +51,10 @@ class OrdersController
             return;
         }
 
-        $userId = ($user['role'] === 'admin') ? null : $user['id'];
+        // Admin có thể xem tất cả đơn hàng, user chỉ xem đơn hàng của mình
+        // Kiểm tra role: có thể là 'admin' (string) hoặc 1 (number)
+        $isAdmin = ($user['role'] === 'admin' || $user['role'] == 1 || $user['role'] === 1);
+        $userId = $isAdmin ? null : $user['id'];
 
         $result = $this->orderModel->getOrderById($id, $userId);
 
