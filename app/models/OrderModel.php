@@ -178,14 +178,13 @@ class OrderModel
                 $voucher = $this->getVoucher($order['voucher_id']);
                 if ($voucher) {
                     // Tính discount dựa trên subtotal (trước khi cộng shipping)
-                    $tempTotal = $subtotal;
+                    // Logic này phải giống hệt với createOrder để đảm bảo tính nhất quán
                     if ($voucher['type'] === 'percent') {
-                        $discount = $tempTotal * ($voucher['discount'] / 100);
-                        // Giới hạn max_discount nếu có
-                        if (isset($voucher['max_discount']) && $voucher['max_discount'] > 0 && $discount > $voucher['max_discount']) {
-                            $discount = (float)$voucher['max_discount'];
-                        }
+                        // Voucher percent: dùng field 'discount' (phần trăm)
+                        $discount = $subtotal * ($voucher['discount'] / 100);
+                        // Bảng vouchers không có max_discount, bỏ qua
                     } else {
+                        // Voucher fixed: dùng field 'amount' (số tiền cố định)
                         $discount = (float)$voucher['amount'];
                     }
                     // Không cho discount vượt quá subtotal
@@ -252,8 +251,38 @@ class OrderModel
             $addressData = $data->address ?? null;
             $paymentMethod = $data->payment_method ?? 'cod';
             $note = $data->note ?? null;
+            $voucherCode = $data->voucher_code ?? null;
             $voucherId = $data->voucher_id ?? null;
             $shippingMethodId = $data->shipping_method_id ?? null;
+            
+            // Nếu có voucher_code, tìm voucher_id
+            if ($voucherCode && !$voucherId) {
+                try {
+                    require_once __DIR__ . '/VoucherModel.php';
+                    $voucherModel = new Vouchers();
+                    $voucher = $voucherModel->getByCode(strtoupper(trim($voucherCode)));
+                    if ($voucher) {
+                        // Kiểm tra voucher có hợp lệ không (chưa hết hạn, đã bắt đầu, còn số lượng)
+                        $now = date('Y-m-d H:i:s');
+                        if ($voucher['expired_at'] && $voucher['expired_at'] < $now) {
+                            // Voucher đã hết hạn, nhưng không throw error, chỉ bỏ qua
+                            $voucherId = null;
+                        } elseif ($voucher['start_at'] && $voucher['start_at'] > $now) {
+                            // Voucher chưa bắt đầu
+                            $voucherId = null;
+                        } elseif ($voucher['quantity'] !== null && $voucher['quantity'] <= 0) {
+                            // Voucher đã hết số lượng
+                            $voucherId = null;
+                        } else {
+                            $voucherId = $voucher['id'];
+                        }
+                    }
+                } catch (Exception $e) {
+                    // Nếu có lỗi khi tìm voucher, bỏ qua và tiếp tục không dùng voucher
+                    $voucherId = null;
+                    error_log("Error finding voucher by code: " . $e->getMessage());
+                }
+            }
 
             if (empty($items)) {
                 return [
@@ -263,10 +292,16 @@ class OrderModel
             }
 
             if (!$addressData) {
+                $this->conn->rollBack();
                 return [
                     'success' => false,
                     'message' => 'Vui lòng cung cấp địa chỉ giao hàng'
                 ];
+            }
+            
+            // Chuyển đổi address từ object sang array nếu cần
+            if (is_object($addressData)) {
+                $addressData = (array)$addressData;
             }
 
             // Tính tổng tiền và validate sản phẩm
@@ -314,35 +349,66 @@ class OrderModel
                 ];
             }
 
+            // Tính subtotal (tổng tiền sản phẩm, chưa có shipping và discount)
+            $subtotal = $total;
+            
             // Tính phí vận chuyển nếu có
             $shippingCost = 0;
             if ($shippingMethodId) {
                 $shippingMethod = $this->getShippingMethod($shippingMethodId);
                 if ($shippingMethod) {
                     $shippingCost = (float)$shippingMethod['cost'];
-                    $total += $shippingCost;
                 }
             }
 
-            // Áp dụng voucher nếu có
+            // Áp dụng voucher nếu có (tính discount dựa trên subtotal, không tính shipping)
             $discount = 0;
             if ($voucherId) {
                 $voucher = $this->getVoucher($voucherId);
-                if ($voucher && $this->isVoucherValid($voucher, $total)) {
+                if ($voucher && $this->isVoucherValid($voucher, $subtotal)) {
                     if ($voucher['type'] === 'percent') {
-                        $discount = $total * ($voucher['value'] / 100);
-                        if ($voucher['max_discount'] && $discount > $voucher['max_discount']) {
-                            $discount = $voucher['max_discount'];
-                        }
+                        // Voucher percent: dùng field 'discount' (phần trăm)
+                        // Bảng vouchers có: discount (int) - ví dụ: 10 = 10%
+                        $discount = $subtotal * ($voucher['discount'] / 100);
+                        // Bảng vouchers không có max_discount, bỏ qua
                     } else {
-                        $discount = $voucher['value'];
+                        // Voucher fixed: dùng field 'amount' (số tiền cố định)
+                        // Bảng vouchers có: amount (decimal) - ví dụ: 100000 = 100,000 VNĐ
+                        $discount = (float)$voucher['amount'];
                     }
-                    $total -= $discount;
+                    // Không cho discount vượt quá subtotal
+                    if ($discount > $subtotal) {
+                        $discount = $subtotal;
+                    }
                 }
+            }
+            
+            // Tính total cuối cùng: subtotal + shipping - discount
+            $total = $subtotal + $shippingCost - $discount;
+            // Đảm bảo total không âm
+            if ($total < 0) {
+                $total = 0;
             }
 
             // Tạo đơn hàng
+            // Đảm bảo addressData là array trước khi encode
+            if (!is_array($addressData)) {
+                $this->conn->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Định dạng địa chỉ không hợp lệ'
+                ];
+            }
+            
             $addressJson = json_encode($addressData, JSON_UNESCAPED_UNICODE);
+            if ($addressJson === false) {
+                $this->conn->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Lỗi khi xử lý địa chỉ: ' . json_last_error_msg()
+                ];
+            }
+            
             $orderQuery = "INSERT INTO " . $this->table_name . " 
                           (user_id, voucher_id, address, status, payment_method, payment_status, total, note, created_at, updated_at) 
                           VALUES (:user_id, :voucher_id, :address, 'pending', :payment_method, 'unpaid', :total, :note, NOW(), NOW())";
@@ -384,6 +450,14 @@ class OrderModel
             return $this->getOrderById($orderId, $userId);
         } catch (PDOException $e) {
             $this->conn->rollBack();
+            error_log("OrderModel::createOrder PDOException: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Lỗi khi tạo đơn hàng: ' . $e->getMessage()
+            ];
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log("OrderModel::createOrder Exception: " . $e->getMessage());
             return [
                 'success' => false,
                 'message' => 'Lỗi khi tạo đơn hàng: ' . $e->getMessage()
@@ -725,7 +799,8 @@ class OrderModel
      */
     private function getVoucher($id)
     {
-        $query = "SELECT * FROM vouchers WHERE id = :id AND status = 1";
+        // Bảng vouchers không có cột status, chỉ lấy theo id
+        $query = "SELECT * FROM vouchers WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
@@ -744,13 +819,18 @@ class OrderModel
             return false;
         }
 
-        // Kiểm tra số lượng
-        if ($voucher['quantity'] !== null && $voucher['quantity'] <= 0) {
+        // Kiểm tra ngày bắt đầu
+        if ($voucher['start_at'] && $voucher['start_at'] > $now) {
             return false;
         }
 
-        // Kiểm tra giá trị đơn hàng tối thiểu
-        if ($voucher['min_order_value'] && $total < $voucher['min_order_value']) {
+        // Kiểm tra số lượng (usage_limit)
+        if (isset($voucher['usage_limit']) && $voucher['usage_limit'] !== null && $voucher['usage_limit'] <= 0) {
+            return false;
+        }
+
+        // Kiểm tra giá trị đơn hàng tối thiểu (có thể không có field này)
+        if (isset($voucher['min_order_value']) && $voucher['min_order_value'] && $total < $voucher['min_order_value']) {
             return false;
         }
 
